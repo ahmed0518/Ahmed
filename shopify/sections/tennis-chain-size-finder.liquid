@@ -1,0 +1,338 @@
+{% comment %}
+  Diamond Tennis Chain Size Finder
+  Interactive tool that recommends a tennis chain length (and width) based on
+  neck size, desired fit, build and chain width. Self-contained: no apps or
+  external scripts. Add it to any page via Online Store > Customize.
+{% endcomment %}
+
+<div class="tcsf" id="tcsf-{{ section.id }}">
+  <div class="tcsf__inner">
+    <header class="tcsf__header">
+      <p class="tcsf__eyebrow">{{ section.settings.eyebrow }}</p>
+      <h2 class="tcsf__title">{{ section.settings.heading }}</h2>
+      <p class="tcsf__intro">{{ section.settings.intro }}</p>
+    </header>
+
+    <div class="tcsf__grid">
+      <form class="tcsf__form" novalidate>
+        <fieldset class="tcsf__step">
+          <legend><span class="tcsf__num">1</span> Your neck size</legend>
+          <div class="tcsf__seg" role="radiogroup" aria-label="How to enter neck size">
+            <label><input type="radio" name="neckMode" value="measure" checked><span>I measured it</span></label>
+            <label><input type="radio" name="neckMode" value="collar"><span>Use shirt collar size</span></label>
+            <label><input type="radio" name="neckMode" value="unknown"><span>I don't know</span></label>
+          </div>
+
+          <div class="tcsf__neck" data-mode="measure">
+            <div class="tcsf__row">
+              <input class="tcsf__input" type="number" name="neck" min="10" max="26" step="0.25" value="16" inputmode="decimal" aria-label="Neck measurement">
+              <div class="tcsf__seg tcsf__seg--sm" role="radiogroup" aria-label="Unit">
+                <label><input type="radio" name="unit" value="in" checked><span>in</span></label>
+                <label><input type="radio" name="unit" value="cm"><span>cm</span></label>
+              </div>
+            </div>
+            <p class="tcsf__hint">Wrap a soft tape (or a string, then measure it with a ruler) around the base of your neck where a chain would sit. Keep it snug but not tight.</p>
+          </div>
+
+          <div class="tcsf__neck" data-mode="collar" hidden>
+            <select class="tcsf__input" name="collar" aria-label="Shirt collar size">
+              <option value="14">14" (Small)</option>
+              <option value="14.5">14.5" (Small)</option>
+              <option value="15">15" (Medium)</option>
+              <option value="15.5">15.5" (Medium)</option>
+              <option value="16" selected>16" (Large)</option>
+              <option value="16.5">16.5" (Large)</option>
+              <option value="17">17" (X-Large)</option>
+              <option value="17.5">17.5" (X-Large)</option>
+              <option value="18">18" (2XL)</option>
+              <option value="18.5">18.5" (2XL)</option>
+              <option value="19">19" (3XL)</option>
+              <option value="20">20" (3XL+)</option>
+            </select>
+            <p class="tcsf__hint">Dress-shirt collar sizes are close to neck size. We subtract a little because collars are cut with room to spare.</p>
+          </div>
+
+          <div class="tcsf__neck" data-mode="unknown" hidden>
+            <div class="tcsf__seg" role="radiogroup" aria-label="Wearer">
+              <label><input type="radio" name="wearer" value="men" checked><span>Men's</span></label>
+              <label><input type="radio" name="wearer" value="women"><span>Women's</span></label>
+            </div>
+            <p class="tcsf__hint">We'll use an average neck size (15.5" men, 13.5" women). Your build below fine-tunes it.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="tcsf__step">
+          <legend><span class="tcsf__num">2</span> Where should it sit?</legend>
+          <div class="tcsf__cards" role="radiogroup">
+            <label class="tcsf__card"><input type="radio" name="fit" value="choker"><span><strong>Tight</strong><small>Hugs the base of the neck</small></span></label>
+            <label class="tcsf__card"><input type="radio" name="fit" value="collarbone" checked><span><strong>Collarbone</strong><small>Classic, sits right on the collarbone</small></span></label>
+            <label class="tcsf__card"><input type="radio" name="fit" value="upper"><span><strong>Upper chest</strong><small>Shows over a crew neck tee</small></span></label>
+            <label class="tcsf__card"><input type="radio" name="fit" value="mid"><span><strong>Mid chest</strong><small>Statement drop, good for pendants</small></span></label>
+            <label class="tcsf__card"><input type="radio" name="fit" value="low"><span><strong>Low</strong><small>Long hang, made for layering</small></span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="tcsf__step">
+          <legend><span class="tcsf__num">3</span> Your build</legend>
+          <div class="tcsf__seg" role="radiogroup">
+            <label><input type="radio" name="build" value="slim"><span>Slim</span></label>
+            <label><input type="radio" name="build" value="average" checked><span>Average</span></label>
+            <label><input type="radio" name="build" value="athletic"><span>Athletic</span></label>
+            <label><input type="radio" name="build" value="large"><span>Broad / Big</span></label>
+          </div>
+          <p class="tcsf__hint">A broader chest and traps take up length, so the chain sits higher than it would on a slim frame.</p>
+        </fieldset>
+
+        <fieldset class="tcsf__step">
+          <legend><span class="tcsf__num">4</span> Chain width</legend>
+          <div class="tcsf__seg" role="radiogroup">
+            <label><input type="radio" name="width" value="2"><span>2mm</span></label>
+            <label><input type="radio" name="width" value="3"><span>3mm</span></label>
+            <label><input type="radio" name="width" value="4" checked><span>4mm</span></label>
+            <label><input type="radio" name="width" value="5"><span>5mm</span></label>
+            <label><input type="radio" name="width" value="6"><span>6mm</span></label>
+            <label><input type="radio" name="width" value="7"><span>7mm+</span></label>
+          </div>
+          <p class="tcsf__hint">Wider tennis links are stiffer and don't curve as tightly, so wide chains need a bit more length to sit in the same spot.</p>
+        </fieldset>
+      </form>
+
+      <aside class="tcsf__result" aria-live="polite">
+        <div class="tcsf__viz" aria-hidden="true">
+          <svg viewBox="0 0 240 260" class="tcsf__svg">
+            <path class="tcsf__body" d="M96 20 C96 8 144 8 144 20 L146 62 C150 72 170 78 200 86 C224 93 236 110 238 140 L240 260 L0 260 L2 140 C4 110 16 93 40 86 C70 78 90 72 94 62 Z"/>
+            <path class="tcsf__guide" d="M60 96 Q120 112 180 96"/>
+            <path class="tcsf__chain" d="M96 62 Q120 142 144 62"/>
+          </svg>
+          <span class="tcsf__viz-label">Collarbone</span>
+        </div>
+
+        <p class="tcsf__result-label">Your recommended length</p>
+        <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
+        <p class="tcsf__cm"><span data-out="cm">51</span> cm</p>
+        <p class="tcsf__summary" data-out="summary"></p>
+
+        <dl class="tcsf__alts">
+          <div><dt>Shorter option</dt><dd data-out="shorter"></dd></div>
+          <div><dt>Longer option</dt><dd data-out="longer"></dd></div>
+          <div><dt>Suggested width</dt><dd data-out="widthTip"></dd></div>
+        </dl>
+
+        {%- if section.settings.shop_url != blank -%}
+          <a class="tcsf__cta" href="{{ section.settings.shop_url }}">{{ section.settings.cta_label }}</a>
+        {%- endif -%}
+        <p class="tcsf__fine">{{ section.settings.fine_print }}</p>
+      </aside>
+    </div>
+
+    <div class="tcsf__chart">
+      <h3>Tennis chain length chart (men's)</h3>
+      <div class="tcsf__table-wrap">
+        <table>
+          <thead><tr><th>Length</th><th>Where it sits on an average man (15.5"–16" neck)</th></tr></thead>
+          <tbody>
+            <tr><td>16"</td><td>Tight at the base of the neck. Best for slim necks or a choker look.</td></tr>
+            <tr><td>18"</td><td>Base of the neck to just above the collarbone.</td></tr>
+            <tr><td>20"</td><td>On the collarbone. The classic tennis chain look.</td></tr>
+            <tr><td>22"</td><td>Just below the collarbone. Shows over a crew neck.</td></tr>
+            <tr><td>24"</td><td>Upper chest. A good pick for broad or athletic builds.</td></tr>
+            <tr><td>26"</td><td>Mid chest. A classic length with a pendant.</td></tr>
+            <tr><td>28"–30"</td><td>Low chest / sternum. Made for layering.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tcsf__hint">Wearing more than one chain? Space them about 2" apart (for example 20" + 22" + 24") so they don't tangle.</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  #tcsf-{{ section.id }} {
+    --tcsf-bg: {{ section.settings.color_bg }};
+    --tcsf-fg: {{ section.settings.color_text }};
+    --tcsf-accent: {{ section.settings.color_accent }};
+    --tcsf-card: rgba(127,127,127,.08);
+    --tcsf-line: rgba(127,127,127,.28);
+    --tcsf-muted: rgba(127,127,127,1);
+  }
+  .tcsf { background: var(--tcsf-bg); color: var(--tcsf-fg); padding: 56px 16px; }
+  .tcsf *, .tcsf *::before, .tcsf *::after { box-sizing: border-box; }
+  .tcsf__inner { max-width: 1120px; margin: 0 auto; }
+  .tcsf__header { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+  .tcsf__eyebrow { text-transform: uppercase; letter-spacing: .18em; font-size: 12px; color: var(--tcsf-accent); margin: 0 0 8px; }
+  .tcsf__title { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 0 0 12px; color: inherit; }
+  .tcsf__intro { margin: 0; opacity: .8; line-height: 1.55; }
+  .tcsf__grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  .tcsf__form { display: grid; gap: 20px; }
+  .tcsf__step { border: 1px solid var(--tcsf-line); border-radius: 12px; padding: 20px; margin: 0; min-width: 0; }
+  .tcsf__step legend { font-weight: 600; font-size: 17px; padding: 0 8px; display: flex; align-items: center; gap: 10px; }
+  .tcsf__num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--tcsf-accent); color: var(--tcsf-bg); font-size: 13px; }
+  .tcsf__hint { font-size: 13px; line-height: 1.5; opacity: .7; margin: 10px 0 0; }
+  .tcsf__row { display: flex; gap: 12px; align-items: stretch; margin-top: 14px; }
+  .tcsf__input { font: inherit; font-size: 18px; padding: 10px 14px; border: 1px solid var(--tcsf-line); border-radius: 8px; background: transparent; color: inherit; width: 100%; max-width: 220px; min-height: 46px; }
+  .tcsf__neck[data-mode="collar"] .tcsf__input, .tcsf__neck[data-mode="unknown"] .tcsf__seg { margin-top: 14px; }
+  .tcsf__input:focus-visible { outline: 2px solid var(--tcsf-accent); outline-offset: 2px; }
+  .tcsf select.tcsf__input option { color: #111; }
+  .tcsf__seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tcsf__seg label, .tcsf__card { cursor: pointer; }
+  .tcsf__seg input, .tcsf__card input { position: absolute; opacity: 0; pointer-events: none; }
+  .tcsf__seg span { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 16px; border: 1px solid var(--tcsf-line); border-radius: 999px; font-size: 14px; transition: border-color .15s, background .15s, color .15s; }
+  .tcsf__seg--sm span { min-height: 46px; padding: 8px 14px; }
+  .tcsf__seg input:checked + span, .tcsf__card input:checked + span { border-color: var(--tcsf-accent); background: var(--tcsf-accent); color: var(--tcsf-bg); }
+  .tcsf__seg input:focus-visible + span, .tcsf__card input:focus-visible + span { outline: 2px solid var(--tcsf-accent); outline-offset: 2px; }
+  .tcsf__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .tcsf__card span { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 14px; border: 1px solid var(--tcsf-line); border-radius: 10px; transition: border-color .15s, background .15s, color .15s; }
+  .tcsf__card small { font-size: 12px; line-height: 1.4; opacity: .8; }
+  .tcsf__result { position: sticky; top: 24px; background: var(--tcsf-card); border: 1px solid var(--tcsf-line); border-radius: 16px; padding: 24px; text-align: center; }
+  .tcsf__viz { position: relative; max-width: 220px; margin: 0 auto 12px; }
+  .tcsf__svg { display: block; width: 100%; height: auto; }
+  .tcsf__body { fill: var(--tcsf-line); }
+  .tcsf__guide { fill: none; stroke: var(--tcsf-fg); stroke-opacity: .25; stroke-width: 2; stroke-linecap: round; }
+  .tcsf__chain { fill: none; stroke: var(--tcsf-accent); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0.1 7; transition: d .35s ease; }
+  .tcsf__viz-label { position: absolute; left: 0; right: 0; bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; opacity: .7; }
+  .tcsf__result-label { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .14em; opacity: .7; }
+  .tcsf__length { font-size: 72px; line-height: 1; font-weight: 700; margin: 6px 0 0; color: var(--tcsf-accent); font-variant-numeric: tabular-nums; }
+  .tcsf__unit { font-size: .6em; vertical-align: top; }
+  .tcsf__cm { margin: 4px 0 12px; opacity: .7; }
+  .tcsf__summary { margin: 0 0 16px; line-height: 1.5; font-size: 15px; }
+  .tcsf__alts { display: grid; gap: 8px; margin: 0 0 20px; text-align: left; }
+  .tcsf__alts div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--tcsf-line); font-size: 14px; }
+  .tcsf__alts dt { opacity: .7; }
+  .tcsf__alts dd { margin: 0; font-weight: 600; text-align: right; }
+  .tcsf__cta { display: block; padding: 14px 20px; border-radius: 999px; background: var(--tcsf-accent); color: var(--tcsf-bg); text-decoration: none; font-weight: 600; letter-spacing: .04em; }
+  .tcsf__cta:hover { opacity: .9; }
+  .tcsf__fine { font-size: 12px; opacity: .6; margin: 14px 0 0; line-height: 1.5; }
+  .tcsf__chart { margin-top: 48px; }
+  .tcsf__chart h3 { font-size: 22px; margin: 0 0 16px; color: inherit; }
+  .tcsf__table-wrap { overflow-x: auto; border: 1px solid var(--tcsf-line); border-radius: 12px; }
+  .tcsf__chart table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .tcsf__chart th, .tcsf__chart td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--tcsf-line); vertical-align: top; }
+  .tcsf__chart tr:last-child td { border-bottom: 0; }
+  .tcsf__chart td:first-child { font-weight: 700; white-space: nowrap; color: var(--tcsf-accent); }
+  .tcsf__chart tr.is-match td { background: var(--tcsf-card); }
+  @media (max-width: 860px) {
+    .tcsf { padding: 40px 16px; }
+    .tcsf__grid { grid-template-columns: 1fr; }
+    .tcsf__result { position: static; }
+    .tcsf__step { padding: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .tcsf * { transition: none !important; } }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('tcsf-{{ section.id }}');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = '1';
+
+    var form = root.querySelector('.tcsf__form');
+    var STANDARD = [16, 18, 20, 22, 24, 26, 28, 30];
+    // Inches of extra length beyond neck size needed to reach each spot.
+    var FIT = {
+      choker:     { add: 2,  label: 'Tight',       sentence: 'snug at the base of your neck' },
+      collarbone: { add: 4,  label: 'Collarbone',  sentence: 'right on your collarbone' },
+      upper:      { add: 6,  label: 'Upper chest', sentence: 'on your upper chest, visible over a crew neck' },
+      mid:        { add: 9,  label: 'Mid chest',   sentence: 'at mid chest' },
+      low:        { add: 12, label: 'Low',         sentence: 'low on your chest, ready for layering' }
+    };
+    var BUILD = { slim: -0.5, average: 0, athletic: 1, large: 2 };
+    var WIDTH = { 2: 0, 3: 0, 4: 0, 5: 0.5, 6: 1, 7: 1 };
+    // Lowest point (SVG y) the drawn chain reaches for each fit.
+    var DROP = { choker: 72, collarbone: 102, upper: 126, mid: 160, low: 200 };
+
+    function val(name) {
+      var el = form.querySelector('[name="' + name + '"]:checked') || form.querySelector('[name="' + name + '"]');
+      return el ? el.value : '';
+    }
+
+    function neckInches() {
+      var mode = val('neckMode');
+      if (mode === 'collar') return parseFloat(val('collar')) - 0.5;
+      if (mode === 'unknown') return val('wearer') === 'women' ? 13.5 : 15.5;
+      var n = parseFloat(form.querySelector('[name="neck"]').value);
+      if (!isFinite(n) || n <= 0) return null;
+      if (val('unit') === 'cm') n = n / 2.54;
+      return Math.min(Math.max(n, 10), 26);
+    }
+
+    function nearest(target) {
+      // Round up to the next standard length: a chain slightly long sits fine,
+      // one slightly short sits tighter than wanted.
+      for (var i = 0; i < STANDARD.length; i++) {
+        if (STANDARD[i] >= target - 0.5) return i;
+      }
+      return STANDARD.length - 1;
+    }
+
+    function fmt(i) { return i < 0 || i >= STANDARD.length ? 'N/A' : STANDARD[i] + '"'; }
+
+    function widthTip(build, fit) {
+      if (fit === 'choker') return '2mm–3mm';
+      if (build === 'slim') return '2mm–4mm';
+      if (build === 'average') return '3mm–5mm';
+      if (build === 'athletic') return '4mm–6mm';
+      return '5mm–7mm+';
+    }
+
+    function update() {
+      var mode = val('neckMode');
+      root.querySelectorAll('.tcsf__neck').forEach(function (el) { el.hidden = el.dataset.mode !== mode; });
+
+      var neck = neckInches();
+      var fit = val('fit'), build = val('build'), width = val('width');
+      if (neck == null) return;
+
+      var target = neck + FIT[fit].add + BUILD[build] + (WIDTH[width] || 0);
+      var i = nearest(target);
+      var len = STANDARD[i];
+
+      root.querySelector('[data-out="length"]').textContent = len;
+      root.querySelector('[data-out="cm"]').textContent = Math.round(len * 2.54);
+      root.querySelector('[data-out="shorter"]').textContent = i > 0 ? fmt(i - 1) + ' (sits higher)' : 'N/A';
+      root.querySelector('[data-out="longer"]').textContent = i < STANDARD.length - 1 ? fmt(i + 1) + ' (sits lower)' : 'N/A';
+      root.querySelector('[data-out="widthTip"]').textContent = widthTip(build, fit);
+
+      var note = '';
+      if (target > STANDARD[STANDARD.length - 1] + 0.5) note = ' For an even longer drop, contact us — we can help.';
+      if (target < STANDARD[0] - 1) note = ' For a tighter fit, contact us — we can help.';
+      root.querySelector('[data-out="summary"]').textContent =
+        'With a ' + neck.toFixed(1).replace(/\.0$/, '') + '" neck, a ' + len + '" ' +
+        (width === '7' ? '7mm+' : width + 'mm') + ' tennis chain should sit ' + FIT[fit].sentence + '.' + note;
+
+      var chain = root.querySelector('.tcsf__chain');
+      // A quadratic curve's midpoint is halfway between its ends and control point.
+      chain.setAttribute('d', 'M96 62 Q120 ' + (2 * DROP[fit] - 62) + ' 144 62');
+      root.querySelector('.tcsf__viz-label').textContent = FIT[fit].label;
+
+      root.querySelectorAll('.tcsf__chart tbody tr').forEach(function (tr) {
+        var first = parseInt(tr.cells[0].textContent, 10);
+        tr.classList.toggle('is-match', first === len || (len >= 28 && first === 28));
+      });
+    }
+
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
+    update();
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Tennis chain size finder",
+  "tag": "section",
+  "class": "section-tennis-chain-size-finder",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Size guide" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Find your perfect tennis chain length" },
+    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Answer four quick questions and we'll tell you which diamond tennis chain length will sit exactly where you want it." },
+    { "type": "url", "id": "shop_url", "label": "Shop button link", "default": "/search?q=tennis+chain" },
+    { "type": "text", "id": "cta_label", "label": "Shop button label", "default": "Shop tennis chains" },
+    { "type": "textarea", "id": "fine_print", "label": "Fine print", "default": "Still not sure? Contact us and we'll help you pick the right length." },
+    { "type": "color", "id": "color_bg", "label": "Background", "default": "#0b0b0c" },
+    { "type": "color", "id": "color_text", "label": "Text", "default": "#f5f3ee" },
+    { "type": "color", "id": "color_accent", "label": "Accent", "default": "#d4af37" }
+  ],
+  "presets": [{ "name": "Tennis chain size finder" }]
+}
+{% endschema %}
