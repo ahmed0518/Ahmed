@@ -1,0 +1,36 @@
+{%- comment -%}
+  Outputs the products of `coll` as JSON for the tennis chain size finder.
+  Length, width and diamond details come from the product's `custom.*`
+  metafields; the script falls back to the title (e.g. "22 Inches 3mm").
+  Usage: {% render 'tcsf-products-json', coll: collection, limit: 100 %}
+{%- endcomment -%}
+{%- assign sep = '' -%}
+[
+{%- paginate coll.products by 250 -%}
+  {%- for p in coll.products limit: limit -%}
+    {%- if p.tags contains 'Bracelets' -%}{%- continue -%}{%- endif -%}
+    {{ sep }}{
+      "id": {{ p.id }},
+      "t": {{ p.title | json }},
+      "u": {{ p.url | json }},
+      "img": {% if p.featured_image %}{{ p.featured_image | image_url: width: 720 | json }}{% else %}null{% endif %},
+      "img2": {% if p.images.size > 1 %}{{ p.images[1] | image_url: width: 720 | json }}{% else %}null{% endif %},
+      "len": {{ p.metafields.custom.length.value | json }},
+      "w": {{ p.metafields.custom.width.value | json }},
+      "ct": {{ p.metafields.custom.diamond_weight_side.value | default: p.metafields.custom.diamond_weight.value | json }},
+      "col": {{ p.metafields.custom.diamond_color_side.value | json }},
+      "cl": {{ p.metafields.custom.diamond_clarity_side.value | json }},
+      "o": {{ p.metafields.custom.diamond_origin_side.value | default: p.metafields.custom.diamond_origin.value | json }},
+      "m": {{ p.metafields.custom.metal.value | json }},
+      "tags": {{ p.tags | json }},
+      "v": [
+        {%- for v in p.variants -%}
+          {"id": {{ v.id }}, "t": {{ v.title | json }}, "a": {{ v.available }}, "p": {{ v.price }}, "c": {{ v.compare_at_price | default: 0 }}}
+          {%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+    }
+    {%- assign sep = ',' -%}
+  {%- endfor -%}
+{%- endpaginate -%}
+]

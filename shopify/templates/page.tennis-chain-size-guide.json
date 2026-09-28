@@ -1,13 +1,16 @@
 {
   "sections": {
-    "main": {
-      "type": "main-page",
-      "settings": {}
-    },
     "size_finder": {
       "type": "tennis-chain-size-finder",
+      "blocks": {
+        "trust_1": { "type": "trust", "settings": { "text": "Real 10K & 14K gold" } },
+        "trust_2": { "type": "trust", "settings": { "text": "Natural & lab-grown diamonds" } },
+        "trust_3": { "type": "trust", "settings": { "text": "Sized to fit you" } },
+        "trust_4": { "type": "trust", "settings": { "text": "New York jeweler" } }
+      },
+      "block_order": ["trust_1", "trust_2", "trust_3", "trust_4"],
       "settings": {}
     }
   },
-  "order": ["main", "size_finder"]
+  "order": ["size_finder"]
 }
