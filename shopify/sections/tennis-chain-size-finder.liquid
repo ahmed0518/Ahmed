@@ -60,7 +60,7 @@
     </header>
 
     <div class="tcsf-market" data-market>
-      <aside class="tcsf-filters" id="{{ uid }}-filters" data-filters aria-label="Filters">
+      <div class="tcsf-filters" id="{{ uid }}-filters" data-filters role="complementary" aria-label="Filters">
         <div class="tcsf-filters__head">
           <h2>Filters</h2>
           <button type="button" class="tcsf-link" data-clear-all>Clear all</button>
@@ -72,7 +72,7 @@
         <div class="tcsf-filters__foot">
           <button type="button" class="tcsf-btn" data-close-filters>Show <span data-out="countShort">0</span> results</button>
         </div>
-      </aside>
+      </div>
       <div class="tcsf-filters__backdrop" data-close-filters hidden></div>
 
       <div class="tcsf-results">
@@ -212,7 +212,7 @@
               <li data-zone="mid">Mid chest</li>
               <li data-zone="low">Low</li>
             </ol>
-            <svg class="tcsf__model" viewBox="0 80 400 380" role="img" aria-label="Preview of the chain on a model" data-model></svg>
+            <svg class="tcsf__model" viewBox="0 80 400 380" preserveAspectRatio="xMidYMin slice" role="img" aria-label="Preview of the chain on a model" data-model></svg>
           </div>
           <div class="tcsf__badge" data-badge><span data-out="badgeLen">20"</span><small data-out="badgeZone">Collarbone</small></div>
           <div class="tcsf__outfit" role="radiogroup" aria-label="Outfit">
@@ -433,7 +433,7 @@
     { "type": "color", "id": "color_text", "label": "Text", "default": "#1a1a1a" },
     { "type": "color", "id": "color_accent", "label": "Add to cart / highlight (yellow)", "default": "#ffd814" },
     { "type": "color", "id": "color_sale", "label": "Sale (red)", "default": "#d0021b" },
-    { "type": "color", "id": "color_good", "label": "Fit and in stock (green)", "default": "#0a8a3e" },
+    { "type": "color", "id": "color_good", "label": "Fit and in stock (green)", "default": "#067a35" },
     { "type": "color", "id": "color_link", "label": "Links (blue)", "default": "#0a66c2" }
   ],
   "blocks": [

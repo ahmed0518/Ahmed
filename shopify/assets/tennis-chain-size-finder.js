@@ -59,7 +59,7 @@
   function num(v) { var m = v == null ? null : String(v).match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
   function titleNum(t, re) { var m = String(t || '').match(re); return m ? parseFloat(m[1]) : null; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function inch(n) { return (Math.round(n * 2) / 2).toString().replace(/\.5$/, '½') + '"'; }
+  function inch(n) { var r = Math.round(n * 4) / 4, f = r % 1; return Math.floor(r) + (f === .25 ? '¼' : f === .5 ? '½' : f === .75 ? '¾' : '') + '"'; }
   function mm(n) { return (Math.round(n * 10) / 10) + 'mm'; }
   function f1(n) { return Math.round(n * 10) / 10; }
   function uniq(a) { var s = {}, o = []; a.forEach(function (x) { var k = String(x); if (!s[k]) { s[k] = 1; o.push(x); } }); return o; }
@@ -202,22 +202,21 @@
       '<filter id="' + id + '-b2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>' +
       '<filter id="' + id + '-b6" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>' +
       '<filter id="' + id + '-cs" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur stdDeviation="2.4"/></filter>' +
-      '</defs><g data-body></g><g data-chains></g>';
-    var bodyG = svg.querySelector('[data-body]'), chainsG = svg.querySelector('[data-chains]');
+      '</defs><g data-body></g><g data-layers></g><g data-chains></g>';
+    var bodyG = svg.querySelector('[data-body]'), layersG = svg.querySelector('[data-layers]'), chainsG = svg.querySelector('[data-chains]');
     var bodyKey = '', drop = null, anim = null;
     function colors(p) {
       var m = METAL[p.metal] || METAL.yellow, k = SKIN[p.skin] || SKIN[2];
       svg.querySelectorAll('[data-metal]').forEach(function (s) { s.setAttribute('stop-color', m[+s.dataset.metal]); });
       svg.querySelectorAll('[data-skin]').forEach(function (s) { s.setAttribute('stop-color', k[+s.dataset.skin]); });
     }
-    var layersHtml = '';
     function chains(p, d) {
-      // Only the main chain moves during a drop; the layered chains are built once per set().
-      chainsG.innerHTML = layersHtml + chainSvg(chainPoints(d), p.w, id + '-metal', id + '-ice', { shadow: id + '-cs', twinkle: p.twinkle });
+      // Only the main chain moves during a drop; the layered chains are drawn once per set().
+      chainsG.innerHTML = chainSvg(chainPoints(d), p.w, id + '-metal', id + '-ice', { shadow: id + '-cs', twinkle: p.twinkle });
     }
     function set(p, o) {
       o = o || {};
-      layersHtml = (p.layers || []).map(function (l, k) { return chainSvg(chainPoints(l.drop), l.w, id + '-metal', id + '-ice', { seed: 3 + k, shadow: id + '-cs', twinkle: p.twinkle }); }).join('');
+      layersG.innerHTML = (p.layers || []).map(function (l, k) { return chainSvg(chainPoints(l.drop), l.w, id + '-metal', id + '-ice', { seed: 3 + k, shadow: id + '-cs', twinkle: p.twinkle }); }).join('');
       var key = p.build + '|' + p.outfit;
       if (key !== bodyKey) { bodyG.innerHTML = bodySvg(id, p.build, p.outfit); bodyKey = key; }
       colors(p);
@@ -264,6 +263,7 @@
       var origin = /lab/i.test(p.t + ' ' + (p.o || '')) ? 'lab' : /natural/i.test(p.o || '') ? 'natural' : null;
       var avail = variants.filter(function (v) { return v.a; });
       var priced = (avail.length ? avail : variants).map(function (v) { return v.p; });
+      var quote = !!p.q || variants.every(function (v) { return !v.p; });
       return {
         id: p.id, i: i, title: cleanTitle(p.t), url: p.u,
         imgs: (p.imgs || [p.img, p.img2]).filter(Boolean),
@@ -273,10 +273,10 @@
         variants: variants,
         metals: uniq(variants.map(function (v) { return v.metal; }).filter(Boolean)),
         price: priced.length ? Math.min.apply(null, priced) : 0,
-        sale: variants.some(function (v) { return v.c > v.p; }),
+        sale: !quote && variants.some(function (v) { return v.p > 0 && v.c > v.p; }),
         best: tags.indexOf('best sellers') > -1, isNew: tags.indexOf('new arrivals') > -1,
         // Priced on request ("Quote Only" tag or $0): shown with "Request a quote" instead of Add to cart.
-        quote: !!p.q || variants.every(function (v) { return !v.p; }),
+        quote: quote,
         available: avail.length > 0
       };
     }).filter(function (p) { return p.variants.length && (!p.len || p.len >= 14); });
@@ -341,7 +341,7 @@
       if (val('neckMode') !== 'measure') return '';
       var inp = q('[name="neck"]'), n = parseFloat(inp.value), cm = val('unit') === 'cm';
       if (!isFinite(n)) return 'Enter your neck size to continue.';
-      if (!cm && n >= 25 && n <= 66) return 'That looks like centimetres. <button type="button" class="tcsf-link" data-to-cm>Switch to cm</button>';
+      if (!cm && n > +inp.max && n <= 66) return 'That looks like centimetres. <button type="button" class="tcsf-link" data-to-cm>Switch to cm</button>';
       if (n < +inp.min || n > +inp.max) return 'Neck sizes are usually between ' + inp.min + ' and ' + inp.max + (cm ? ' cm' : '"') + '. Please check your measurement.';
       return '';
     }
@@ -362,7 +362,13 @@
       for (var i = 0; i < STANDARD.length; i++) if (STANDARD[i] >= target - 0.5) return { len: STANDARD[i], target: target };
       return { len: STANDARD[STANDARD.length - 1], target: target };
     }
-    function mySize() { return st.override || recommended().len; }
+    function mySize() {
+      if (st.override) return st.override;
+      if (memo && memo.$size) return memo.$size;
+      var s = recommended().len;
+      if (memo) memo.$size = s;
+      return s;
+    }
     function yFor(len, w) { return slackToY(len - used(w)); }
     function modelParams(len, w, metal, extra) {
       var p = { build: val('build'), outfit: val('outfit'), skin: val('skin'), metal: metal, w: w, drop: yFor(len, w), layers: [] };
@@ -377,6 +383,11 @@
 
     var lastBadge = '';
     function updateFinder(o) {
+      var own = !memo;
+      if (own) memo = {};
+      try { updateFinder0(o); } finally { if (own) memo = null; }
+    }
+    function updateFinder0(o) {
       o = o || {};
       var mode = val('neckMode');
       qa('.tcsf__neck').forEach(function (n) { n.hidden = n.dataset.mode !== mode; });
@@ -411,7 +422,8 @@
         ? 'A ' + size + '" ' + widthLabel() + ' chain sits ' + where + '. Our pick for you was ' + rec.len + '".'
         : 'With a ' + inch(neckInches()) + ' neck, a ' + size + '" ' + widthLabel() + ' tennis chain sits ' + (clamped ? where : FIT[val('fit')].sentence) + '.' + note;
       q('[data-out="summary"]').textContent = summary;
-      if (inResult) announce('Your size: ' + size + ' inches. ' + summary);
+      if (inResult && !fitModal.hidden) announce('Your size: ' + size + ' inches. ' + summary);
+      q('[name="neck"]').setAttribute('aria-label', 'Neck measurement in ' + (val('unit') === 'cm' ? 'centimetres' : 'inches'));
       var slider = q('[data-length]');
       slider.value = size;
       slider.setAttribute('aria-valuetext', size + ' inches, ' + ZONE_LABEL[sz].toLowerCase());
@@ -458,6 +470,7 @@
       ni.step = cm ? 1 : 0.5; ni.min = cm ? 25 : 10; ni.max = cm ? 66 : 26;
       if (sv.neck) ni.value = sv.neck;
       st.override = sv.len || null;
+      showNeckProblem(false);
     }
     function saveFit() {
       if (!st.done) return;
@@ -468,6 +481,7 @@
       var was = st.done;
       st.done = true;
       if (!was && st.sort === 'featured') { st.sort = 'fit'; var se = q('[data-sort]'); if (se) se.value = 'fit'; }
+      var fo = q('[data-sort] option[value="fit"]'); if (fo) fo.textContent = 'Best fit for me';
       saveFit();
       refresh(o);
     }
@@ -537,7 +551,7 @@
       width: function (p) { return bucketTest(WIDTH_BUCKETS, F.width, p.w); },
       metal: function (p) { return p.variants.some(function (v) { return F.metal[v.metal] && (v.a || !p.available); }); },
       origin: function (p) { return !!F.origin[p.origin]; },
-      price: function (p) { return !p.quote && bucketTest(PRICE_BUCKETS, F.price, fitFor(p).v.p); },
+      price: function (p) { return !p.quote && bucketTest(PRICE_BUCKETS, F.price, variantFor(p, preferredMetal(p), targetLength()).p); },
       carat: function (p) { return bucketTest(CARAT_BUCKETS, F.carat, p.ctN); },
       stock: function (p) { return p.available; },
       sale: function (p) { return p.sale; },
@@ -549,11 +563,15 @@
       return true;
     }
     function countWith(key, patch) {
-      var saved = F[key]; F[key] = patch;
-      var n = 0;
-      for (var i = 0; i < products.length; i++) if (passes(products[i], null)) n++;
-      F[key] = saved;
-      return n;
+      var own = !memo;
+      if (own) memo = {};
+      try {
+        var saved = F[key]; F[key] = patch;
+        var n = 0;
+        for (var i = 0; i < products.length; i++) if (passes(products[i], null)) n++;
+        F[key] = saved;
+        return n;
+      } finally { if (own) memo = null; }
     }
     function one(v) { var o = {}; o[v] = true; return o; }
 
@@ -779,8 +797,10 @@
       grid.innerHTML = list.slice(0, shown).map(cardHtml).join('');
       grid.dataset.density = st.density;
       pagerText(shown, list.length);
-      q('[data-out="count"]').textContent = list.length;
-      q('[data-out="countLabel"]').textContent = (list.length === 1 ? 'result' : 'results') + (st.done && st.sort === 'fit' ? ', ranked for your ' + size + '" size' : '');
+      var ce = q('[data-out="count"]'), cl = q('[data-out="countLabel"]');
+      var lbl = (list.length === 1 ? 'result' : 'results') + (st.done && st.sort === 'fit' ? ', ranked for your ' + size + '" size' : '');
+      if (ce.textContent !== String(list.length)) ce.textContent = list.length;
+      if (cl.textContent !== lbl) cl.textContent = lbl;
       q('[data-out="countShort"]').textContent = list.length;
       updateFacets();
       renderChips();
@@ -989,7 +1009,7 @@
     function closeFilters(o) {
       if (!drawerOpen()) return;
       filters.classList.remove('is-open');
-      filters.removeAttribute('role'); filters.removeAttribute('aria-modal');
+      filters.setAttribute('role', 'complementary'); filters.removeAttribute('aria-modal');
       setExpanded(false);
       q('.tcsf-filters__backdrop').hidden = true;
       lock();
@@ -1026,10 +1046,14 @@
       clearTimeout(t._h);
       t._h = setTimeout(hide, wait);
       // Pause while the pointer or keyboard focus is on the message so its links stay usable.
-      t.onmouseenter = t.onfocusin = function () { clearTimeout(t._h); };
+      t.onmouseenter = function () { clearTimeout(t._h); };
       t.onmouseleave = function () { if (!t.contains(document.activeElement)) t._h = setTimeout(hide, 3000); };
-      t.onfocusout = function (e) { if (!t.contains(e.relatedTarget)) t._h = setTimeout(hide, 3000); };
     }
+    (function () {
+      var t = q('[data-toast]');
+      t.addEventListener('focusin', function () { clearTimeout(t._h); });
+      t.addEventListener('focusout', function (e) { if (!t.contains(e.relatedTarget)) t._h = setTimeout(function () { t.hidden = true; }, 3000); });
+    })();
     function addToCart(btn, qty) {
       if (btn.getAttribute('aria-disabled') === 'true') return;
       var id = +btn.dataset.add, url = (root.dataset.cartAdd || '/cart/add') + '.js', label = btn.textContent;
@@ -1046,7 +1070,10 @@
           var cart = root.dataset.cart || '/cart', usedDrawer = false;
           if (j && j.sections) {
             if (drawer && typeof drawer.renderContents === 'function' && j.sections['cart-drawer']) {
+              var ret = qvModal.contains(btn) ? (qvModal._opener || btn) : btn;
               closeModal(qvModal, { noFocus: true });
+              drawer.classList.remove('is-empty');
+              if (typeof drawer.setActiveElement === 'function') drawer.setActiveElement(ret);
               try { drawer.renderContents(j); usedDrawer = true; } catch (e) { usedDrawer = false; }
             } else if (bubble && j.sections['cart-icon-bubble']) {
               var doc = new DOMParser().parseFromString(j.sections['cart-icon-bubble'], 'text/html');
@@ -1074,7 +1101,8 @@
       var n = e.target.name;
       if (n === 'unit') {
         var inp = q('[name="neck"]'), v = parseFloat(inp.value), cm = e.target.value === 'cm';
-        if (isFinite(v)) inp.value = cm ? Math.round(v * 2.54) : Math.round(v / 2.54 * 2) / 2;
+        var fits = cm ? (v >= 25 && v <= 66) : (v >= 10 && v <= 26);
+        if (isFinite(v) && !fits) inp.value = cm ? Math.round(v * 2.54) : Math.round(v / 2.54 * 2) / 2;
         inp.step = cm ? 1 : 0.5; inp.min = cm ? 25 : 10; inp.max = cm ? 66 : 26;
         showNeckProblem(false);
       }
@@ -1113,9 +1141,8 @@
     });
     var sortEl = q('[data-sort]');
     if (sortEl) sortEl.addEventListener('change', function () {
-      // "Best fit for me" needs a size first.
-      if (sortEl.value === 'fit' && !st.done) { sortEl.value = st.sort; openFit(sortEl); return; }
       st.sort = sortEl.value; st.shown = PAGE; renderShop();
+      if (sortEl.value === 'fit' && !st.done) toast('<span>Find your size to rank chains by fit.</span><button type="button" class="tcsf-link" data-open-fit>Find my size</button>', 8000);
     });
 
     function replaceCard(pid) {
@@ -1172,7 +1199,7 @@
       if (d.go === 'restart') restart();
       if (d.go === 'shop') {
         var nearN = grid && products.length ? countWith('near', true) : 0;
-        if (nearN) { F.near = true; st.shown = PAGE; }
+        F.near = nearN > 0; st.shown = PAGE;
         closeModal(fitModal, { noFocus: true });
         markDone();
         focusResults();
@@ -1245,15 +1272,17 @@
     }
 
     // Theme editor: clean up when this section is re-rendered or removed.
-    document.addEventListener('shopify:section:unload', function (e) {
+    function onUnload(e) {
       if (!e.target || !e.target.contains || !e.target.contains(root)) return;
+      document.removeEventListener('shopify:section:unload', onUnload);
       stack = [];
       if (filters) filters.classList.remove('is-open');
       lock();
       document.removeEventListener('keydown', onKey);
       if (mqDesk.removeEventListener) mqDesk.removeEventListener('change', onMq);
       if (io) io.disconnect();
-    });
+    }
+    document.addEventListener('shopify:section:unload', onUnload);
 
     // Restore a size saved on this device.
     var saved = storeGet();
