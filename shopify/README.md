@@ -14,7 +14,7 @@ A marketplace-style category page for diamond tennis chains, with a built-in siz
   length, width and metal), metal and length options, a specs table (length, width, carat, color,
   clarity, diamonds, metal, setting, weight), quantity and Add to cart.
 - **Find my size:** a 4-step quiz (neck size, where it should sit, build, width) shown live on a
-  model. The result ranks every chain by fit, adds "Your size" badges, and is remembered on the
+  real model photo, with the chain drawn over the photo at its true position and scale. The result ranks every chain by fit, adds "Your size" badges, and is remembered on the
   shopper's device for their next visit. Shoppers can try other lengths, widths, metals, skin tones,
   outfits and a layered stack.
 - **Size guide tabs:** length chart (your size highlighted), width guide explaining "pointer" sizes
@@ -33,6 +33,7 @@ changed in the theme editor.
 | `snippets/tcsf-products-json.liquid` | `snippets/` |
 | `assets/tennis-chain-size-finder.css` | `assets/` |
 | `assets/tennis-chain-size-finder.js` | `assets/` |
+| `assets/tcsf-model-women.jpg` | `assets/` (optional; see Model photos) |
 | `templates/page.tennis-chain-size-guide.json` | `templates/` |
 
 ## Install
@@ -44,6 +45,21 @@ changed in the theme editor.
 4. Open the page in **Customize** to check the collection (it uses **Tennis Chains** by default),
    edit the heading, breadcrumb label, trust badges and contact link.
 5. Preview, test the filters, quick view and Add to cart, then publish the theme.
+
+## Model photos
+
+The size finder and the quick view's "Fit preview" draw the chain over a real photo of a model.
+In the theme editor, under **Model photos**, pick a **Men's** and a **Women's** photo:
+
+- Square (it is cropped to 1024×1024), facing the camera, cropped from the chin down to the chest.
+- No jewelry on the neck, a plain top or bare shoulders, even lighting.
+- The included `tcsf-model-women.jpg` is a ready-made women's photo: upload it to **Content → Files**
+  and pick it as the Women's model photo.
+
+The position of the neck and collarbones for each photo is set in `PHOTOS` at the top of
+`assets/tennis-chain-size-finder.js` (`neck`, `notch`, `px` = pixels per inch). If you use a
+different photo, adjust those numbers so the chain sits on the neck.
+Without a photo for the chosen wearer, the drawn model is used instead.
 
 ## Product data it reads
 

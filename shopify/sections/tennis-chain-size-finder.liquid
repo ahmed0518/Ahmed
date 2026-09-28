@@ -22,6 +22,8 @@
   data-locale="{{ request.locale.iso_code }}"
   data-cart-add="{{ routes.cart_add_url }}"
   data-cart="{{ routes.cart_url }}"
+  {%- if section.settings.photo_men != blank %} data-photo-men="{{ section.settings.photo_men | image_url: width: 1024, height: 1024, crop: center }}"{% endif -%}
+  {%- if section.settings.photo_women != blank %} data-photo-women="{{ section.settings.photo_women | image_url: width: 1024, height: 1024, crop: center }}"{% endif -%}
   style="--tcsf-bg: {{ section.settings.color_bg }}; --tcsf-fg: {{ section.settings.color_text }}; --tcsf-accent: {{ section.settings.color_accent }}; --tcsf-sale: {{ section.settings.color_sale }}; --tcsf-good: {{ section.settings.color_good }}; --tcsf-link: {{ section.settings.color_link }}; --tcsf-top: {{ section.settings.sticky_offset | plus: 16 }}px;"
 >
   <div class="tcsf__inner">
@@ -213,12 +215,17 @@
               <li data-zone="low">Low</li>
             </ol>
             <svg class="tcsf__model" viewBox="0 80 400 380" preserveAspectRatio="xMidYMin slice" role="img" aria-label="Preview of the chain on a model" data-model></svg>
+            <p class="tcsf__overflow" data-overflow hidden></p>
           </div>
           <div class="tcsf__badge" data-badge><span data-out="badgeLen">20"</span><small data-out="badgeZone">Collarbone</small></div>
-          <div class="tcsf__outfit" role="radiogroup" aria-label="Outfit">
+          <div class="tcsf__outfit tcsf__outfit--drawn" role="radiogroup" aria-label="Outfit">
             <label><input type="radio" form="{{ uid }}-quiz" name="outfit" value="none" checked><span>No shirt</span></label>
             <label><input type="radio" form="{{ uid }}-quiz" name="outfit" value="white"><span>White tee</span></label>
             <label><input type="radio" form="{{ uid }}-quiz" name="outfit" value="black"><span>Black tee</span></label>
+          </div>
+          <div class="tcsf__outfit tcsf__who" role="radiogroup" aria-label="Model">
+            <label><input type="radio" form="{{ uid }}-quiz" name="who" value="men" checked><span>Men's</span></label>
+            <label><input type="radio" form="{{ uid }}-quiz" name="who" value="women"><span>Women's</span></label>
           </div>
           </div>
         </div>
@@ -422,6 +429,9 @@
     { "type": "header", "content": "Products" },
     { "type": "collection", "id": "collection", "label": "Tennis chain collection", "info": "Uses the Tennis Chains collection when left empty. Length and width come from the custom.length and custom.width metafields." },
     { "type": "range", "id": "limit", "label": "Products to load", "min": 12, "max": 248, "step": 4, "default": 248 },
+    { "type": "header", "content": "Model photos" },
+    { "type": "image_picker", "id": "photo_men", "label": "Men's model photo", "info": "Square photo, chin to chest, facing the camera, no jewelry. Without a photo a drawn model is used." },
+    { "type": "image_picker", "id": "photo_women", "label": "Women's model photo" },
     { "type": "header", "content": "Help" },
     { "type": "url", "id": "contact_url", "label": "Contact link" },
     { "type": "text", "id": "contact_label", "label": "Contact link text", "default": "Talk to a jeweler" },

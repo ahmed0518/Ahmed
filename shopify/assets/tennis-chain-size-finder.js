@@ -128,7 +128,8 @@
     var d = opts.scale ? widthMm * opts.scale : 3.4 + widthMm * 2;
     var links = along(pts, d * 1.02), link = linkSvg(d, metal, ice), html = '', tw = '', seed = opts.seed || 0;
     if (opts.shadow) {
-      html += '<polyline points="' + pts.map(function (p) { return f1(p[0] + 1.5) + ',' + f1(p[1] + 4); }).join(' ') + '" fill="none" stroke="#000" stroke-opacity=".32" stroke-width="' + f1(d * .9) + '" stroke-linecap="round" filter="url(#' + opts.shadow + ')"/>';
+      var sdy = opts.shadowDy || 4;
+      html += '<polyline points="' + pts.map(function (p) { return f1(p[0] + sdy * .4) + ',' + f1(p[1] + sdy); }).join(' ') + '" fill="none" stroke="#000" stroke-opacity=".32" stroke-width="' + f1(d * .9) + '" stroke-linecap="round" filter="url(#' + opts.shadow + ')"/>';
     }
     links.forEach(function (p, i) {
       html += '<g transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ') rotate(' + f1(p[2]) + ')">' + link + '</g>';
@@ -191,6 +192,101 @@
         '<g filter="url(#' + id + '-b2)" stroke="#000" stroke-opacity=".16" fill="none" stroke-width="3"><path d="M' + f1(L + 30) + ' 250 Q' + f1(L + 60) + ' 300 ' + f1(L + 50) + ' 380"/><path d="M' + f1(R - 30) + ' 260 Q' + f1(R - 56) + ' 320 ' + f1(R - 44) + ' 400"/><path d="M180 330 Q200 350 226 336"/></g>';
     }
     return s;
+  }
+
+  // Photo models: a real photo with the chain drawn over it. Coordinates are pixels of the 1024x1024 photo.
+  // neck: where the chain leaves the neck on each side (x, y); px: photo pixels per inch of chain drop;
+  // base: chain drop (same units as the drawn model, SVG y) that lands at the base of the neck.
+  var PHOTOS = {
+    // neck: the outline of the neck on each side at the height a snug chain sits (x, y); notch: the sternal notch;
+    // px: photo pixels per inch; base: drawn-model drop (SVG y) that equals a snug fit; bottom: last usable photo row.
+    woman: { neck: [[352, 560], [808, 548]], notch: [530, 850], px: 62, base: 152, bottom: 1000, maxDrop: 250 },
+    man:   { neck: [[318, 520], [905, 520]], notch: [612, 640], px: 60, base: 152, bottom: 1000, maxDrop: 300 }
+  };
+  // Converts a drawn-model drop (SVG y, 146..420) into photo pixels of hang below a snug fit.
+  function photoHang(ph, drop) { return Math.max(0, (drop - ph.base) / (346 - 158) * 8 * ph.px * 0.92); }
+  // The photo only shows the chest down to a point; beyond that the chain is drawn at the photo's limit and the caption says how much further it hangs.
+  function photoDrop(ph, drop) { return Math.min(ph.maxDrop || 1e9, photoHang(ph, drop)); }
+  function photoOverflowInches(ph, drop) { return Math.max(0, (photoHang(ph, drop) - (ph.maxDrop || 1e9)) / ph.px); }
+  // The visible front of the chain on the photo: from just behind each side of the neck, around the front, down to the lowest point.
+  function photoChainPoints(ph, drop) {
+    var L = ph.neck[0], R = ph.neck[1], dy = photoDrop(ph, drop), cx = (L[0] + R[0]) / 2;
+    var snugY = (L[1] + R[1]) / 2 + (ph.notch[1] - (L[1] + R[1]) / 2) * 0.42; // where a snug chain crosses the front of the neck
+    var low = snugY + dy, hang = dy / ph.px; // inches of hang
+    // A hanging chain narrows into a V as it gets longer; a snug one hugs the neck as a shallow U.
+    var narrow = Math.min(1, hang / 7), sideX = (R[0] - L[0]) / 2;
+    // Start a little inside the neck outline and higher up, so the first links look like they come from behind the neck.
+    var p0 = [L[0] + 26, L[1] - 70], p3 = [R[0] - 26, R[1] - 70];
+    var c1 = [L[0] - 10 + sideX * 0.3 * narrow, snugY + dy * (1.15 + 0.2 * narrow)], c2 = [R[0] + 10 - sideX * 0.3 * narrow, snugY + dy * (1.15 + 0.2 * narrow)];
+    if (dy < 8) { c1 = [L[0] + 10, snugY + 48]; c2 = [R[0] - 10, snugY + 48]; }
+    var pts = [];
+    for (var i = 0; i <= 360; i++) {
+      var t = i / 360, u = 1 - t;
+      pts.push([
+        u * u * u * p0[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p3[0],
+        u * u * u * p0[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p3[1]
+      ]);
+    }
+    return pts;
+  }
+  // Extends the photo below its last row so long chains have somewhere to hang: a soft blur of the bottom edge.
+  function photoExtension(id, src, ph) {
+    // Below the photo: a stretched, blurred copy of its last rows, fading out, so a long chain has somewhere to hang.
+    return '<clipPath id="' + id + '-clipb"><rect x="0" y="' + ph.bottom + '" width="1024" height="600"/></clipPath>' +
+      '<g clip-path="url(#' + id + '-clipb)"><image href="' + src + '" x="0" y="' + (ph.bottom - 1024 * 22) + '" width="1024" height="' + (1024 * 22.6) + '" preserveAspectRatio="none" filter="url(#' + id + '-bl)"/></g>' +
+      '<rect x="0" y="' + ph.bottom + '" width="1024" height="600" fill="url(#' + id + '-fade)"/>';
+  }
+  function createPhotoModel(svg, id, ph, src) {
+    svg.setAttribute('viewBox', '0 0 1024 1024');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMin slice');
+    svg.innerHTML = '<defs>' + metalGradients(id) +
+      '<linearGradient id="' + id + '-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" data-metal="0"/><stop offset=".5" data-metal="1"/><stop offset="1" data-metal="2"/></linearGradient>' +
+      '<filter id="' + id + '-cs" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur stdDeviation="5"/></filter>' +
+      '<filter id="' + id + '-bl" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="14"/></filter>' +
+      '<linearGradient id="' + id + '-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e9ea" stop-opacity="0"/><stop offset="1" stop-color="#e9e9ea" stop-opacity=".9"/></linearGradient>' +
+      '<clipPath id="' + id + '-front"><path d="M0 ' + (ph.neck[0][1] + 14) + ' L' + (ph.neck[0][0] + 40) + ' ' + (ph.neck[0][1] + 14) + ' Q' + ((ph.neck[0][0] + ph.neck[1][0]) / 2) + ' ' + (ph.neck[0][1] + 110) + ' ' + (ph.neck[1][0] - 40) + ' ' + (ph.neck[1][1] + 14) + ' L1024 ' + (ph.neck[1][1] + 14) + ' L1024 1700 L0 1700 Z"/></clipPath>' +
+      '</defs><image href="' + src + '" x="0" y="0" width="1024" height="1024" preserveAspectRatio="xMidYMid slice"/>' + photoExtension(id, src, ph) + '<g clip-path="url(#' + id + '-front)"><g data-layers></g><g data-chains></g></g>';
+    var layersG = svg.querySelector('[data-layers]'), chainsG = svg.querySelector('[data-chains]');
+    var drop = null, anim = null;
+    // Link size on the photo: real size (px per inch / 25.4 per mm) scaled up so the stones read on screen, as product photos do.
+    function linkD(w) { return Math.max(11, w * ph.px / 25.4 * 1.7); }
+    function colors(p) {
+      var m = METAL[p.metal] || METAL.yellow;
+      svg.querySelectorAll('[data-metal]').forEach(function (s) { s.setAttribute('stop-color', m[+s.dataset.metal]); });
+    }
+    function chains(p, d) {
+      chainsG.innerHTML = chainSvg(photoChainPoints(ph, d), p.w, id + '-metal', id + '-ice', { shadow: id + '-cs', twinkle: p.twinkle, scale: linkD(p.w) / p.w, shadowDy: 8 });
+      // Slide the photo up a little so the lowest point of a long chain stays in view.
+      var lowest = photoChainPoints(ph, d)[180][1];
+      svg.style.setProperty('--tcsf-pan', (Math.round(Math.min(Math.max(0, lowest - 880), 200) / 1024 * 100 * 100) / 100) + '%');
+      var over = photoOverflowInches(ph, d), cap = svg.parentNode && svg.parentNode.querySelector('[data-overflow]');
+      if (cap) { cap.hidden = over < 0.4; cap.textContent = 'Hangs about ' + inch(Math.round(over * 2) / 2) + ' lower than the photo shows'; }
+    }
+    function set(p, o) {
+      o = o || {};
+      layersG.innerHTML = (p.layers || []).map(function (l, k) { return chainSvg(photoChainPoints(ph, l.drop), l.w, id + '-metal', id + '-ice', { seed: 3 + k, shadow: id + '-cs', twinkle: p.twinkle, scale: linkD(l.w) / l.w, shadowDy: 8 }); }).join('');
+      colors(p);
+      if (anim) cancelAnimationFrame(anim);
+      if (REDUCED || o.instant || (drop == null && !o.fromTop)) { drop = p.drop; chains(p, drop); return; }
+      var start = o.fromTop || drop == null ? 128 : drop, target = p.drop, t0 = null, dur = o.fromTop ? 950 : 420;
+      function frame(ts) {
+        if (t0 == null) t0 = ts;
+        var k = Math.min(1, (ts - t0) / dur);
+        var e = o.fromTop ? 1 + 2.4 * Math.pow(k - 1, 3) + 1.4 * Math.pow(k - 1, 2) : 1 - Math.pow(1 - k, 3);
+        drop = start + (target - start) * e;
+        chains(p, drop);
+        if (k < 1) anim = requestAnimationFrame(frame); else { drop = target; chains(p, target); anim = null; }
+      }
+      anim = requestAnimationFrame(frame);
+    }
+    return { set: set, photo: true };
+  }
+  // Picks the photo model for the chosen wearer when the section has a photo for it; else the drawn model.
+  function makeModel(svg, id, root, who) {
+    var src = root.dataset['photo' + (who === 'women' ? 'Women' : 'Men')];
+    if (src) return createPhotoModel(svg, id, PHOTOS[who === 'women' ? 'woman' : 'man'], src);
+    svg.setAttribute('viewBox', '0 80 400 380');
+    return createModel(svg, id);
   }
 
   // A model (body + chains) drawn into an <svg>. set() redraws, animating the drop.
@@ -309,8 +405,19 @@
 
     var fitModal = q('[data-fit-modal]'), qvModal = q('[data-qv]'), qvBody = q('[data-qv-body]');
     var app = q('.tcsf__app'), form = q('.tcsf__quiz'), res = q('.tcsf__res');
-    var fitModel = createModel(q('[data-model]'), ID + '-fit');
-    var miniSvg = q('[data-mini]'), miniModel = miniSvg ? createModel(miniSvg, ID + '-mini') : null;
+    var modelWho = '', fitModel = null, miniModel = null, miniSvg = q('[data-mini]');
+    function wearer() { return val('who') || val('wearer') || 'men'; }
+    function ensureModels() {
+      var who = wearer();
+      if (who === modelWho) return;
+      modelWho = who;
+      fitModel = makeModel(q('[data-model]'), ID + '-fit', root, who);
+      miniModel = miniSvg ? makeModel(miniSvg, ID + '-mini', root, who) : null;
+      var stage = q('.tcsf__stage');
+      if (stage) stage.classList.toggle('is-photo', !!fitModel.photo);
+      if (miniSvg) miniSvg.parentNode.classList.toggle('is-photo', !!(miniModel && miniModel.photo));
+    }
+    ensureModels();
     var grid = q('[data-grid]'), filters = q('[data-filters]'), facetsEl = q('[data-facets]');
 
     var st = { step: 1, override: null, layer: false, done: false, shown: PAGE, sort: 'featured', density: '3' };
@@ -397,6 +504,7 @@
       var p = modelParams(size, w, val('metal'), { layer: st.layer && inResult });
       // Early in the quiz show the fit being chosen; afterwards the real length on this body.
       if (!inResult && st.step <= 2) p.drop = ZONE_Y[val('fit') === 'choker' ? 'tight' : val('fit')];
+      ensureModels();
       if (!o.skipModel) fitModel.set(p, { fromTop: o.fromTop, instant: o.instant });
       var zone = zoneOf(p.drop);
       qa('.tcsf__zones li').forEach(function (li) {
@@ -461,11 +569,11 @@
     function snapshot() {
       return {
         v: 1, neckMode: val('neckMode'), neck: q('[name="neck"]').value, unit: val('unit'), collar: val('collar'), wearer: val('wearer'),
-        fit: val('fit'), build: val('build'), width: val('width'), metal: val('metal'), skin: val('skin'), outfit: val('outfit'), len: st.override
+        fit: val('fit'), build: val('build'), width: val('width'), metal: val('metal'), skin: val('skin'), outfit: val('outfit'), who: val('who'), len: st.override
       };
     }
     function applySaved(sv) {
-      ['neckMode', 'unit', 'collar', 'wearer', 'fit', 'build', 'width', 'metal', 'skin', 'outfit'].forEach(function (k) { if (sv[k]) setRadio(k, sv[k]); });
+      ['neckMode', 'unit', 'collar', 'wearer', 'fit', 'build', 'width', 'metal', 'skin', 'outfit', 'who'].forEach(function (k) { if (sv[k]) setRadio(k, sv[k]); });
       var ni = q('[name="neck"]'), cm = sv.unit === 'cm';
       ni.step = cm ? 1 : 0.5; ni.min = cm ? 25 : 10; ni.max = cm ? 66 : 26;
       if (sv.neck) ni.value = sv.neck;
@@ -808,10 +916,17 @@
 
     function renderFitbar() {
       var size = mySize(), bar = q('[data-fitbar]');
+      ensureModels();
       if (miniModel) {
         var p = modelParams(st.done ? size : recommended().len, pickedWidth(), val('metal'), { twinkle: false });
-        var hgt = Math.max(176, p.drop + 36 - 104), x = 200 - hgt / 2;
-        miniSvg.setAttribute('viewBox', f1(x) + ' 104 ' + f1(hgt) + ' ' + f1(hgt));
+        if (miniModel.photo) {
+          var ph = PHOTOS[wearer() === 'women' ? 'woman' : 'man'], cy = (ph.neck[0][1] + ph.neck[1][1]) / 2 + 30 + photoDrop(ph, p.drop) * 0.5;
+          var side = Math.min(1024, 520 + photoDrop(ph, p.drop));
+          miniSvg.setAttribute('viewBox', f1(Math.max(0, ph.notch[0] - side / 2)) + ' ' + f1(Math.max(0, Math.min(1024 - side, cy - side / 2))) + ' ' + f1(side) + ' ' + f1(side));
+        } else {
+          var hgt = Math.max(176, p.drop + 36 - 104), x = 200 - hgt / 2;
+          miniSvg.setAttribute('viewBox', f1(x) + ' 104 ' + f1(hgt) + ' ' + f1(hgt));
+        }
         miniModel.set(p, { instant: true });
       }
       if (bar) {
@@ -821,7 +936,9 @@
         q('[data-out="fitEyebrow"]').textContent = st.done ? 'Your size' : 'Size finder';
         if (st.done) {
           q('[data-out="fitTitle"]').innerHTML = '<b>' + size + '"</b> ' + esc(widthLabel()) + ' tennis chain · sits at your ' + ZONE_LABEL[zoneOf(yFor(size))].toLowerCase();
-          q('[data-out="fitSub"]').textContent = (exact ? exact + ' ' + (exact === 1 ? 'chain comes' : 'chains come') + ' in your exact size and ' : '') + near + ' within 2". Every card shows where that chain sits on you.';
+          q('[data-out="fitSub"]').textContent = near
+            ? (exact ? exact + ' ' + (exact === 1 ? 'chain comes' : 'chains come') + ' in your exact size and ' : '') + near + ' within 2". Every card shows where that chain sits on you.'
+            : 'No chains within 2" of ' + size + '" yet. Every card shows where that chain sits on you, or contact us for a custom length.';
         } else {
           q('[data-out="fitTitle"]').textContent = 'Not sure which length? Find your size in 30 seconds.';
           q('[data-out="fitSub"]').textContent = 'Answer 4 quick questions and see the chain on a model. Every chain below is then ranked by how it sits on you.';
@@ -932,10 +1049,10 @@
       var mp = modelParams(len || 20, p.w || pickedWidth(), v.metal || qv.metal || 'yellow');
       var mEl = qvBody.querySelector('[data-qv-model]');
       // Drop the chain in only when switching to the model view, not on every option change.
-      if (mEl) createModel(mEl, ID + '-qvm').set(mp, qv.lastView !== 'onyou' ? { fromTop: true } : { instant: true });
+      if (mEl) { var qm = makeModel(mEl, ID + '-qvm', root, wearer()); mEl.parentNode.classList.toggle('is-photo', !!qm.photo); qm.set(mp, qv.lastView !== 'onyou' ? { fromTop: true } : { instant: true }); }
       qv.lastView = qv.view;
       var tEl = qvBody.querySelector('[data-qv-thumbmodel]');
-      if (tEl) { mp.twinkle = false; createModel(tEl, ID + '-qvt').set(mp, { instant: true }); }
+      if (tEl) { mp.twinkle = false; var tm = makeModel(tEl, ID + '-qvt', root, wearer()); if (tm.photo) tEl.setAttribute('viewBox', '250 420 560 560'); tm.set(mp, { instant: true }); }
       if (focusSel) { var fEl = qvBody.querySelector(focusSel); if (fEl) fEl.focus(); }
     }
 
@@ -1106,6 +1223,7 @@
         inp.step = cm ? 1 : 0.5; inp.min = cm ? 25 : 10; inp.max = cm ? 66 : 26;
         showNeckProblem(false);
       }
+      if (n === 'wearer') setRadio('who', e.target.value);
       updateFinder();
       if ((n === 'fit' || n === 'build') && !REDUCED && Date.now() - ptrAt < 1500) {
         clearTimeout(advanceTimer);
@@ -1114,7 +1232,10 @@
     });
     form.addEventListener('input', function (e) { if (e.target.name === 'neck') { showNeckProblem(false); updateFinder(); } });
     form.addEventListener('submit', function (e) { e.preventDefault(); });
-    q('.tcsf__stage').addEventListener('change', function (e) { if (e.target.name === 'outfit') { updateFinder(); saveFit(); } });
+    q('.tcsf__stage').addEventListener('change', function (e) {
+      if (e.target.name === 'outfit') { updateFinder(); saveFit(); }
+      if (e.target.name === 'who') { refresh({ instant: true }); saveFit(); }
+    });
     // Dragging the length slider only moves the chain; the grid re-ranks when it's released.
     res.addEventListener('input', function (e) {
       if (!e.target.hasAttribute('data-length')) return;
