@@ -1,10 +1,11 @@
 {% comment %}
-  Diamond Tennis Chain Size Finder + shop
-  1. A 4-step quiz recommends a tennis chain length (and width) from neck size,
-     fit, build and width, shown live on a model wearing the chain.
-  2. Customers try on other lengths, widths, metals, outfits and a layered stack.
-  3. A product grid from the chosen collection is ranked by how well each chain
-     fits them, with metal swatches, "Try on" and Add to cart.
+  Tennis chain shop with size finder (marketplace layout)
+  - Filter sidebar (fit, length, width, metal, diamond type, price, carat), sort, result count
+  - Product grid from the chosen collection with badges, quick view and Add to cart
+  - "Find my size" dialog: a 4-step quiz shown live on a model wearing the chain;
+    the result ranks the grid and adds "Your size" badges. The size is remembered
+    on the shopper's device.
+  - Quick view shows each chain on the model at its real length, width and metal.
   Styles and script live in assets/tennis-chain-size-finder.{css,js}.
 {% endcomment %}
 
@@ -12,10 +13,11 @@
 <script src="{{ 'tennis-chain-size-finder.js' | asset_url }}" defer="defer"></script>
 
 {%- assign coll = section.settings.collection | default: collections['tennis-chains'] -%}
+{%- assign uid = 'tcsf-' | append: section.id -%}
 
 <div
   class="tcsf"
-  id="tcsf-{{ section.id }}"
+  id="{{ uid }}"
   data-currency="{{ cart.currency.iso_code }}"
   data-locale="{{ request.locale.iso_code }}"
   data-cart-add="{{ routes.cart_add_url }}"
@@ -23,268 +25,140 @@
   style="--tcsf-bg: {{ section.settings.color_bg }}; --tcsf-fg: {{ section.settings.color_text }}; --tcsf-accent: {{ section.settings.color_accent }};"
 >
   <div class="tcsf__inner">
-    <header class="tcsf__header">
-      <p class="tcsf__eyebrow">{{ section.settings.eyebrow }}</p>
-      <h1 class="tcsf__title">{{ section.settings.heading }}</h1>
-      <p class="tcsf__intro">{{ section.settings.intro }}</p>
+    <nav class="tcsf-crumbs" aria-label="Breadcrumb">
+      <a href="{{ routes.root_url }}">Home</a>
+      <span aria-hidden="true">/</span>
+      {%- if coll != blank -%}
+        <a href="{{ coll.url }}">{{ coll.title | escape }}</a>
+        <span aria-hidden="true">/</span>
+      {%- endif -%}
+      <span aria-current="page">{{ section.settings.crumb }}</span>
+    </nav>
+
+    <header class="tcsf-head">
+      <div class="tcsf-head__text">
+        <h1 class="tcsf-head__title">{{ section.settings.heading }}</h1>
+        <p class="tcsf-head__intro">{{ section.settings.intro }}</p>
+      </div>
       {%- if section.blocks.size > 0 -%}
-        <ul class="tcsf__trust">
+        <ul class="tcsf-trust">
           {%- for block in section.blocks -%}
-            <li {{ block.shopify_attributes }}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5 12.6 7l6 .6-4.5 4 1.3 5.9L10 14.6l-5.4 2.9 1.3-5.9-4.5-4 6-.6Z"/></svg>{{ block.settings.text }}</li>
+            <li {{ block.shopify_attributes }}>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.6 14.2 3.4 10l-1.4 1.4 5.6 5.6 12-12-1.4-1.4z"/></svg>
+              {{ block.settings.text }}
+            </li>
           {%- endfor -%}
         </ul>
       {%- endif -%}
     </header>
 
-    <div class="tcsf__app" data-view="quiz">
-      <div class="tcsf__stage">
-        <div class="tcsf__fig">
-          <ol class="tcsf__zones" aria-hidden="true">
-            <li data-zone="tight">Tight</li>
-            <li data-zone="collarbone">Collarbone</li>
-            <li data-zone="upper">Upper chest</li>
-            <li data-zone="mid">Mid chest</li>
-            <li data-zone="low">Low</li>
-          </ol>
-          <svg class="tcsf__model" viewBox="0 80 400 380" role="img" aria-label="Preview of the chain on a model" data-model></svg>
+    <div class="tcsf-market" data-market>
+      <aside class="tcsf-filters" id="{{ uid }}-filters" data-filters aria-label="Filters">
+        <div class="tcsf-filters__head">
+          <h2>Filters</h2>
+          <button type="button" class="tcsf-link" data-clear-all>Clear all</button>
+          <button type="button" class="tcsf-iconbtn tcsf-filters__x" data-close-filters aria-label="Close filters">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
         </div>
-        <div class="tcsf__badge" data-badge><span data-out="badgeLen">20"</span><small data-out="badgeZone">Collarbone</small></div>
-        <div class="tcsf__outfit" role="radiogroup" aria-label="Outfit">
-          <label><input type="radio" name="outfit" value="none" checked><span>No shirt</span></label>
-          <label><input type="radio" name="outfit" value="white"><span>White tee</span></label>
-          <label><input type="radio" name="outfit" value="black"><span>Black tee</span></label>
+        <div class="tcsf-filters__body" data-facets></div>
+        <div class="tcsf-filters__foot">
+          <button type="button" class="tcsf-btn" data-close-filters>Show <span data-out="countShort">0</span> results</button>
         </div>
-        <p class="tcsf__trying" data-trying hidden>
-          <span>Trying on: <b data-out="tryName"></b></span>
-          <button type="button" data-untry aria-label="Stop trying on this chain">&times;</button>
-        </p>
-      </div>
+      </aside>
+      <div class="tcsf-filters__backdrop" data-close-filters hidden></div>
 
-      <div class="tcsf__panel">
-        <form class="tcsf__quiz" novalidate>
-          <div class="tcsf__progress" aria-hidden="true"><span data-progress></span></div>
-          <p class="tcsf__stepcount" data-stepcount>Step 1 of 4</p>
+      <div class="tcsf-results">
+        <section class="tcsf-fitbar" data-fitbar aria-labelledby="{{ uid }}-fit-title">
+          <div class="tcsf-fitbar__model">
+            <svg viewBox="112 104 176 176" role="img" aria-label="Chain on a model" data-mini></svg>
+          </div>
+          <div class="tcsf-fitbar__text">
+            <p class="tcsf-eyebrow" data-out="fitEyebrow">Size finder</p>
+            <h2 id="{{ uid }}-fit-title" data-out="fitTitle">Not sure which length? Find your size in 30 seconds.</h2>
+            <p data-out="fitSub">Answer 4 quick questions and see the chain on a model. Every chain below is then ranked by how it sits on you.</p>
+          </div>
+          <div class="tcsf-fitbar__actions">
+            <button type="button" class="tcsf-btn tcsf-btn--gold" data-open-fit><span data-out="fitCta">Find my size</span></button>
+            <button type="button" class="tcsf-link" data-open-guide>Size chart</button>
+          </div>
+        </section>
 
-          <section class="tcsf__q" data-step="1">
-            <h2>What's your neck size?</h2>
-            <div class="tcsf__seg" role="radiogroup" aria-label="How to enter neck size">
-              <label><input type="radio" name="neckMode" value="measure" checked><span>I measured it</span></label>
-              <label><input type="radio" name="neckMode" value="collar"><span>Shirt collar size</span></label>
-              <label><input type="radio" name="neckMode" value="unknown"><span>No idea / gift</span></label>
-            </div>
-
-            <div class="tcsf__neck" data-mode="measure">
-              <div class="tcsf__dial">
-                <button type="button" class="tcsf__step-btn" data-nudge="-1" aria-label="Decrease">&minus;</button>
-                <label class="tcsf__dial-val">
-                  <input type="number" name="neck" id="tcsf-{{ section.id }}-neck" min="10" max="26" step="0.5" value="16" inputmode="decimal" aria-label="Neck measurement">
-                  <span data-out="unitLabel">in</span>
-                </label>
-                <button type="button" class="tcsf__step-btn" data-nudge="1" aria-label="Increase">+</button>
-              </div>
-              <div class="tcsf__seg tcsf__seg--center" role="radiogroup" aria-label="Unit">
-                <label><input type="radio" name="unit" value="in" checked><span>inches</span></label>
-                <label><input type="radio" name="unit" value="cm"><span>cm</span></label>
-              </div>
-              <details class="tcsf__tip">
-                <summary>How do I measure?</summary>
-                <p>No tape measure? Wrap a phone charger cable or a piece of string around the base of your neck where a chain would sit, mark where it meets, then lay it along a ruler. Keep it snug, not tight.</p>
-              </details>
-            </div>
-
-            <div class="tcsf__neck" data-mode="collar" hidden>
-              <div class="tcsf__chips" role="radiogroup" aria-label="Shirt collar size">
-                <label><input type="radio" name="collar" value="14"><span>14"<small>S</small></span></label>
-                <label><input type="radio" name="collar" value="14.5"><span>14½"<small>S</small></span></label>
-                <label><input type="radio" name="collar" value="15"><span>15"<small>M</small></span></label>
-                <label><input type="radio" name="collar" value="15.5"><span>15½"<small>M</small></span></label>
-                <label><input type="radio" name="collar" value="16" checked><span>16"<small>L</small></span></label>
-                <label><input type="radio" name="collar" value="16.5"><span>16½"<small>L</small></span></label>
-                <label><input type="radio" name="collar" value="17"><span>17"<small>XL</small></span></label>
-                <label><input type="radio" name="collar" value="17.5"><span>17½"<small>XL</small></span></label>
-                <label><input type="radio" name="collar" value="18"><span>18"<small>2XL</small></span></label>
-                <label><input type="radio" name="collar" value="18.5"><span>18½"<small>2XL</small></span></label>
-                <label><input type="radio" name="collar" value="19"><span>19"<small>3XL</small></span></label>
-                <label><input type="radio" name="collar" value="20"><span>20"<small>3XL+</small></span></label>
-              </div>
-              <p class="tcsf__hint">Collars are cut with a little room, so we take ½" off to get your neck size.</p>
-            </div>
-
-            <div class="tcsf__neck" data-mode="unknown" hidden>
-              <div class="tcsf__seg" role="radiogroup" aria-label="Wearer">
-                <label><input type="radio" name="wearer" value="men" checked><span>For him</span></label>
-                <label><input type="radio" name="wearer" value="women"><span>For her</span></label>
-              </div>
-              <p class="tcsf__hint">We'll start from an average neck (15½" for men, 13½" for women). Buying a gift? This is a safe bet.</p>
-            </div>
-
-            <div class="tcsf__nav"><button type="button" class="tcsf__btn" data-go="next">Next</button></div>
-          </section>
-
-          <section class="tcsf__q" data-step="2" hidden>
-            <h2>Where should it hit?</h2>
-            <p class="tcsf__sub">Watch the model. The chain moves as you choose.</p>
-            <div class="tcsf__cards" role="radiogroup" aria-label="Fit">
-              <label class="tcsf__card"><input type="radio" name="fit" value="choker"><span><i data-icon="tight"></i><strong>Tight</strong><small>Hugs the neck</small></span></label>
-              <label class="tcsf__card"><input type="radio" name="fit" value="collarbone" checked><span><i data-icon="collarbone"></i><strong>Collarbone</strong><small>The classic</small></span></label>
-              <label class="tcsf__card"><input type="radio" name="fit" value="upper"><span><i data-icon="upper"></i><strong>Upper chest</strong><small>Shows over a tee</small></span></label>
-              <label class="tcsf__card"><input type="radio" name="fit" value="mid"><span><i data-icon="mid"></i><strong>Mid chest</strong><small>Statement drop</small></span></label>
-              <label class="tcsf__card"><input type="radio" name="fit" value="low"><span><i data-icon="low"></i><strong>Low</strong><small>Made to layer</small></span></label>
-            </div>
-            <div class="tcsf__nav">
-              <button type="button" class="tcsf__btn tcsf__btn--ghost" data-go="back">Back</button>
-              <button type="button" class="tcsf__btn" data-go="next">Next</button>
-            </div>
-          </section>
-
-          <section class="tcsf__q" data-step="3" hidden>
-            <h2>What's your build?</h2>
-            <p class="tcsf__sub">A broad chest and traps take up length, so the chain sits higher.</p>
-            <div class="tcsf__cards tcsf__cards--4" role="radiogroup" aria-label="Build">
-              <label class="tcsf__card"><input type="radio" name="build" value="slim"><span><i data-build="slim"></i><strong>Slim</strong></span></label>
-              <label class="tcsf__card"><input type="radio" name="build" value="average" checked><span><i data-build="average"></i><strong>Average</strong></span></label>
-              <label class="tcsf__card"><input type="radio" name="build" value="athletic"><span><i data-build="athletic"></i><strong>Athletic</strong></span></label>
-              <label class="tcsf__card"><input type="radio" name="build" value="large"><span><i data-build="large"></i><strong>Broad / Big</strong></span></label>
-            </div>
-            <div class="tcsf__nav">
-              <button type="button" class="tcsf__btn tcsf__btn--ghost" data-go="back">Back</button>
-              <button type="button" class="tcsf__btn" data-go="next">Next</button>
-            </div>
-          </section>
-
-          <section class="tcsf__q" data-step="4" hidden>
-            <h2>How iced out?</h2>
-            <p class="tcsf__sub">Pick a width. Wider links are stiffer, so they need a touch more length.</p>
-            <div class="tcsf__widths" role="radiogroup" aria-label="Chain width">
-              <label><input type="radio" name="width" value="2"><span><b style="--d:6px"></b>2mm<small>Subtle</small></span></label>
-              <label><input type="radio" name="width" value="3" checked><span><b style="--d:9px"></b>3mm<small>Everyday</small></span></label>
-              <label><input type="radio" name="width" value="4"><span><b style="--d:12px"></b>4mm<small>Classic</small></span></label>
-              <label><input type="radio" name="width" value="5"><span><b style="--d:15px"></b>5mm<small>Bold</small></span></label>
-              <label><input type="radio" name="width" value="6"><span><b style="--d:18px"></b>6mm<small>Heavy</small></span></label>
-              <label><input type="radio" name="width" value="7"><span><b style="--d:21px"></b>7mm+<small>Iced out</small></span></label>
-            </div>
-            <div class="tcsf__nav">
-              <button type="button" class="tcsf__btn tcsf__btn--ghost" data-go="back">Back</button>
-              <button type="button" class="tcsf__btn tcsf__btn--glow" data-go="reveal">Reveal my size</button>
-            </div>
-          </section>
-        </form>
-
-        <div class="tcsf__res" hidden aria-live="polite">
-          <p class="tcsf__res-label">Your perfect length</p>
-          <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
-          <p class="tcsf__res-meta"><span data-out="cm">51</span> cm · about <span data-out="stones">120</span> diamonds at <span data-out="widthLabel">3mm</span></p>
-          <p class="tcsf__summary" data-out="summary"></p>
-
-          <div class="tcsf__tune">
-            <div>
-              <div class="tcsf__tune-head"><span>Try other lengths</span><button type="button" class="tcsf__link" data-reset hidden>Back to my size</button></div>
-              <input class="tcsf__range" type="range" id="tcsf-{{ section.id }}-length" min="16" max="30" step="2" value="20" data-length aria-label="Chain length">
-              <div class="tcsf__ticks" aria-hidden="true"><span>16"</span><span>18"</span><span>20"</span><span>22"</span><span>24"</span><span>26"</span><span>28"</span><span>30"</span></div>
-            </div>
-            <div>
-              <span class="tcsf__tune-title">Width</span>
-              <div class="tcsf__seg tcsf__seg--xs" role="radiogroup" aria-label="Width">
-                <label><input type="radio" name="width2" value="2"><span>2mm</span></label>
-                <label><input type="radio" name="width2" value="3"><span>3mm</span></label>
-                <label><input type="radio" name="width2" value="4"><span>4mm</span></label>
-                <label><input type="radio" name="width2" value="5"><span>5mm</span></label>
-                <label><input type="radio" name="width2" value="6"><span>6mm</span></label>
-                <label><input type="radio" name="width2" value="7"><span>7mm+</span></label>
-              </div>
-            </div>
-            <div class="tcsf__tune-split">
-              <div>
-                <span class="tcsf__tune-title">Metal</span>
-                <div class="tcsf__swatches" role="radiogroup" aria-label="Metal">
-                  <label title="White gold"><input type="radio" name="metal" value="white"><span style="--c1:#f4f6f9;--c2:#9ea5b0"></span></label>
-                  <label title="Yellow gold"><input type="radio" name="metal" value="yellow" checked><span style="--c1:#f7dc85;--c2:#b0831f"></span></label>
-                  <label title="Rose gold"><input type="radio" name="metal" value="rose"><span style="--c1:#f4c7b5;--c2:#b06a58"></span></label>
-                </div>
-              </div>
-              <div>
-                <span class="tcsf__tune-title">Skin tone</span>
-                <div class="tcsf__swatches" role="radiogroup" aria-label="Skin tone">
-                  <label title="Light"><input type="radio" name="skin" value="1"><span style="--c1:#f3d3bb;--c2:#d9a887"></span></label>
-                  <label title="Medium"><input type="radio" name="skin" value="2" checked><span style="--c1:#d9a178;--c2:#b0754d"></span></label>
-                  <label title="Tan"><input type="radio" name="skin" value="3"><span style="--c1:#a8704a;--c2:#7c4d30"></span></label>
-                  <label title="Deep"><input type="radio" name="skin" value="4"><span style="--c1:#6e4630;--c2:#43291b"></span></label>
-                </div>
-              </div>
-            </div>
-            <label class="tcsf__toggle">
-              <input type="checkbox" data-layer>
-              <span class="tcsf__switch" aria-hidden="true"></span>
-              <span>Layer it: add chains 2" and 4" longer</span>
+        <div class="tcsf-toolbar">
+          <button type="button" class="tcsf-btn tcsf-btn--outline tcsf-toolbar__filter" data-open-filters aria-controls="{{ uid }}-filters">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8M14 4v6M8 14v6"/></svg>
+            Filter<span class="tcsf-count" data-out="filterCount" hidden></span>
+          </button>
+          <p class="tcsf-toolbar__count" aria-live="polite"><b data-out="count">0</b> <span data-out="countLabel">results</span></p>
+          <div class="tcsf-toolbar__right">
+            <label class="tcsf-sort">
+              <span>Sort by</span>
+              <select data-sort id="{{ uid }}-sort">
+                <option value="featured">Featured</option>
+                <option value="fit">Best fit for me</option>
+                <option value="price-asc">Price: low to high</option>
+                <option value="price-desc">Price: high to low</option>
+                <option value="carat">Carat: high to low</option>
+              </select>
             </label>
-          </div>
-
-          <button type="button" class="tcsf__btn tcsf__btn--glow tcsf__cta" data-go="shop">Shop chains in my size</button>
-          <div class="tcsf__res-foot">
-            <button type="button" class="tcsf__link" data-go="restart">Change my answers</button>
-            <button type="button" class="tcsf__link" data-copy>Copy my size</button>
+            <div class="tcsf-density" role="group" aria-label="Grid size">
+              <button type="button" class="tcsf-iconbtn" data-density="3" aria-pressed="true" aria-label="3 per row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h5v7H3zM9.5 4h5v7h-5zM16 4h5v7h-5zM3 13h5v7H3zM9.5 13h5v7h-5zM16 13h5v7h-5z"/></svg></button>
+              <button type="button" class="tcsf-iconbtn" data-density="4" aria-pressed="false" aria-label="4 per row"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h4v7H2zM7.3 4h4v7h-4zM12.6 4h4v7h-4zM18 4h4v7h-4zM2 13h4v7H2zM7.3 13h4v7h-4zM12.6 13h4v7h-4zM18 13h4v7h-4z"/></svg></button>
+            </div>
           </div>
         </div>
+        <div class="tcsf-activechips" data-active hidden></div>
+
+        {%- if coll != blank -%}
+          <div class="tcsf-grid" data-grid data-density="3"></div>
+          <div class="tcsf-empty" data-empty hidden>
+            <p><b>No chains match these filters.</b></p>
+            <p>Try removing a filter or two.</p>
+            <button type="button" class="tcsf-btn tcsf-btn--outline" data-clear-all>Clear all filters</button>
+          </div>
+          <div class="tcsf-pager" data-pager>
+            <p data-out="pagerText"></p>
+            <div class="tcsf-pager__bar" aria-hidden="true"><span data-out="pagerBar"></span></div>
+            <button type="button" class="tcsf-btn tcsf-btn--outline" data-more>Load more</button>
+          </div>
+          <script type="application/json" data-products>
+            {%- render 'tcsf-products-json', coll: coll, limit: section.settings.limit -%}
+          </script>
+        {%- else -%}
+          <p class="tcsf-empty">Choose a tennis chain collection for this section in the theme editor.</p>
+        {%- endif -%}
       </div>
     </div>
 
-    {%- if coll != blank -%}
-      <section class="tcsf-shop" data-shop aria-labelledby="tcsf-{{ section.id }}-shop-title">
-        <div class="tcsf-shop__head">
-          <div>
-            <p class="tcsf__eyebrow" data-out="shopEyebrow">Best sellers</p>
-            <h2 id="tcsf-{{ section.id }}-shop-title" data-out="shopTitle">{{ section.settings.shop_heading }}</h2>
-            <p class="tcsf-shop__sub" data-out="shopSub"></p>
-          </div>
-          <div class="tcsf-shop__tools">
-            <label class="tcsf-select">
-              <span>Diamonds</span>
-              <select data-filter="origin" id="tcsf-{{ section.id }}-origin">
-                <option value="all">All</option>
-                <option value="natural">Natural</option>
-                <option value="lab">Lab-grown</option>
-              </select>
-            </label>
-            <label class="tcsf-select">
-              <span>Width</span>
-              <select data-filter="width" id="tcsf-{{ section.id }}-fwidth">
-                <option value="all">All widths</option>
-                <option value="near" selected>Near my pick</option>
-                <option value="0-2.6">Up to 2.5mm</option>
-                <option value="2.6-3.6">2.7–3.5mm</option>
-                <option value="3.6-4.9">3.7–4.8mm</option>
-                <option value="4.9-99">5mm and up</option>
-              </select>
-            </label>
-            <label class="tcsf-select">
-              <span>Sort</span>
-              <select data-filter="sort" id="tcsf-{{ section.id }}-sort">
-                <option value="fit">Best fit</option>
-                <option value="price-asc">Price: low to high</option>
-                <option value="price-desc">Price: high to low</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <div class="tcsf-grid" data-grid></div>
-        <p class="tcsf-shop__empty" data-empty hidden>No chains match these filters. Try "All widths" or another diamond type.</p>
-        <div class="tcsf-shop__more">
-          <button type="button" class="tcsf__btn tcsf__btn--ghost" data-more hidden>Show more chains</button>
-          <a class="tcsf__link" href="{{ coll.url }}">View all {{ coll.title | escape }}</a>
-        </div>
-        <script type="application/json" data-products>
-          {%- render 'tcsf-products-json', coll: coll, limit: section.settings.limit -%}
-        </script>
-      </section>
-    {%- endif -%}
+    <section class="tcsf-guide" id="{{ uid }}-guide" data-guide aria-label="Size guide">
+      <div class="tcsf-tabs" role="tablist" aria-label="Size guide">
+        <button type="button" role="tab" id="{{ uid }}-tab-length" aria-controls="{{ uid }}-panel-length" aria-selected="true" data-tab="length">Length chart</button>
+        <button type="button" role="tab" id="{{ uid }}-tab-width" aria-controls="{{ uid }}-panel-width" aria-selected="false" tabindex="-1" data-tab="width">Width guide</button>
+        <button type="button" role="tab" id="{{ uid }}-tab-faq" aria-controls="{{ uid }}-panel-faq" aria-selected="false" tabindex="-1" data-tab="faq">Sizing FAQ</button>
+      </div>
 
-    <section class="tcsf-guide">
-      <div class="tcsf-guide__col">
-        <p class="tcsf__eyebrow">Width guide</p>
-        <h2>What "pointer" means</h2>
-        <p class="tcsf-guide__lead">A pointer is one hundredth of a carat per stone. A 10 pointer chain has 0.10 ct diamonds in every link. Bigger stones make a wider, heavier chain. Circles below are drawn to scale.</p>
-        <div class="tcsf__table-wrap">
-          <table class="tcsf-guide__table">
+      <div class="tcsf-tabpanel" role="tabpanel" id="{{ uid }}-panel-length" aria-labelledby="{{ uid }}-tab-length" data-panel="length">
+        <p class="tcsf-guide__lead">Where each length sits on an average man with a 15½"–16" neck. Your size is highlighted once you've used the size finder.</p>
+        <div class="tcsf-tablewrap">
+          <table class="tcsf-chart">
+            <thead><tr><th>Length</th><th>Where it sits</th><th>Good for</th></tr></thead>
+            <tbody>
+              <tr data-len="16"><td>16"</td><td>Tight at the base of the neck</td><td>Slim necks, choker look</td></tr>
+              <tr data-len="18"><td>18"</td><td>Base of the neck to just above the collarbone</td><td>A close, clean fit</td></tr>
+              <tr data-len="20"><td>20"</td><td>On the collarbone</td><td>The classic tennis chain look</td></tr>
+              <tr data-len="22"><td>22"</td><td>Just below the collarbone</td><td>Showing over a crew neck</td></tr>
+              <tr data-len="24"><td>24"</td><td>Upper chest</td><td>Broad or athletic builds</td></tr>
+              <tr data-len="26"><td>26"</td><td>Mid chest</td><td>Wearing with a pendant</td></tr>
+              <tr data-len="28"><td>28"–30"</td><td>Low chest</td><td>Layering</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tcsf-tabpanel" role="tabpanel" id="{{ uid }}-panel-width" aria-labelledby="{{ uid }}-tab-width" data-panel="width" hidden>
+        <p class="tcsf-guide__lead">A "pointer" is one hundredth of a carat per stone, so a 10 pointer chain has 0.10 ct diamonds in every link. Bigger stones make a wider chain. Stones below are drawn to scale.</p>
+        <div class="tcsf-tablewrap">
+          <table class="tcsf-widthtable">
             <thead><tr><th>Width</th><th>Stones</th><th>Per stone</th><th>Look</th></tr></thead>
             <tbody>
               <tr><td>2–2.5mm</td><td><span class="tcsf-dots" style="--d:8px"></span></td><td>2–4 pointer</td><td>Subtle, stacks well</td></tr>
@@ -297,67 +171,251 @@
           </table>
         </div>
       </div>
-      <div class="tcsf-guide__col">
-        <p class="tcsf__eyebrow">Length chart</p>
-        <h2>Where each length sits</h2>
-        <p class="tcsf-guide__lead">On an average man with a 15½"–16" neck. Your size is highlighted.</p>
-        <div class="tcsf__table-wrap">
-          <table class="tcsf__chart">
-            <tbody>
-              <tr data-len="16"><td>16"</td><td>Tight at the base of the neck</td></tr>
-              <tr data-len="18"><td>18"</td><td>Base of the neck to just above the collarbone</td></tr>
-              <tr data-len="20"><td>20"</td><td>On the collarbone, the classic look</td></tr>
-              <tr data-len="22"><td>22"</td><td>Just below the collarbone, shows over a crew neck</td></tr>
-              <tr data-len="24"><td>24"</td><td>Upper chest, good for broad or athletic builds</td></tr>
-              <tr data-len="26"><td>26"</td><td>Mid chest, a classic length with a pendant</td></tr>
-              <tr data-len="28"><td>28"–30"</td><td>Low chest, made for layering</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
 
-    <section class="tcsf-faq">
-      <h2>Sizing questions</h2>
-      <details><summary>Does the length include the clasp?</summary><p>Yes. Chain length is measured end to end with the clasp closed, so a 22" chain is 22" all the way around.</p></details>
-      <details><summary>I'm between two sizes. Which should I pick?</summary><p>Go up. A tennis chain that is a little long still lies flat. One that is too short sits tight and rides up when you move.</p></details>
-      <details><summary>How much lower does a longer chain sit?</summary><p>About half the extra length. Going from 20" to 22" drops the front of the chain roughly 1" lower on your chest.</p></details>
-      <details><summary>Does width change the fit?</summary><p>Yes. Wide tennis links are stiffer and don't curve as tightly around the neck, so a 5mm+ chain sits a little higher than a 2mm chain of the same length. The size finder adds ½"–1" for wide chains.</p></details>
-      <details><summary>What's the difference between natural and lab-grown diamonds?</summary><p>Both are real diamonds with the same sparkle and hardness. Lab-grown diamonds are made above ground and cost less for the same size. Each product page shows which one you're getting.</p></details>
-      <details><summary>I'm buying a gift and don't know their size.</summary><p>Choose "No idea / gift" in step 1. For most men, 20"–22" sits at or just below the collarbone and is the safest choice.</p></details>
-      {%- if section.settings.contact_url != blank -%}
-        <p class="tcsf-faq__more">Still not sure? <a href="{{ section.settings.contact_url }}">{{ section.settings.contact_label }}</a></p>
-      {%- endif -%}
+      <div class="tcsf-tabpanel tcsf-faq" role="tabpanel" id="{{ uid }}-panel-faq" aria-labelledby="{{ uid }}-tab-faq" data-panel="faq" hidden>
+        <details><summary>Does the length include the clasp?</summary><p>Yes. Chain length is measured end to end with the clasp closed, so a 22" chain is 22" all the way around.</p></details>
+        <details><summary>I'm between two sizes. Which should I pick?</summary><p>Go up. A tennis chain that is a little long still lies flat. One that is too short sits tight and rides up when you move.</p></details>
+        <details><summary>How much lower does a longer chain sit?</summary><p>About half the extra length. Going from 20" to 22" drops the front of the chain roughly 1" lower on your chest.</p></details>
+        <details><summary>Does width change the fit?</summary><p>Yes. Wide tennis links are stiffer and don't curve as tightly around the neck, so a 5mm+ chain sits a little higher than a 2mm chain of the same length. The size finder adds ½"–1" for wide chains.</p></details>
+        <details><summary>What's the difference between natural and lab-grown diamonds?</summary><p>Both are real diamonds with the same sparkle and hardness. Lab-grown diamonds are made above ground and cost less for the same size. Each product page shows which one you're getting.</p></details>
+        <details><summary>I'm buying a gift and don't know their size.</summary><p>Choose "No idea / gift" in the size finder. For most men, 20"–22" sits at or just below the collarbone and is the safest choice.</p></details>
+        {%- if section.settings.contact_url != blank -%}
+          <p class="tcsf-faq__more">Still not sure? <a href="{{ section.settings.contact_url }}">{{ section.settings.contact_label }}</a></p>
+        {%- endif -%}
+      </div>
     </section>
   </div>
 
-  <div class="tcsf-bar" data-bar hidden>
-    <div><b data-out="barLen">20"</b> <span data-out="barMeta">3mm · Collarbone</span></div>
-    <button type="button" class="tcsf__btn" data-go="shop">Shop my size</button>
+  {%- comment -%} Size finder dialog {%- endcomment -%}
+  <div class="tcsf-modal tcsf-modal--fit" data-fit-modal hidden>
+    <div class="tcsf-modal__backdrop" data-close></div>
+    <div class="tcsf-modal__panel" role="dialog" aria-modal="true" aria-labelledby="{{ uid }}-fit-dialog-title">
+      <div class="tcsf-modal__head">
+        <h2 id="{{ uid }}-fit-dialog-title">Find your tennis chain size</h2>
+        <button type="button" class="tcsf-iconbtn" data-close aria-label="Close size finder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="tcsf__app" data-view="quiz">
+        <div class="tcsf__stage">
+          <div class="tcsf__fig">
+            <ol class="tcsf__zones" aria-hidden="true">
+              <li data-zone="tight">Tight</li>
+              <li data-zone="collarbone">Collarbone</li>
+              <li data-zone="upper">Upper chest</li>
+              <li data-zone="mid">Mid chest</li>
+              <li data-zone="low">Low</li>
+            </ol>
+            <svg class="tcsf__model" viewBox="0 80 400 380" role="img" aria-label="Preview of the chain on a model" data-model></svg>
+          </div>
+          <div class="tcsf__badge" data-badge><span data-out="badgeLen">20"</span><small data-out="badgeZone">Collarbone</small></div>
+          <div class="tcsf__outfit" role="radiogroup" aria-label="Outfit">
+            <label><input type="radio" name="outfit" value="none" checked><span>No shirt</span></label>
+            <label><input type="radio" name="outfit" value="white"><span>White tee</span></label>
+            <label><input type="radio" name="outfit" value="black"><span>Black tee</span></label>
+          </div>
+        </div>
+
+        <div class="tcsf__panel">
+          <form class="tcsf__quiz" novalidate>
+            <div class="tcsf__progress" aria-hidden="true"><span data-progress></span></div>
+            <p class="tcsf__stepcount" data-stepcount>Step 1 of 4</p>
+
+            <section class="tcsf__q" data-step="1">
+              <h3>What's your neck size?</h3>
+              <div class="tcsf__seg" role="radiogroup" aria-label="How to enter neck size">
+                <label><input type="radio" name="neckMode" value="measure" checked><span>I measured it</span></label>
+                <label><input type="radio" name="neckMode" value="collar"><span>Shirt collar size</span></label>
+                <label><input type="radio" name="neckMode" value="unknown"><span>No idea / gift</span></label>
+              </div>
+
+              <div class="tcsf__neck" data-mode="measure">
+                <div class="tcsf__dial">
+                  <button type="button" class="tcsf__step-btn" data-nudge="-1" aria-label="Decrease">&minus;</button>
+                  <label class="tcsf__dial-val">
+                    <input type="number" name="neck" id="{{ uid }}-neck" min="10" max="26" step="0.5" value="16" inputmode="decimal" aria-label="Neck measurement">
+                    <span data-out="unitLabel">in</span>
+                  </label>
+                  <button type="button" class="tcsf__step-btn" data-nudge="1" aria-label="Increase">+</button>
+                </div>
+                <div class="tcsf__seg tcsf__seg--center" role="radiogroup" aria-label="Unit">
+                  <label><input type="radio" name="unit" value="in" checked><span>inches</span></label>
+                  <label><input type="radio" name="unit" value="cm"><span>cm</span></label>
+                </div>
+                <details class="tcsf__tip">
+                  <summary>How do I measure?</summary>
+                  <p>No tape measure? Wrap a phone charger cable or a piece of string around the base of your neck where a chain would sit, mark where it meets, then lay it along a ruler. Keep it snug, not tight.</p>
+                </details>
+              </div>
+
+              <div class="tcsf__neck" data-mode="collar" hidden>
+                <div class="tcsf__chips" role="radiogroup" aria-label="Shirt collar size">
+                  <label><input type="radio" name="collar" value="14"><span>14"<small>S</small></span></label>
+                  <label><input type="radio" name="collar" value="14.5"><span>14½"<small>S</small></span></label>
+                  <label><input type="radio" name="collar" value="15"><span>15"<small>M</small></span></label>
+                  <label><input type="radio" name="collar" value="15.5"><span>15½"<small>M</small></span></label>
+                  <label><input type="radio" name="collar" value="16" checked><span>16"<small>L</small></span></label>
+                  <label><input type="radio" name="collar" value="16.5"><span>16½"<small>L</small></span></label>
+                  <label><input type="radio" name="collar" value="17"><span>17"<small>XL</small></span></label>
+                  <label><input type="radio" name="collar" value="17.5"><span>17½"<small>XL</small></span></label>
+                  <label><input type="radio" name="collar" value="18"><span>18"<small>2XL</small></span></label>
+                  <label><input type="radio" name="collar" value="18.5"><span>18½"<small>2XL</small></span></label>
+                  <label><input type="radio" name="collar" value="19"><span>19"<small>3XL</small></span></label>
+                  <label><input type="radio" name="collar" value="20"><span>20"<small>3XL+</small></span></label>
+                </div>
+                <p class="tcsf__hint">Collars are cut with a little room, so we take ½" off to get your neck size.</p>
+              </div>
+
+              <div class="tcsf__neck" data-mode="unknown" hidden>
+                <div class="tcsf__seg" role="radiogroup" aria-label="Wearer">
+                  <label><input type="radio" name="wearer" value="men" checked><span>For him</span></label>
+                  <label><input type="radio" name="wearer" value="women"><span>For her</span></label>
+                </div>
+                <p class="tcsf__hint">We'll start from an average neck (15½" for men, 13½" for women). Buying a gift? This is a safe bet.</p>
+              </div>
+
+              <div class="tcsf__nav"><button type="button" class="tcsf-btn" data-go="next">Next</button></div>
+            </section>
+
+            <section class="tcsf__q" data-step="2" hidden>
+              <h3>Where should it hit?</h3>
+              <p class="tcsf__sub">Watch the model. The chain moves as you choose.</p>
+              <div class="tcsf__cards" role="radiogroup" aria-label="Fit">
+                <label class="tcsf__card"><input type="radio" name="fit" value="choker"><span><i data-icon="tight"></i><strong>Tight</strong><small>Hugs the neck</small></span></label>
+                <label class="tcsf__card"><input type="radio" name="fit" value="collarbone" checked><span><i data-icon="collarbone"></i><strong>Collarbone</strong><small>The classic</small></span></label>
+                <label class="tcsf__card"><input type="radio" name="fit" value="upper"><span><i data-icon="upper"></i><strong>Upper chest</strong><small>Shows over a tee</small></span></label>
+                <label class="tcsf__card"><input type="radio" name="fit" value="mid"><span><i data-icon="mid"></i><strong>Mid chest</strong><small>Statement drop</small></span></label>
+                <label class="tcsf__card"><input type="radio" name="fit" value="low"><span><i data-icon="low"></i><strong>Low</strong><small>Made to layer</small></span></label>
+              </div>
+              <div class="tcsf__nav">
+                <button type="button" class="tcsf-btn tcsf-btn--outline" data-go="back">Back</button>
+                <button type="button" class="tcsf-btn" data-go="next">Next</button>
+              </div>
+            </section>
+
+            <section class="tcsf__q" data-step="3" hidden>
+              <h3>What's your build?</h3>
+              <p class="tcsf__sub">A broad chest and traps take up length, so the chain sits higher.</p>
+              <div class="tcsf__cards tcsf__cards--4" role="radiogroup" aria-label="Build">
+                <label class="tcsf__card"><input type="radio" name="build" value="slim"><span><i data-build="slim"></i><strong>Slim</strong></span></label>
+                <label class="tcsf__card"><input type="radio" name="build" value="average" checked><span><i data-build="average"></i><strong>Average</strong></span></label>
+                <label class="tcsf__card"><input type="radio" name="build" value="athletic"><span><i data-build="athletic"></i><strong>Athletic</strong></span></label>
+                <label class="tcsf__card"><input type="radio" name="build" value="large"><span><i data-build="large"></i><strong>Broad / Big</strong></span></label>
+              </div>
+              <div class="tcsf__nav">
+                <button type="button" class="tcsf-btn tcsf-btn--outline" data-go="back">Back</button>
+                <button type="button" class="tcsf-btn" data-go="next">Next</button>
+              </div>
+            </section>
+
+            <section class="tcsf__q" data-step="4" hidden>
+              <h3>How iced out?</h3>
+              <p class="tcsf__sub">Pick a width. Wider links are stiffer, so they need a touch more length.</p>
+              <div class="tcsf__widths" role="radiogroup" aria-label="Chain width">
+                <label><input type="radio" name="width" value="2"><span><b style="--d:6px"></b>2mm<small>Subtle</small></span></label>
+                <label><input type="radio" name="width" value="3" checked><span><b style="--d:9px"></b>3mm<small>Everyday</small></span></label>
+                <label><input type="radio" name="width" value="4"><span><b style="--d:12px"></b>4mm<small>Classic</small></span></label>
+                <label><input type="radio" name="width" value="5"><span><b style="--d:15px"></b>5mm<small>Bold</small></span></label>
+                <label><input type="radio" name="width" value="6"><span><b style="--d:18px"></b>6mm<small>Heavy</small></span></label>
+                <label><input type="radio" name="width" value="7"><span><b style="--d:21px"></b>7mm+<small>Iced out</small></span></label>
+              </div>
+              <div class="tcsf__nav">
+                <button type="button" class="tcsf-btn tcsf-btn--outline" data-go="back">Back</button>
+                <button type="button" class="tcsf-btn tcsf-btn--gold" data-go="reveal">Reveal my size</button>
+              </div>
+            </section>
+          </form>
+
+          <div class="tcsf__res" hidden aria-live="polite">
+            <p class="tcsf__res-label">Your perfect length</p>
+            <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
+            <p class="tcsf__res-meta"><span data-out="cm">51</span> cm · about <span data-out="stones">120</span> diamonds at <span data-out="widthLabel">3mm</span></p>
+            <p class="tcsf__summary" data-out="summary"></p>
+
+            <div class="tcsf__tune">
+              <div>
+                <div class="tcsf__tune-head"><span>Try other lengths</span><button type="button" class="tcsf-link" data-reset hidden>Back to my size</button></div>
+                <input class="tcsf__range" type="range" id="{{ uid }}-length" min="16" max="30" step="2" value="20" data-length aria-label="Chain length">
+                <div class="tcsf__ticks" aria-hidden="true"><span>16"</span><span>18"</span><span>20"</span><span>22"</span><span>24"</span><span>26"</span><span>28"</span><span>30"</span></div>
+              </div>
+              <div>
+                <span class="tcsf__tune-title">Width</span>
+                <div class="tcsf__seg tcsf__seg--xs" role="radiogroup" aria-label="Width">
+                  <label><input type="radio" name="width2" value="2"><span>2mm</span></label>
+                  <label><input type="radio" name="width2" value="3"><span>3mm</span></label>
+                  <label><input type="radio" name="width2" value="4"><span>4mm</span></label>
+                  <label><input type="radio" name="width2" value="5"><span>5mm</span></label>
+                  <label><input type="radio" name="width2" value="6"><span>6mm</span></label>
+                  <label><input type="radio" name="width2" value="7"><span>7mm+</span></label>
+                </div>
+              </div>
+              <div class="tcsf__tune-split">
+                <div>
+                  <span class="tcsf__tune-title">Metal</span>
+                  <div class="tcsf__swatches" role="radiogroup" aria-label="Metal">
+                    <label title="White gold"><input type="radio" name="metal" value="white"><span style="--c1:#f4f6f9;--c2:#9ea5b0"></span></label>
+                    <label title="Yellow gold"><input type="radio" name="metal" value="yellow" checked><span style="--c1:#f7dc85;--c2:#b0831f"></span></label>
+                    <label title="Rose gold"><input type="radio" name="metal" value="rose"><span style="--c1:#f4c7b5;--c2:#b06a58"></span></label>
+                  </div>
+                </div>
+                <div>
+                  <span class="tcsf__tune-title">Skin tone</span>
+                  <div class="tcsf__swatches" role="radiogroup" aria-label="Skin tone">
+                    <label title="Light"><input type="radio" name="skin" value="1"><span style="--c1:#f3d3bb;--c2:#d9a887"></span></label>
+                    <label title="Medium"><input type="radio" name="skin" value="2" checked><span style="--c1:#d9a178;--c2:#b0754d"></span></label>
+                    <label title="Tan"><input type="radio" name="skin" value="3"><span style="--c1:#a8704a;--c2:#7c4d30"></span></label>
+                    <label title="Deep"><input type="radio" name="skin" value="4"><span style="--c1:#6e4630;--c2:#43291b"></span></label>
+                  </div>
+                </div>
+              </div>
+              <label class="tcsf__toggle">
+                <input type="checkbox" data-layer>
+                <span class="tcsf__switch" aria-hidden="true"></span>
+                <span>Layer it: add chains 2" and 4" longer</span>
+              </label>
+            </div>
+
+            <button type="button" class="tcsf-btn tcsf-btn--gold tcsf__cta" data-go="shop">Show chains in my size</button>
+            <div class="tcsf__res-foot">
+              <button type="button" class="tcsf-link" data-go="restart">Change my answers</button>
+              <button type="button" class="tcsf-link" data-copy>Copy my size</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} Quick view dialog {%- endcomment -%}
+  <div class="tcsf-modal tcsf-modal--qv" data-qv hidden>
+    <div class="tcsf-modal__backdrop" data-close></div>
+    <div class="tcsf-modal__panel" role="dialog" aria-modal="true" aria-labelledby="{{ uid }}-qv-title" data-qv-body></div>
+  </div>
+
+  <div class="tcsf-mbar" data-mbar hidden>
+    <button type="button" class="tcsf-btn tcsf-btn--outline" data-open-filters>Filter<span class="tcsf-count" data-out="filterCount2" hidden></span></button>
+    <button type="button" class="tcsf-btn tcsf-btn--gold" data-open-fit><span data-out="mbarFit">Find my size</span></button>
   </div>
   <div class="tcsf-toast" data-toast role="status" hidden></div>
 </div>
 
 {% schema %}
 {
-  "name": "Tennis chain size finder",
+  "name": "Tennis chain shop",
   "tag": "section",
   "class": "section-tennis-chain-size-finder",
   "settings": [
-    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Tennis chain size guide" },
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Find the tennis chain that fits you" },
-    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Answer four quick questions and watch the chain move on the model. Then shop real chains ranked by how they'll sit on you." },
+    { "type": "text", "id": "crumb", "label": "Breadcrumb label", "default": "Shop by size" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Diamond Tennis Chains" },
+    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Shop real diamond tennis chains by length, width and diamond size. Use the size finder to see exactly where each one will sit on you." },
     { "type": "header", "content": "Products" },
     { "type": "collection", "id": "collection", "label": "Tennis chain collection", "info": "Uses the Tennis Chains collection when left empty. Length and width come from the custom.length and custom.width metafields." },
-    { "type": "range", "id": "limit", "label": "Products to consider", "min": 12, "max": 248, "step": 4, "default": 100 },
-    { "type": "text", "id": "shop_heading", "label": "Product grid heading", "default": "Tennis chains" },
+    { "type": "range", "id": "limit", "label": "Products to load", "min": 12, "max": 248, "step": 4, "default": 120 },
     { "type": "header", "content": "Help" },
     { "type": "url", "id": "contact_url", "label": "Contact link", "default": "/pages/contact" },
     { "type": "text", "id": "contact_label", "label": "Contact link text", "default": "Talk to a jeweler" },
     { "type": "header", "content": "Colors" },
-    { "type": "color", "id": "color_bg", "label": "Background", "default": "#0b0b0c" },
-    { "type": "color", "id": "color_text", "label": "Text", "default": "#f5f3ee" },
-    { "type": "color", "id": "color_accent", "label": "Accent", "default": "#d4af37" }
+    { "type": "color", "id": "color_bg", "label": "Background", "default": "#ffffff" },
+    { "type": "color", "id": "color_text", "label": "Text and buttons", "default": "#141414" },
+    { "type": "color", "id": "color_accent", "label": "Accent (gold)", "default": "#c9a04a" }
   ],
   "blocks": [
     {
@@ -369,7 +427,7 @@
   ],
   "presets": [
     {
-      "name": "Tennis chain size finder",
+      "name": "Tennis chain shop",
       "blocks": [
         { "type": "trust", "settings": { "text": "Real 10K & 14K gold" } },
         { "type": "trust", "settings": { "text": "Natural & lab-grown diamonds" } },
