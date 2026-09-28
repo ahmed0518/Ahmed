@@ -20,8 +20,10 @@ A marketplace-style category page for diamond tennis chains, with a built-in siz
 - **Size guide tabs:** length chart (your size highlighted), width guide explaining "pointer" sizes
   (stones drawn to scale), and a sizing FAQ.
 
-It uses plain Liquid, CSS and JavaScript, with no apps and no external scripts. The default look is
-white with black buttons and gold accents; the three colors can be changed in the theme editor.
+It uses plain Liquid, CSS and JavaScript, with no apps and no external scripts. The default look is a
+bright retail palette: yellow Add to cart, orange Buy now, red sale prices and a sale strip (worked
+out from your compare-at prices), green fit and in-stock labels and blue links. Every color can be
+changed in the theme editor.
 
 ## Files
 
@@ -51,19 +53,24 @@ For each product in the collection:
 | --- | --- | --- |
 | Length | `custom.length` metafield ("22 inches") | number before "Inches" in the title |
 | Width | `custom.width` ("3 mm") | number before "mm" in the title |
-| Carat, color, clarity | `custom.diamond_weight_side`, `custom.diamond_color_side`, `custom.diamond_clarity_side` | hidden |
+| Carat, color, clarity | `custom.diamond_weight_side`, `custom.diamond_color_side`, `custom.diamond_clarity_side` | `custom.diamond_weight`, `custom.diamond_color`, `custom.diamond_clarity`, else hidden |
 | Natural / lab-grown | `custom.diamond_origin_side`, or "Lab" in the title | hidden |
 | Metal type, weight, setting | `custom.metal`, `custom.weight`, `custom.setting` | hidden |
 | Metal color | variant title containing Yellow / White / Rose | |
 | Length variants | variant titles like "Yellow / 20 Inches" | the closest length is picked |
 | Badges | tags `Best Sellers` and `New Arrivals`; compare-at price for sales | |
 
-Products tagged `Bracelets` are skipped. The page loads up to 120 products by default
-("Products to load" in the theme editor, up to 248).
+Products tagged `Bracelets` are skipped. Products tagged `Quote Only` (or priced $0) show
+"Price on request" and a **Request a quote** button that opens the product page instead of
+Add to cart. The page loads up to 248 products ("Products to load" in the theme editor).
 
-**Add to cart** posts to Shopify's cart (`/cart/add.js`), shows a "View cart / Checkout" message and
-updates common cart-count badges. If your theme has a slide-out cart that doesn't refresh on its
-own, the item still appears when the shopper opens the cart.
+**Add to cart** posts to Shopify's cart (`/cart/add.js`). In Dawn-based themes it also refreshes the
+cart icon and opens the theme's cart drawer; otherwise it shows a "View cart / Checkout" message and
+updates common cart-count badges. **Buy now** in quick view uses a Shopify cart link
+(`/cart/VARIANT:QTY`), which goes straight to checkout.
+
+If your store header stays on screen while scrolling, set **Space for a sticky store header** (theme
+editor, Layout) to its height so the filter sidebar and scroll targets aren't hidden under it.
 
 ## How the recommendation works
 

@@ -9,7 +9,10 @@
         "trust_4": { "type": "trust", "settings": { "text": "New York jeweler" } }
       },
       "block_order": ["trust_1", "trust_2", "trust_3", "trust_4"],
-      "settings": {}
+      "settings": {
+        "contact_url": "shopify://pages/contact",
+        "limit": 248
+      }
     }
   },
   "order": ["size_finder"]

@@ -210,14 +210,14 @@
       svg.querySelectorAll('[data-metal]').forEach(function (s) { s.setAttribute('stop-color', m[+s.dataset.metal]); });
       svg.querySelectorAll('[data-skin]').forEach(function (s) { s.setAttribute('stop-color', k[+s.dataset.skin]); });
     }
+    var layersHtml = '';
     function chains(p, d) {
-      var html = '', metal = id + '-metal', ice = id + '-ice', sh = id + '-cs';
-      (p.layers || []).forEach(function (l, k) { html += chainSvg(chainPoints(l.drop), l.w, metal, ice, { seed: 3 + k, shadow: sh, twinkle: p.twinkle }); });
-      html += chainSvg(chainPoints(d), p.w, metal, ice, { shadow: sh, twinkle: p.twinkle });
-      chainsG.innerHTML = html;
+      // Only the main chain moves during a drop; the layered chains are built once per set().
+      chainsG.innerHTML = layersHtml + chainSvg(chainPoints(d), p.w, id + '-metal', id + '-ice', { shadow: id + '-cs', twinkle: p.twinkle });
     }
     function set(p, o) {
       o = o || {};
+      layersHtml = (p.layers || []).map(function (l, k) { return chainSvg(chainPoints(l.drop), l.w, id + '-metal', id + '-ice', { seed: 3 + k, shadow: id + '-cs', twinkle: p.twinkle }); }).join('');
       var key = p.build + '|' + p.outfit;
       if (key !== bodyKey) { bodyG.innerHTML = bodySvg(id, p.build, p.outfit); bodyKey = key; }
       colors(p);
@@ -275,6 +275,8 @@
         price: priced.length ? Math.min.apply(null, priced) : 0,
         sale: variants.some(function (v) { return v.c > v.p; }),
         best: tags.indexOf('best sellers') > -1, isNew: tags.indexOf('new arrivals') > -1,
+        // Priced on request ("Quote Only" tag or $0): shown with "Request a quote" instead of Add to cart.
+        quote: !!p.q || variants.every(function (v) { return !v.p; }),
         available: avail.length > 0
       };
     }).filter(function (p) { return p.variants.length && (!p.len || p.len >= 14); });
@@ -290,10 +292,13 @@
     var ID = root.id, GID = ID + '-g';
     var q = function (s) { return root.querySelector(s); };
     var qa = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
-    var fmt;
-    try { fmt = new Intl.NumberFormat(root.dataset.locale || undefined, { style: 'currency', currency: root.dataset.currency || 'USD', maximumFractionDigits: 0 }); }
-    catch (e) { fmt = { format: function (n) { return '$' + Math.round(n).toLocaleString(); } }; }
-    function money(cents) { return fmt.format(cents / 100); }
+    var cur = root.dataset.currency || 'USD', loc = root.dataset.locale || undefined, fmt0, fmt2;
+    try {
+      fmt0 = new Intl.NumberFormat(loc, { style: 'currency', currency: cur, minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      fmt2 = new Intl.NumberFormat(loc, { style: 'currency', currency: cur });
+    } catch (e) { fmt0 = fmt2 = { format: function (n) { return cur + ' ' + n.toFixed(2); } }; }
+    // Whole amounts without cents ($9,000), otherwise with cents ($9,000.50).
+    function money(cents) { return (cents % 100 ? fmt2 : fmt0).format(cents / 100); }
 
     // Shared gradients for product drawings.
     var defs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -313,9 +318,13 @@
     var cardMetal = {};
 
     // ---- Answers & sizing ----
+    var memo = null; // answers cached while rendering the grid, which reads them for every product
     function val(name) {
+      if (memo && name in memo) return memo[name];
       var el = root.querySelector('[name="' + name + '"]:checked') || root.querySelector('[name="' + name + '"]');
-      return el ? el.value : '';
+      var v = el ? el.value : '';
+      if (memo) memo[name] = v;
+      return v;
     }
     function setRadio(name, v) { var el = root.querySelector('[name="' + name + '"][value="' + v + '"]'); if (el) el.checked = true; }
     function neckInches() {
@@ -323,9 +332,26 @@
       if (mode === 'collar') return parseFloat(val('collar')) - 0.5;
       if (mode === 'unknown') return val('wearer') === 'women' ? 13.5 : 15.5;
       var n = parseFloat(q('[name="neck"]').value);
-      if (!isFinite(n) || n <= 0) n = 16;
+      if (!isFinite(n) || n <= 0) return 16;
       if (val('unit') === 'cm') n = n / 2.54;
       return Math.min(Math.max(n, 10), 26);
+    }
+    // Checks the typed neck size. Returns a message when it needs attention, or '' when it's fine.
+    function neckProblem() {
+      if (val('neckMode') !== 'measure') return '';
+      var inp = q('[name="neck"]'), n = parseFloat(inp.value), cm = val('unit') === 'cm';
+      if (!isFinite(n)) return 'Enter your neck size to continue.';
+      if (!cm && n >= 25 && n <= 66) return 'That looks like centimetres. <button type="button" class="tcsf-link" data-to-cm>Switch to cm</button>';
+      if (n < +inp.min || n > +inp.max) return 'Neck sizes are usually between ' + inp.min + ' and ' + inp.max + (cm ? ' cm' : '"') + '. Please check your measurement.';
+      return '';
+    }
+    function showNeckProblem(force) {
+      var msg = neckProblem(), hint = q('[data-neck-hint]'), inp = q('[name="neck"]');
+      var show = !!msg && (force || !/Enter your/.test(msg));
+      hint.innerHTML = show ? msg : '';
+      hint.hidden = !show;
+      if (show) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid');
+      return msg;
     }
     function pickedWidth() { return parseFloat(val('width')) || 3; }
     function widthLabel() { return pickedWidth() >= 7 ? '7mm+' : pickedWidth() + 'mm'; }
@@ -377,30 +403,66 @@
       q('[data-out="stones"]').textContent = Math.round(size * 25.4 / (w * 1.05));
       q('[data-out="widthLabel"]').textContent = widthLabel();
       var sz = zoneOf(yFor(size)), note = '';
+      var where = sz === 'tight' ? 'tight on your neck' : 'at your ' + ZONE_LABEL[sz].toLowerCase();
+      var clamped = !st.override && (rec.target > 30.5 || rec.target < 15);
       if (!st.override && rec.target > 30.5) note = ' Want it even longer? Contact us and we can help.';
       if (!st.override && rec.target < 15) note = ' Want it even tighter? Contact us and we can help.';
-      q('[data-out="summary"]').textContent = st.override
-        ? 'A ' + size + '" ' + widthLabel() + ' chain sits ' + (sz === 'tight' ? 'tight on your neck' : 'at your ' + ZONE_LABEL[sz].toLowerCase()) + '. Our pick for you was ' + rec.len + '".'
-        : 'With a ' + inch(neckInches()) + ' neck, a ' + size + '" ' + widthLabel() + ' tennis chain sits ' + FIT[val('fit')].sentence + '.' + note;
-      q('[data-length]').value = size;
+      var summary = st.override
+        ? 'A ' + size + '" ' + widthLabel() + ' chain sits ' + where + '. Our pick for you was ' + rec.len + '".'
+        : 'With a ' + inch(neckInches()) + ' neck, a ' + size + '" ' + widthLabel() + ' tennis chain sits ' + (clamped ? where : FIT[val('fit')].sentence) + '.' + note;
+      q('[data-out="summary"]').textContent = summary;
+      if (inResult) announce('Your size: ' + size + ' inches. ' + summary);
+      var slider = q('[data-length]');
+      slider.value = size;
+      slider.setAttribute('aria-valuetext', size + ' inches, ' + ZONE_LABEL[sz].toLowerCase());
       q('[data-reset]').hidden = !st.override || st.override === rec.len;
       setRadio('width2', val('width'));
       q('[data-progress]').style.width = (st.step / 4 * 100) + '%';
       q('[data-stepcount]').textContent = 'Step ' + st.step + ' of 4';
       var cta = q('[data-go="shop"]');
-      if (cta) cta.textContent = grid ? 'Show chains in my size (' + products.filter(function (x) { return x.lens.some(function (l) { return Math.abs(l - size) <= 2; }); }).length + ')' : 'Done';
+      if (cta) {
+        var nearN = grid && products.length ? countWith('near', true) : 0;
+        cta.textContent = !grid ? 'Done' : nearN ? 'Show ' + nearN + ' ' + (nearN === 1 ? 'chain' : 'chains') + ' in my size' : 'Show the closest chains';
+      }
+    }
+    var announceTimer;
+    function announce(text) {
+      clearTimeout(announceTimer);
+      announceTimer = setTimeout(function () { var a = q('[data-announce]'); if (a && a.textContent !== text) a.textContent = text; }, 450);
     }
 
-    function goStep(n) {
+    function panelToTop() {
+      var pnl = fitModal.querySelector('.tcsf-modal__panel');
+      if (pnl && window.innerWidth <= 900) pnl.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+    }
+    function goStep(n, o) {
       st.step = Math.max(1, Math.min(4, n));
       qa('.tcsf__q').forEach(function (s) { s.hidden = +s.dataset.step !== st.step; });
       updateFinder();
+      if (!fitModal.hidden && !(o && o.noFocus)) {
+        panelToTop();
+        var h = form.querySelector('.tcsf__q[data-step="' + st.step + '"] h3');
+        if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+      }
     }
-    function saveFit() {
-      storeSet({
+    // The answers as saved on this device (also used to undo abandoned edits).
+    function snapshot() {
+      return {
         v: 1, neckMode: val('neckMode'), neck: q('[name="neck"]').value, unit: val('unit'), collar: val('collar'), wearer: val('wearer'),
         fit: val('fit'), build: val('build'), width: val('width'), metal: val('metal'), skin: val('skin'), outfit: val('outfit'), len: st.override
-      });
+      };
+    }
+    function applySaved(sv) {
+      ['neckMode', 'unit', 'collar', 'wearer', 'fit', 'build', 'width', 'metal', 'skin', 'outfit'].forEach(function (k) { if (sv[k]) setRadio(k, sv[k]); });
+      var ni = q('[name="neck"]'), cm = sv.unit === 'cm';
+      ni.step = cm ? 1 : 0.5; ni.min = cm ? 25 : 10; ni.max = cm ? 66 : 26;
+      if (sv.neck) ni.value = sv.neck;
+      st.override = sv.len || null;
+    }
+    function saveFit() {
+      if (!st.done) return;
+      st.committed = snapshot();
+      storeSet(st.committed);
     }
     function markDone(o) {
       var was = st.done;
@@ -410,14 +472,15 @@
       refresh(o);
     }
     function reveal() {
+      if (showNeckProblem(true)) { goStep(1); q('[name="neck"]').focus(); return; }
       st.override = null;
       app.dataset.view = 'result';
       form.hidden = true; res.hidden = false;
       updateFinder({ fromTop: true });
       markDone({ skipModel: true });
-      var h = res.querySelector('.tcsf__res-label');
-      if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
-      if (window.innerWidth <= 900) q('.tcsf__stage').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+      panelToTop();
+      var top = q('[data-res-top]');
+      if (top) top.focus({ preventScroll: true });
     }
     function restart() {
       app.dataset.view = 'quiz';
@@ -430,12 +493,15 @@
     var products = [];
     if (grid) {
       try { products = normalize(JSON.parse(q('[data-products]').textContent)); } catch (e) { products = []; }
+      if (!products.length && /[?&]page=/.test(location.search)) {
+        var u = new URL(location.href); u.searchParams.delete('page'); location.replace(u.toString()); return;
+      }
     }
     function byId(id) { for (var i = 0; i < products.length; i++) if (String(products[i].id) === String(id)) return products[i]; return null; }
 
     function niceCents(c) { var d = Math.pow(10, Math.max(2, Math.floor(Math.log10(Math.max(c, 1))) - 1)); return Math.round(c / d) * d; }
     function priceBuckets() {
-      var ps = products.map(function (p) { return p.price; }).sort(function (a, b) { return a - b; });
+      var ps = products.filter(function (p) { return !p.quote; }).map(function (p) { return p.price; }).sort(function (a, b) { return a - b; });
       if (ps.length < 6) return [];
       var cuts = uniq([0.25, 0.5, 0.75].map(function (f) { return niceCents(ps[Math.floor(f * (ps.length - 1))]); })).filter(function (c) { return c > 0; });
       var out = [], lo = 0;
@@ -469,9 +535,9 @@
     var TESTS = {
       len: function (p) { return p.lens.some(function (l) { return F.len[String(l)]; }); },
       width: function (p) { return bucketTest(WIDTH_BUCKETS, F.width, p.w); },
-      metal: function (p) { return p.metals.some(function (m) { return F.metal[m]; }); },
+      metal: function (p) { return p.variants.some(function (v) { return F.metal[v.metal] && (v.a || !p.available); }); },
       origin: function (p) { return !!F.origin[p.origin]; },
-      price: function (p) { return bucketTest(PRICE_BUCKETS, F.price, p.price); },
+      price: function (p) { return !p.quote && bucketTest(PRICE_BUCKETS, F.price, fitFor(p).v.p); },
       carat: function (p) { return bucketTest(CARAT_BUCKETS, F.carat, p.ctN); },
       stock: function (p) { return p.available; },
       sale: function (p) { return p.sale; },
@@ -501,23 +567,23 @@
         h += '<details class="tcsf-facet" open data-facet="len"><summary>Length<span class="tcsf-facet__sel" data-sel="len"></span></summary><div class="tcsf-lengths">' +
           ALL_LENS.map(function (l) { return '<label data-opt="' + l + '"><input type="checkbox" id="' + ID + '-f-len-' + String(l).replace('.', '_') + '" data-f="len" value="' + l + '"><span>' + inch(l) + '<small data-n></small></span></label>'; }).join('') + '</div></details>';
       }
-      var checks = function (key, title, list, extra) {
+      var checks = function (key, title, list, extra, closed) {
         var opts = list;
-        return '<details class="tcsf-facet" open data-facet="' + key + '"><summary>' + title + '<span class="tcsf-facet__sel" data-sel="' + key + '"></span></summary><div class="tcsf-facet__body">' +
+        return '<details class="tcsf-facet"' + (closed ? '' : ' open') + ' data-facet="' + key + '"><summary>' + title + '<span class="tcsf-facet__sel" data-sel="' + key + '"></span></summary><div class="tcsf-facet__body">' +
           opts.map(function (o) {
             return '<label class="tcsf-opt" data-opt="' + o.v + '"><input type="checkbox" id="' + ID + '-f-' + key + '-' + o.v + '" data-f="' + key + '" value="' + o.v + '"><span class="tcsf-check"></span>' +
               '<span class="tcsf-opt__label">' + (extra ? extra(o) : '') + esc(o.label) + '</span><span class="tcsf-opt__n" data-n></span></label>';
           }).join('') + '</div></details>';
       };
       var present = function (list, get) { return list.filter(function (o) { return products.some(function (p) { var x = get(p); return x != null && o.test(x); }); }); };
+      if (PRICE_BUCKETS.length) h += checks('price', 'Price', PRICE_BUCKETS);
       h += checks('width', 'Width', present(WIDTH_BUCKETS, function (p) { return p.w; }));
       if (ALL_METALS.length) h += checks('metal', 'Metal', ALL_METALS.map(function (m) { return { v: m, label: METAL_NAME[m] }; }), function (o) { var c = METAL[o.v]; return '<i class="tcsf-opt__sw" style="background:linear-gradient(135deg,' + c[0] + ',' + c[2] + ')"></i>'; });
       var origins = [{ v: 'natural', label: 'Natural diamonds' }, { v: 'lab', label: 'Lab-grown diamonds' }].filter(function (o) { return products.some(function (p) { return p.origin === o.v; }); });
       if (origins.length) h += checks('origin', 'Diamond type', origins);
-      if (PRICE_BUCKETS.length) h += checks('price', 'Price', PRICE_BUCKETS);
       var carats = present(CARAT_BUCKETS, function (p) { return p.ctN; });
-      if (carats.length) h += checks('carat', 'Total carat weight', carats, null);
-      h += '<details class="tcsf-facet" open data-facet="more"><summary>Availability</summary><div class="tcsf-facet__body">' +
+      if (carats.length) h += checks('carat', 'Total carat weight', carats, null, true);
+      h += '<details class="tcsf-facet" data-facet="more"><summary>Availability</summary><div class="tcsf-facet__body">' +
         '<label class="tcsf-opt" data-opt="stock"><input type="checkbox" id="' + ID + '-f-stock" data-f="stock"><span class="tcsf-check"></span><span class="tcsf-opt__label">In stock</span><span class="tcsf-opt__n" data-n></span></label>' +
         '<label class="tcsf-opt" data-opt="sale"><input type="checkbox" id="' + ID + '-f-sale" data-f="sale"><span class="tcsf-check"></span><span class="tcsf-opt__label">On sale</span><span class="tcsf-opt__n" data-n></span></label>' +
         '</div></details>';
@@ -540,11 +606,13 @@
       nearOpt.querySelector('input').checked = F.near;
       nearOpt.querySelector('[data-n]').textContent = nearN;
       nearOpt.classList.toggle('is-zero', !nearN && !F.near);
+      nearOpt.querySelector('input').disabled = !nearN && !F.near;
       qa('[data-facet="len"] label').forEach(function (lab) {
         var v = lab.dataset.opt, n = countWith('len', one(v));
         lab.querySelector('input').checked = !!F.len[v];
         lab.querySelector('[data-n]').textContent = n;
         lab.classList.toggle('is-zero', !n && !F.len[v]);
+        lab.querySelector('input').disabled = !n && !F.len[v];
         lab.classList.toggle('is-mine', st.done && +v === size);
       });
       ['width', 'metal', 'origin', 'price', 'carat'].forEach(function (key) {
@@ -553,6 +621,7 @@
           lab.querySelector('input').checked = !!F[key][v];
           lab.querySelector('[data-n]').textContent = n;
           lab.classList.toggle('is-zero', !n && !F[key][v]);
+          lab.querySelector('input').disabled = !n && !F[key][v];
         });
       });
       ['stock', 'sale'].forEach(function (key) {
@@ -562,6 +631,7 @@
         lab.querySelector('input').checked = F[key];
         lab.querySelector('[data-n]').textContent = n;
         lab.classList.toggle('is-zero', !n && !F[key]);
+        lab.querySelector('input').disabled = !n && !F[key];
       });
       qa('[data-sel]').forEach(function (s) {
         var key = s.dataset.sel, n = Object.keys(F[key]).filter(function (k) { return F[key][k]; }).length;
@@ -619,7 +689,12 @@
       if (v.a) return '<p class="' + cls + '">' + CHECK + 'In stock' + (v.metal && p.metals.length > 1 ? ' in ' + METAL_NAME[v.metal].toLowerCase() : '') + '</p>';
       return '<p class="' + cls + ' is-out">' + (p.available ? 'Sold out in this metal' : 'Sold out') + '</p>';
     }
-    function pct(v) { return v.c > v.p ? Math.round((1 - v.p / v.c) * 100) : 0; }
+    function pct(v) { return v.c > v.p && v.p > 0 ? Math.round((1 - v.p / v.c) * 100) : 0; }
+    function priceHtml(p, v, cls) {
+      if (p.quote) return '<div class="' + cls + '"><b>Price on request</b></div>';
+      var off = pct(v);
+      return '<div class="' + cls + (off ? ' is-sale' : '') + '"><b>' + money(v.p) + '</b>' + (off ? '<s>' + money(v.c) + '</s><em>Save ' + money(v.c - v.p) + '</em>' : '') + '</div>';
+    }
 
     function mediaHtml(p, metal) {
       if (!p.imgs.length) return productShot(GID, p, metal || 'yellow');
@@ -627,7 +702,7 @@
         (p.imgs[1] ? '<img src="' + esc(p.imgs[1]) + '" alt="" loading="lazy" width="800" height="800">' : '');
     }
     function cardHtml(x) {
-      var p = x.p, f = x.f, v = f.v, off = pct(v), badges = [];
+      var p = x.p, f = x.f, v = f.v, off = p.quote ? 0 : pct(v), badges = [];
       if (st.done && f.len && Math.abs(f.diff) <= 0.5) badges.push('<span class="tcsf-badge tcsf-badge--fit">Your size</span>');
       if (off) badges.push('<span class="tcsf-badge tcsf-badge--sale">−' + off + '%</span>');
       if (p.best) badges.push('<span class="tcsf-badge tcsf-badge--best">Best seller</span>');
@@ -636,7 +711,7 @@
       if (st.done && f.len) {
         var d = Math.round(f.diff * 2) / 2, near = Math.abs(d) <= 2;
         fitLine = '<p class="tcsf-card__fit ' + (near ? 'is-good' : 'is-off') + '">' +
-          (Math.abs(d) <= .5 ? 'Your size' : inch(Math.abs(d)) + (d > 0 ? ' longer' : ' shorter')) + ' · sits at your ' + ZONE_LABEL[f.zone].toLowerCase() + '</p>';
+          (Math.abs(d) <= .5 ? 'Your size' : inch(Math.abs(d)) + (d > 0 ? ' longer' : ' shorter')) + ' · ' + ZONE_LABEL[f.zone] + '</p>';
       }
       var specs = [f.len ? '<b>' + inch(f.len) + '</b>' : null, p.w ? '<b>' + mm(p.w) + '</b>' : null, p.ct ? esc(p.ct) : null,
         p.origin === 'lab' ? 'Lab-grown' : p.origin === 'natural' ? 'Natural' : null].filter(Boolean).join(' · ');
@@ -652,17 +727,38 @@
         '<div class="tcsf-card__body">' + fitLine +
           '<h3><a href="' + esc(p.url) + '">' + esc(p.title) + '</a></h3>' +
           '<p class="tcsf-card__specs">' + specs + '</p>' +
-          '<div class="tcsf-card__price' + (off ? ' is-sale' : '') + '"><b>' + money(v.p) + '</b>' + (off ? '<s>' + money(v.c) + '</s><em>Save ' + money(v.c - v.p) + '</em>' : '') + '</div>' +
-          stockHtml(p, v, 'tcsf-card__stock') +
+          priceHtml(p, v, 'tcsf-card__price') +
+          (p.quote ? '' : stockHtml(p, v, 'tcsf-card__stock')) +
           '<div class="tcsf-card__row"><div class="tcsf-metals" role="group" aria-label="Metal">' + metals + '</div>' +
             (f.len ? '<button type="button" class="tcsf-link tcsf-card__try" data-qv-open="' + p.id + '" data-onyou>Fit preview</button>' : '') + '</div>' +
-          '<button type="button" class="tcsf-btn tcsf-card__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart' : 'Sold out') + '</button>' +
+          (p.quote ? '<a class="tcsf-btn tcsf-btn--outline tcsf-card__add" href="' + esc(p.url) + '">Request a quote</a>'
+            : '<button type="button" class="tcsf-btn tcsf-card__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart' : 'Sold out') + '</button>') +
         '</div></article>';
     }
 
     var lastList = [];
     function renderShop() {
       if (!grid) return;
+      memo = {};
+      try { renderShop0(); } finally { memo = null; }
+    }
+    function pagerText(shown, total) {
+      q('[data-empty]').hidden = total > 0;
+      q('[data-pager]').hidden = !total;
+      q('[data-out="pagerText"]').textContent = 'Showing ' + shown + ' of ' + total + ' tennis chains';
+      q('[data-out="pagerBar"]').style.width = (total ? shown / total * 100 : 0) + '%';
+      q('[data-more]').hidden = shown >= total;
+    }
+    function showMore() {
+      var before = grid.children.length;
+      st.shown += PAGE;
+      var shown = Math.min(st.shown, lastList.length);
+      memo = {};
+      try { grid.insertAdjacentHTML('beforeend', lastList.slice(before, shown).map(cardHtml).join('')); } finally { memo = null; }
+      pagerText(shown, lastList.length);
+      return grid.children[before];
+    }
+    function renderShop0() {
       var size = mySize(), w = pickedWidth();
       var list = products.filter(function (p) { return passes(p, null); }).map(function (p) {
         var f = fitFor(p);
@@ -672,6 +768,7 @@
       var s = st.sort;
       list.sort(function (a, b) {
         if (s === 'fit') return a.score - b.score;
+        if ((s === 'price-asc' || s === 'price-desc') && a.p.quote !== b.p.quote) return a.p.quote ? 1 : -1;
         if (s === 'price-asc') return a.f.v.p - b.f.v.p || a.p.i - b.p.i;
         if (s === 'price-desc') return b.f.v.p - a.f.v.p || a.p.i - b.p.i;
         if (s === 'carat') return (b.p.ctN || -1) - (a.p.ctN || -1) || a.p.i - b.p.i;
@@ -681,11 +778,7 @@
       var shown = Math.min(st.shown, list.length);
       grid.innerHTML = list.slice(0, shown).map(cardHtml).join('');
       grid.dataset.density = st.density;
-      q('[data-empty]').hidden = list.length > 0;
-      q('[data-pager]').hidden = !list.length;
-      q('[data-out="pagerText"]').textContent = 'Showing ' + shown + ' of ' + list.length + ' tennis chains';
-      q('[data-out="pagerBar"]').style.width = (list.length ? shown / list.length * 100 : 0) + '%';
-      q('[data-more]').hidden = shown >= list.length;
+      pagerText(shown, list.length);
       q('[data-out="count"]').textContent = list.length;
       q('[data-out="countLabel"]').textContent = (list.length === 1 ? 'result' : 'results') + (st.done && st.sort === 'fit' ? ', ranked for your ' + size + '" size' : '');
       q('[data-out="countShort"]').textContent = list.length;
@@ -735,13 +828,21 @@
       var p = byId(pid);
       if (!p) return;
       var f = fitFor(p);
-      qv = { p: p, metal: f.v.metal || preferredMetal(p), len: f.len, qty: 1, view: onyou && f.len ? 'onyou' : 0 };
+      qv = { p: p, metal: f.v.metal || preferredMetal(p), len: f.len, qty: 1, view: onyou && f.len ? 'onyou' : 0, lastView: null };
       renderQV();
       openModal(qvModal, opener);
     }
     function qvVariant() { return variantFor(qv.p, qv.metal, qv.len); }
+    function buyNowUrl(v) { return (root.dataset.cart || '/cart') + '/' + v.id + ':' + qv.qty; }
+    // Quantity changes update the buy row in place so focus and the model view stay put.
+    function syncQty() {
+      var v = qvVariant(), inp = qvBody.querySelector('[data-qv-qty]'), add = qvBody.querySelector('.tcsf-qv__add'), bn = qvBody.querySelector('[data-buy-now]');
+      if (inp) inp.value = qv.qty;
+      if (add && v.a && !add.classList.contains('is-done') && add.getAttribute('aria-disabled') !== 'true') add.textContent = 'Add to cart · ' + money(v.p * qv.qty);
+      if (bn) bn.setAttribute('href', buyNowUrl(v));
+    }
     function renderQV(focusSel) {
-      var p = qv.p, v = qvVariant(), len = v.len || qv.len || p.len, off = pct(v);
+      var p = qv.p, v = qvVariant(), len = v.len || qv.len || p.len, off = p.quote ? 0 : pct(v);
       var views = p.imgs.map(function (src, k) { return { k: k, src: src }; });
       if (!views.length) views = [{ k: 0, shot: true }];
       var canOnYou = !!len;
@@ -787,27 +888,32 @@
       var badges = [];
       if (off) badges.push('<span class="tcsf-badge tcsf-badge--sale">−' + off + '%</span>');
       if (p.best) badges.push('<span class="tcsf-badge tcsf-badge--best">Best seller</span>');
-      if (p.isNew) badges.push('<span class="tcsf-badge">New</span>');
+      if (p.isNew) badges.push('<span class="tcsf-badge tcsf-badge--new">New</span>');
 
-      qvBody.innerHTML = '<div class="tcsf-qv">' +
+      var buy = p.quote
+        ? '<a class="tcsf-btn tcsf-qv__add" href="' + esc(p.url) + '">Request a quote</a>'
+        : '<div class="tcsf-qty"><button type="button" data-qty="-1" aria-label="Decrease quantity">−</button><input type="number" id="' + ID + '-qv-qty" min="1" max="10" value="' + qv.qty + '" aria-label="Quantity" data-qv-qty><button type="button" data-qty="1" aria-label="Increase quantity">+</button></div>' +
+          '<button type="button" class="tcsf-btn tcsf-qv__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart · ' + money(v.p * qv.qty) : 'Sold out') + '</button>' +
+          (v.a ? '<a class="tcsf-btn tcsf-btn--buy" data-buy-now href="' + esc(buyNowUrl(v)) + '">Buy now</a>' : '');
+      qvBody.innerHTML = '<div class="tcsf-qv__bar"><button type="button" class="tcsf-iconbtn" data-close aria-label="Close quick view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>' +
+        '<div class="tcsf-qv">' +
         '<div class="tcsf-qv__media"><div class="tcsf-qv__main' + mainCls + '">' + main + '</div><div class="tcsf-qv__thumbs">' + thumbs + '</div>' +
           (mainCls === ' is-model' ? '<p class="tcsf-qv__note">Illustration of where this length sits' + (st.done ? ' on you, based on your size answers.' : ' on an average 16" neck.') + ' See the photos for the real piece.</p>' : '') + '</div>' +
         '<div class="tcsf-qv__info">' +
-          '<button type="button" class="tcsf-iconbtn tcsf-qv__close" data-close aria-label="Close quick view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
           (badges.length ? '<div class="tcsf-card__badges" style="position:static">' + badges.join('') + '</div>' : '') +
           '<h2 id="' + ID + '-qv-title">' + esc(p.title) + '</h2>' +
-          '<div class="tcsf-qv__price' + (off ? ' is-sale' : '') + '"><b>' + money(v.p) + '</b>' + (off ? '<s>' + money(v.c) + '</s><em>Save ' + money(v.c - v.p) + '</em>' : '') + '</div>' +
-          stockHtml(p, v, 'tcsf-qv__stock') + fitBox + metalOpts + lenOpts +
+          priceHtml(p, v, 'tcsf-qv__price') +
+          (p.quote ? '' : stockHtml(p, v, 'tcsf-qv__stock')) + fitBox + metalOpts + lenOpts +
           (specs ? '<dl class="tcsf-qv__specs">' + specs + '</dl>' : '') +
-          '<div class="tcsf-qv__buy"><div class="tcsf-qty"><button type="button" data-qty="-1" aria-label="Decrease quantity">−</button><input type="number" id="' + ID + '-qv-qty" min="1" max="10" value="' + qv.qty + '" aria-label="Quantity" data-qv-qty><button type="button" data-qty="1" aria-label="Increase quantity">+</button></div>' +
-            '<button type="button" class="tcsf-btn tcsf-qv__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart · ' + money(v.p * qv.qty) : 'Sold out') + '</button>' +
-            (v.a ? '<a class="tcsf-btn tcsf-btn--buy" href="' + esc((root.dataset.cart || '/cart') + '/' + v.id + ':' + qv.qty) + '">Buy now</a>' : '') + '</div>' +
+          '<div class="tcsf-qv__buy' + (p.quote ? ' is-quote' : '') + '">' + buy + '</div>' +
           '<div class="tcsf-qv__more"><a href="' + esc(p.url) + '">View full details</a>' + (len && qv.view !== 'onyou' ? '<button type="button" class="tcsf-link" data-qv-view="onyou">Fit preview on a model</button>' : '') + '</div>' +
         '</div></div>';
 
       var mp = modelParams(len || 20, p.w || pickedWidth(), v.metal || qv.metal || 'yellow');
       var mEl = qvBody.querySelector('[data-qv-model]');
-      if (mEl) createModel(mEl, ID + '-qvm').set(mp, { fromTop: true });
+      // Drop the chain in only when switching to the model view, not on every option change.
+      if (mEl) createModel(mEl, ID + '-qvm').set(mp, qv.lastView !== 'onyou' ? { fromTop: true } : { instant: true });
+      qv.lastView = qv.view;
       var tEl = qvBody.querySelector('[data-qv-thumbmodel]');
       if (tEl) { mp.twinkle = false; createModel(tEl, ID + '-qvt').set(mp, { instant: true }); }
       if (focusSel) { var fEl = qvBody.querySelector(focusSel); if (fEl) fEl.focus(); }
@@ -815,50 +921,90 @@
 
     // ---- Dialogs, drawer, scroll lock ----
     var stack = [];
-    function lock() { document.documentElement.style.overflow = stack.length || (filters && filters.classList.contains('is-open')) ? 'hidden' : ''; }
+    var mqDesk = window.matchMedia('(min-width: 1024px)');
+    var advanceTimer, ptrAt = 0;
+    function drawerOpen() { return !!(filters && filters.classList.contains('is-open')); }
+    function lock() {
+      var de = document.documentElement, on = !!(stack.length || drawerOpen());
+      de.style.overflow = on ? 'hidden' : '';
+      de.style.scrollbarGutter = on ? 'stable' : '';
+    }
+    function visible(el) { return !!(el && document.contains(el) && el.offsetParent !== null && !el.closest('[hidden]')); }
     function focusables(el) { return Array.prototype.slice.call(el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select,textarea,[tabindex]:not([tabindex="-1"])')).filter(function (n) { return n.offsetParent !== null || n === document.activeElement; }); }
     function openModal(m, opener) {
       if (!m) return;
       if (stack.indexOf(m) === -1) { m._opener = opener || document.activeElement; stack.push(m); }
       m.hidden = false;
       lock();
-      var mb = q('[data-mbar]'); if (mb) mb.hidden = true;
+      syncMbar();
       var f = m.querySelector('.tcsf-modal__panel [data-close]') || focusables(m)[0];
       if (f) f.focus({ preventScroll: true });
     }
-    function closeModal(m) {
+    // Where focus goes back to when a dialog closes: its opener, or the same control on a re-rendered card.
+    function returnTarget(o) {
+      if (visible(o)) return o;
+      if (o && o.dataset && o.dataset.qvOpen && grid) {
+        var again = grid.querySelector('[data-qv-open="' + o.dataset.qvOpen + '"]' + (o.hasAttribute('data-onyou') ? '[data-onyou]' : '.tcsf-card__quick'));
+        if (visible(again)) return again;
+      }
+      var fb = q('.tcsf-fitbar [data-open-fit]');
+      return visible(fb) ? fb : q('[data-sort]');
+    }
+    function closeModal(m, o) {
       if (!m || m.hidden) return;
+      if (m === fitModal) {
+        clearTimeout(advanceTimer);
+        // Closing half-way through "Change my answers" keeps the size already chosen.
+        if (st.done && app.dataset.view !== 'result' && st.committed) {
+          applySaved(st.committed);
+          app.dataset.view = 'result'; form.hidden = true; res.hidden = false;
+          refresh({ instant: true });
+        }
+      }
       m.hidden = true;
       stack = stack.filter(function (x) { return x !== m; });
       lock();
-      if (m._opener && document.contains(m._opener)) m._opener.focus({ preventScroll: true });
       syncMbar();
+      if (!(o && o.noFocus)) { var t = returnTarget(m._opener); if (t) t.focus({ preventScroll: true }); }
     }
     function openFit(opener) {
       if (opener && qvModal.contains(opener)) opener = qvModal._opener;
-      if (opener && filters && filters.contains(opener) && filters.classList.contains('is-open')) opener = filters._opener;
-      if (!qvModal.hidden) closeModal(qvModal);
-      closeFilters();
+      if (opener && filters && filters.contains(opener) && drawerOpen()) opener = filters._opener;
+      if (!qvModal.hidden) closeModal(qvModal, { noFocus: true });
+      closeFilters({ noFocus: true });
       openModal(fitModal, opener);
       updateFinder({ instant: true });
     }
+    function setExpanded(v) { qa('[data-open-filters]').forEach(function (b) { b.setAttribute('aria-expanded', String(v)); }); }
     function openFilters(opener) {
-      if (!filters || window.innerWidth >= 1024) { var f = facetsEl && facetsEl.querySelector('input'); if (f) f.focus(); return; }
+      if (!filters || mqDesk.matches) { var f = facetsEl && facetsEl.querySelector('input:not([disabled])'); if (f) f.focus(); return; }
       filters._opener = opener;
       filters.classList.add('is-open');
+      filters.setAttribute('role', 'dialog'); filters.setAttribute('aria-modal', 'true');
+      setExpanded(true);
       q('.tcsf-filters__backdrop').hidden = false;
       lock();
       var x = filters.querySelector('.tcsf-filters__x'); if (x) x.focus();
     }
-    function closeFilters() {
-      if (!filters || !filters.classList.contains('is-open')) return;
+    function closeFilters(o) {
+      if (!drawerOpen()) return;
       filters.classList.remove('is-open');
+      filters.removeAttribute('role'); filters.removeAttribute('aria-modal');
+      setExpanded(false);
       q('.tcsf-filters__backdrop').hidden = true;
       lock();
-      if (filters._opener && document.contains(filters._opener)) filters._opener.focus({ preventScroll: true });
+      if (!(o && o.noFocus)) {
+        var t = visible(filters._opener) ? filters._opener : q('.tcsf-toolbar__filter');
+        if (visible(t)) t.focus({ preventScroll: true }); else { var s2 = q('[data-sort]'); if (s2) s2.focus({ preventScroll: true }); }
+      }
     }
-    document.addEventListener('keydown', function (e) {
-      var top = stack[stack.length - 1] || (filters && filters.classList.contains('is-open') ? filters : null);
+    // Rotating a tablet or widening the window turns the drawer back into the sidebar.
+    var onMq = function (e) { if (e.matches) closeFilters({ noFocus: true }); };
+    if (mqDesk.addEventListener) mqDesk.addEventListener('change', onMq); else if (mqDesk.addListener) mqDesk.addListener(onMq);
+
+    function onKey(e) {
+      if (!document.contains(root)) return;
+      var top = stack[stack.length - 1] || (drawerOpen() && !mqDesk.matches ? filters : null);
       if (!top) return;
       if (e.key === 'Escape') { e.preventDefault(); if (top === filters) closeFilters(); else closeModal(top); return; }
       if (e.key === 'Tab') {
@@ -869,62 +1015,91 @@
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         else if (!top.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
       }
-    });
+    }
+    document.addEventListener('keydown', onKey);
 
     // ---- Cart ----
     function toast(html, ms) {
-      var t = q('[data-toast]');
+      var t = q('[data-toast]'), wait = ms || 5000;
+      var hide = function () { t.hidden = true; };
       t.innerHTML = html; t.hidden = false;
       clearTimeout(t._h);
-      t._h = setTimeout(function () { t.hidden = true; }, ms || 5000);
+      t._h = setTimeout(hide, wait);
+      // Pause while the pointer or keyboard focus is on the message so its links stay usable.
+      t.onmouseenter = t.onfocusin = function () { clearTimeout(t._h); };
+      t.onmouseleave = function () { if (!t.contains(document.activeElement)) t._h = setTimeout(hide, 3000); };
+      t.onfocusout = function (e) { if (!t.contains(e.relatedTarget)) t._h = setTimeout(hide, 3000); };
     }
     function addToCart(btn, qty) {
+      if (btn.getAttribute('aria-disabled') === 'true') return;
       var id = +btn.dataset.add, url = (root.dataset.cartAdd || '/cart/add') + '.js', label = btn.textContent;
-      btn.disabled = true; btn.textContent = 'Adding…';
-      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ items: [{ id: id, quantity: qty || 1 }] }) })
+      var drawer = document.querySelector('cart-drawer'), bubble = document.getElementById('cart-icon-bubble');
+      var body = { items: [{ id: id, quantity: qty || 1 }] };
+      // Ask Shopify for the theme's cart drawer / cart icon markup so they update too (Dawn and similar themes).
+      var sections = [drawer ? 'cart-drawer' : null, bubble ? 'cart-icon-bubble' : null].filter(Boolean);
+      if (sections.length) { body.sections = sections.join(','); body.sections_url = location.pathname; }
+      btn.setAttribute('aria-disabled', 'true'); btn.textContent = 'Adding…';
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) })
         .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.description || j.message || 'Could not add to cart.'); return j; }); })
-        .then(function () {
+        .then(function (j) {
           btn.classList.add('is-done'); btn.textContent = 'Added ✓';
-          var cart = root.dataset.cart || '/cart';
-          toast('<span>Added to your cart.</span><a href="' + esc(cart) + '">View cart</a><a class="tcsf-btn" href="/checkout">Checkout</a>');
-          document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
+          var cart = root.dataset.cart || '/cart', usedDrawer = false;
+          if (j && j.sections) {
+            if (drawer && typeof drawer.renderContents === 'function' && j.sections['cart-drawer']) {
+              closeModal(qvModal, { noFocus: true });
+              try { drawer.renderContents(j); usedDrawer = true; } catch (e) { usedDrawer = false; }
+            } else if (bubble && j.sections['cart-icon-bubble']) {
+              var doc = new DOMParser().parseFromString(j.sections['cart-icon-bubble'], 'text/html');
+              var sec = doc.querySelector('.shopify-section');
+              if (sec) bubble.innerHTML = sec.innerHTML;
+            }
+          }
+          if (!usedDrawer) toast('<span>Added to your cart.</span><a href="' + esc(cart) + '">View cart</a><a class="tcsf-btn" href="' + esc(cart.replace(/cart$/, 'checkout')) + '">Checkout</a>', 10000);
+          document.documentElement.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true }));
           fetch(cart + '.js', { headers: { Accept: 'application/json' } }).then(function (r) { return r.json(); }).then(function (c) {
             document.querySelectorAll('[data-cart-count], .cart-count-bubble span[aria-hidden="true"]').forEach(function (n) { n.textContent = c.item_count; });
           }).catch(function () {});
-          setTimeout(function () { btn.classList.remove('is-done'); btn.disabled = false; btn.textContent = label; }, 2400);
+          setTimeout(function () { btn.classList.remove('is-done'); btn.removeAttribute('aria-disabled'); btn.textContent = btn.classList.contains('tcsf-qv__add') && qv ? 'Add to cart · ' + money(qvVariant().p * qv.qty) : label; }, 2400);
         })
         .catch(function (err) {
-          btn.disabled = false; btn.textContent = label;
-          toast('<span>' + esc(err.message || 'Could not add to cart. Please try again.') + '</span>');
+          btn.removeAttribute('aria-disabled'); btn.textContent = label;
+          toast('<span>' + esc(err.message || 'Could not add to cart. Please try again.') + '</span>', 8000);
         });
     }
 
     // ---- Events ----
-    var advanceTimer;
+    // Picture cards move to the next question after a tap or click, but not while arrowing through options.
+    form.addEventListener('pointerdown', function () { ptrAt = Date.now(); });
     form.addEventListener('change', function (e) {
       var n = e.target.name;
       if (n === 'unit') {
-        var inp = q('[name="neck"]'), v = parseFloat(inp.value) || 16, cm = e.target.value === 'cm';
-        inp.value = cm ? Math.round(v * 2.54) : Math.round(v / 2.54 * 2) / 2;
+        var inp = q('[name="neck"]'), v = parseFloat(inp.value), cm = e.target.value === 'cm';
+        if (isFinite(v)) inp.value = cm ? Math.round(v * 2.54) : Math.round(v / 2.54 * 2) / 2;
         inp.step = cm ? 1 : 0.5; inp.min = cm ? 25 : 10; inp.max = cm ? 66 : 26;
+        showNeckProblem(false);
       }
       updateFinder();
-      if ((n === 'fit' || n === 'build') && !REDUCED) {
+      if ((n === 'fit' || n === 'build') && !REDUCED && Date.now() - ptrAt < 1500) {
         clearTimeout(advanceTimer);
-        advanceTimer = setTimeout(function () { goStep(st.step + 1); }, 650);
+        advanceTimer = setTimeout(function () { if (!fitModal.hidden) goStep(st.step + 1); }, 650);
       }
     });
-    form.addEventListener('input', function (e) { if (e.target.name === 'neck') updateFinder(); });
+    form.addEventListener('input', function (e) { if (e.target.name === 'neck') { showNeckProblem(false); updateFinder(); } });
     form.addEventListener('submit', function (e) { e.preventDefault(); });
-    q('.tcsf__stage').addEventListener('change', function (e) { if (e.target.name === 'outfit') { updateFinder(); if (st.done) saveFit(); } });
+    q('.tcsf__stage').addEventListener('change', function (e) { if (e.target.name === 'outfit') { updateFinder(); saveFit(); } });
+    // Dragging the length slider only moves the chain; the grid re-ranks when it's released.
     res.addEventListener('input', function (e) {
-      if (e.target.hasAttribute('data-length')) { st.override = parseInt(e.target.value, 10); refresh(); saveFit(); }
+      if (!e.target.hasAttribute('data-length')) return;
+      var v = parseInt(e.target.value, 10);
+      st.override = v === recommended().len ? null : v;
+      updateFinder();
     });
     res.addEventListener('change', function (e) {
       var n = e.target.name;
+      if (e.target.hasAttribute('data-length')) { refresh({ skipModel: true }); saveFit(); }
       if (n === 'width2') { setRadio('width', e.target.value); refresh(); saveFit(); }
       if (n === 'metal') { refresh(); saveFit(); }
-      if (n === 'skin') { updateFinder({ skipModel: false }); renderFitbar(); saveFit(); }
+      if (n === 'skin') { updateFinder(); renderFitbar(); saveFit(); }
       if (e.target.hasAttribute('data-layer')) { st.layer = e.target.checked; updateFinder({ instant: true }); }
     });
 
@@ -937,13 +1112,25 @@
       renderShop();
     });
     var sortEl = q('[data-sort]');
-    if (sortEl) sortEl.addEventListener('change', function () { st.sort = sortEl.value; st.shown = PAGE; renderShop(); });
+    if (sortEl) sortEl.addEventListener('change', function () {
+      // "Best fit for me" needs a size first.
+      if (sortEl.value === 'fit' && !st.done) { sortEl.value = st.sort; openFit(sortEl); return; }
+      st.sort = sortEl.value; st.shown = PAGE; renderShop();
+    });
 
+    function replaceCard(pid) {
+      var card = grid && grid.querySelector('[data-pid="' + pid + '"]');
+      var x = lastList.filter(function (y) { return String(y.p.id) === String(pid); })[0];
+      if (!card || !x) return null;
+      memo = {};
+      try { x.f = fitFor(x.p); var tmp = document.createElement('div'); tmp.innerHTML = cardHtml(x); card.replaceWith(tmp.firstChild); } finally { memo = null; }
+      return grid.querySelector('[data-pid="' + pid + '"]');
+    }
     qvModal.addEventListener('change', function (e) {
       if (!qv) return;
-      if (e.target.name === ID + '-qvMetal') { qv.metal = e.target.value; cardMetal[qv.p.id] = qv.metal; renderQV('[name="' + ID + '-qvMetal"]:checked'); renderShop(); }
+      if (e.target.name === ID + '-qvMetal') { qv.metal = e.target.value; cardMetal[qv.p.id] = qv.metal; renderQV('[name="' + ID + '-qvMetal"]:checked'); replaceCard(qv.p.id); }
       if (e.target.name === ID + '-qvLen') { qv.len = +e.target.value; renderQV('[name="' + ID + '-qvLen"]:checked'); }
-      if (e.target.hasAttribute('data-qv-qty')) { qv.qty = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1)); renderQV('[data-qv-qty]'); }
+      if (e.target.hasAttribute('data-qv-qty')) { qv.qty = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1)); syncQty(); }
     });
 
     function clearAll() {
@@ -952,66 +1139,77 @@
       st.shown = PAGE;
       renderShop();
     }
+    function focusResults() {
+      var tb = q('.tcsf-toolbar');
+      if (tb) tb.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+      var c = q('.tcsf-toolbar__count');
+      if (c) { c.tabIndex = -1; c.focus({ preventScroll: true }); }
+    }
 
     root.addEventListener('click', function (e) {
-      var t = e.target.closest('button, a, [data-close]');
+      var t = e.target.closest('button, a, [data-close], [data-close-filters]');
       if (!t || !root.contains(t)) return;
       var d = t.dataset;
       if (d.nudge) {
-        var inp = q('[name="neck"]'), step = parseFloat(inp.step) || 0.5;
-        var nv = (parseFloat(inp.value) || 16) + step * parseFloat(d.nudge);
+        var inp = q('[name="neck"]'), step = parseFloat(inp.step) || 0.5, cur0 = parseFloat(inp.value);
+        var nv = (isFinite(cur0) ? cur0 : (val('unit') === 'cm' ? 41 : 16)) + step * parseFloat(d.nudge);
         inp.value = Math.min(parseFloat(inp.max), Math.max(parseFloat(inp.min), nv));
+        showNeckProblem(false);
         updateFinder();
       }
-      if (d.go === 'next') { clearTimeout(advanceTimer); goStep(st.step + 1); }
+      if (t.hasAttribute('data-to-cm')) {
+        setRadio('unit', 'cm');
+        var ni = q('[name="neck"]'); ni.step = 1; ni.min = 25; ni.max = 66;
+        showNeckProblem(false); updateFinder(); ni.focus();
+      }
+      if (d.go === 'next') {
+        clearTimeout(advanceTimer);
+        if (st.step === 1 && showNeckProblem(true)) { q('[name="neck"]').focus(); return; }
+        goStep(st.step + 1);
+      }
       if (d.go === 'back') { clearTimeout(advanceTimer); goStep(st.step - 1); }
       if (d.go === 'reveal') reveal();
       if (d.go === 'restart') restart();
       if (d.go === 'shop') {
+        var nearN = grid && products.length ? countWith('near', true) : 0;
+        if (nearN) { F.near = true; st.shown = PAGE; }
+        closeModal(fitModal, { noFocus: true });
         markDone();
-        closeModal(fitModal);
-        var tb = q('.tcsf-toolbar');
-        if (tb) tb.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
-        toast('<span>Showing chains ranked for your ' + mySize() + '" size.</span>', 3500);
+        focusResults();
+        toast('<span>' + (nearN ? 'Showing ' + nearN + ' ' + (nearN === 1 ? 'chain' : 'chains') + ' within 2" of your ' + mySize() + '" size.' : 'Showing chains ranked for your ' + mySize() + '" size.') + '</span>', 4000);
       }
-      if (t.hasAttribute('data-reset')) { st.override = null; refresh(); saveFit(); }
+      if (t.hasAttribute('data-reset')) { st.override = null; refresh(); saveFit(); q('[data-length]').focus(); }
       if (t.hasAttribute('data-open-fit')) { e.preventDefault(); openFit(t); }
       if (t.hasAttribute('data-close')) { closeModal(t.closest('.tcsf-modal')); }
       if (t.hasAttribute('data-open-filters')) openFilters(t);
       if (t.hasAttribute('data-close-filters')) closeFilters();
-      if (t.hasAttribute('data-clear-all')) clearAll();
-      if (t.hasAttribute('data-shop-sale')) {
-        F.sale = true; st.shown = PAGE; renderShop();
-        var tb2 = q('.tcsf-toolbar'); if (tb2) tb2.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
-      }
+      if (t.hasAttribute('data-clear-all')) { clearAll(); if (!visible(t)) { var s1 = q('[data-sort]'); if (s1) s1.focus(); } }
+      if (t.hasAttribute('data-shop-sale')) { F.sale = true; st.shown = PAGE; renderShop(); focusResults(); }
       if (d.unchip) {
         if (typeof F[d.unchip] === 'boolean') F[d.unchip] = false; else F[d.unchip][d.v] = false;
         st.shown = PAGE; renderShop();
         var nx = q('[data-active] .tcsf-chip') || q('[data-sort]'); if (nx) nx.focus();
       }
       if (t.hasAttribute('data-more')) {
-        var before = st.shown;
-        st.shown += PAGE; renderShop();
-        var nextCard = grid.children[before]; if (nextCard) { var a = nextCard.querySelector('h3 a'); if (a) a.focus({ preventScroll: false }); }
+        var first = showMore();
+        if (first) { var a = first.querySelector('h3 a'); if (a) a.focus({ preventScroll: false }); }
       }
-      if (d.density) { st.density = d.density; qa('[data-density]').forEach(function (b) { if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', String(b.dataset.density === st.density)); }); grid.dataset.density = st.density; }
+      if (d.density) { st.density = d.density; qa('button[data-density]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.density === st.density)); }); grid.dataset.density = st.density; }
       if (d.cardMetal) {
-        var card = t.closest('[data-pid]'), pid = card.dataset.pid;
-        cardMetal[pid] = d.cardMetal;
-        var x = lastList.filter(function (y) { return String(y.p.id) === pid; })[0];
-        if (x) {
-          x.f = fitFor(x.p);
-          var tmp = document.createElement('div'); tmp.innerHTML = cardHtml(x);
-          card.replaceWith(tmp.firstChild);
-          var again = grid.querySelector('[data-pid="' + pid + '"] [data-card-metal="' + d.cardMetal + '"]'); if (again) again.focus();
-        }
+        cardMetal[t.closest('[data-pid]').dataset.pid] = d.cardMetal;
+        var nc = replaceCard(t.closest('[data-pid]').dataset.pid);
+        var again = nc && nc.querySelector('[data-card-metal="' + d.cardMetal + '"]'); if (again) again.focus();
       }
       if (d.qvOpen) openQV(d.qvOpen, t.hasAttribute('data-onyou'), t);
-      if (d.qvView != null && qv) { qv.view = d.qvView === 'onyou' ? 'onyou' : +d.qvView; renderQV('[data-qv-view="' + d.qvView + '"][aria-pressed]'); }
-      if (d.qty && qv) { qv.qty = Math.max(1, Math.min(10, qv.qty + +d.qty)); renderQV('[data-qty="' + d.qty + '"]'); }
+      if (d.qvView != null && qv) { qv.view = d.qvView === 'onyou' ? 'onyou' : +d.qvView; renderQV('.tcsf-qv__thumbs [data-qv-view="' + d.qvView + '"]'); }
+      if (d.qty && qv) { qv.qty = Math.max(1, Math.min(10, qv.qty + +d.qty)); syncQty(); }
       if (d.add) addToCart(t, t.classList.contains('tcsf-qv__add') && qv ? qv.qty : 1);
       if (d.tab) selectTab(d.tab, true);
-      if (t.hasAttribute('data-open-guide')) { selectTab('length'); q('[data-guide]').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); }
+      if (t.hasAttribute('data-open-guide')) {
+        selectTab('length');
+        q('[data-guide]').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+        q('[data-tab="length"]').focus({ preventScroll: true });
+      }
       if (t.hasAttribute('data-copy')) {
         var text = 'My tennis chain size: ' + mySize() + '" (' + Math.round(mySize() * 2.54) + ' cm), ' + widthLabel() + ' wide, ' + (METAL_NAME[val('metal')] || '').toLowerCase();
         var ok = function () { t.textContent = 'Copied ✓'; setTimeout(function () { t.textContent = 'Copy my size'; }, 1800); };
@@ -1039,20 +1237,29 @@
     });
 
     // Mobile bar: shown while the product area is on screen and nothing is open.
-    var mbar = q('[data-mbar]'), marketVisible = false;
+    var mbar = q('[data-mbar]'), marketVisible = false, io = null;
     function syncMbar() { if (mbar) mbar.hidden = !(marketVisible && !stack.length); }
     if (mbar && 'IntersectionObserver' in window) {
-      new IntersectionObserver(function (en) { marketVisible = en[0].isIntersecting; syncMbar(); }, { rootMargin: '-120px 0px -40% 0px' }).observe(q('[data-market]'));
+      io = new IntersectionObserver(function (en) { marketVisible = en[0].isIntersecting; syncMbar(); }, { rootMargin: '-120px 0px -40% 0px' });
+      io.observe(q('[data-market]'));
     }
+
+    // Theme editor: clean up when this section is re-rendered or removed.
+    document.addEventListener('shopify:section:unload', function (e) {
+      if (!e.target || !e.target.contains || !e.target.contains(root)) return;
+      stack = [];
+      if (filters) filters.classList.remove('is-open');
+      lock();
+      document.removeEventListener('keydown', onKey);
+      if (mqDesk.removeEventListener) mqDesk.removeEventListener('change', onMq);
+      if (io) io.disconnect();
+    });
 
     // Restore a size saved on this device.
     var saved = storeGet();
     if (saved && saved.v === 1) {
-      ['neckMode', 'unit', 'collar', 'wearer', 'fit', 'build', 'width', 'metal', 'skin', 'outfit'].forEach(function (k) { if (saved[k]) setRadio(k, saved[k]); });
-      if (saved.unit === 'cm') { var ni = q('[name="neck"]'); ni.step = 1; ni.min = 25; ni.max = 66; }
-      if (saved.neck) q('[name="neck"]').value = saved.neck;
-      st.override = saved.len || null;
-      st.done = true; st.sort = 'fit';
+      applySaved(saved);
+      st.done = true; st.sort = 'fit'; st.committed = saved;
       if (sortEl) sortEl.value = 'fit';
       app.dataset.view = 'result'; form.hidden = true; res.hidden = false;
     }

@@ -21,13 +21,14 @@
       "len": {{ p.metafields.custom.length.value | json }},
       "w": {{ p.metafields.custom.width.value | json }},
       "ct": {{ p.metafields.custom.diamond_weight_side.value | default: p.metafields.custom.diamond_weight.value | json }},
-      "col": {{ p.metafields.custom.diamond_color_side.value | json }},
-      "cl": {{ p.metafields.custom.diamond_clarity_side.value | json }},
+      "col": {{ p.metafields.custom.diamond_color_side.value | default: p.metafields.custom.diamond_color.value | json }},
+      "cl": {{ p.metafields.custom.diamond_clarity_side.value | default: p.metafields.custom.diamond_clarity.value | json }},
       "o": {{ p.metafields.custom.diamond_origin_side.value | default: p.metafields.custom.diamond_origin.value | json }},
       "m": {{ p.metafields.custom.metal.value | json }},
       "g": {{ p.metafields.custom.weight.value | json }},
       "set": {{ p.metafields.custom.setting.value | json }},
       "tags": {{ p.tags | json }},
+      "q": {% if p.tags contains 'Quote Only' or p.price == 0 %}true{% else %}false{% endif %},
       "v": [
         {%- for v in p.variants -%}
           {"id": {{ v.id }}, "t": {{ v.title | json }}, "a": {{ v.available }}, "p": {{ v.price }}, "c": {{ v.compare_at_price | default: 0 }}}

@@ -22,7 +22,7 @@
   data-locale="{{ request.locale.iso_code }}"
   data-cart-add="{{ routes.cart_add_url }}"
   data-cart="{{ routes.cart_url }}"
-  style="--tcsf-bg: {{ section.settings.color_bg }}; --tcsf-fg: {{ section.settings.color_text }}; --tcsf-accent: {{ section.settings.color_accent }}; --tcsf-sale: {{ section.settings.color_sale }}; --tcsf-good: {{ section.settings.color_good }}; --tcsf-link: {{ section.settings.color_link }};"
+  style="--tcsf-bg: {{ section.settings.color_bg }}; --tcsf-fg: {{ section.settings.color_text }}; --tcsf-accent: {{ section.settings.color_accent }}; --tcsf-sale: {{ section.settings.color_sale }}; --tcsf-good: {{ section.settings.color_good }}; --tcsf-link: {{ section.settings.color_link }}; --tcsf-top: {{ section.settings.sticky_offset | plus: 16 }}px;"
 >
   <div class="tcsf__inner">
     {%- if section.settings.show_promo -%}
@@ -92,14 +92,14 @@
         </section>
 
         <div class="tcsf-toolbar">
-          <button type="button" class="tcsf-btn tcsf-btn--outline tcsf-toolbar__filter" data-open-filters aria-controls="{{ uid }}-filters">
+          <button type="button" class="tcsf-btn tcsf-btn--outline tcsf-toolbar__filter" data-open-filters aria-controls="{{ uid }}-filters" aria-expanded="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8M14 4v6M8 14v6"/></svg>
             Filter<span class="tcsf-count" data-out="filterCount" hidden></span>
           </button>
           <p class="tcsf-toolbar__count" aria-live="polite"><b data-out="count">0</b> <span data-out="countLabel">results</span></p>
           <div class="tcsf-toolbar__right">
             <label class="tcsf-sort">
-              <span>Sort by</span>
+              <span class="tcsf-sort__label">Sort by</span>
               <select data-sort id="{{ uid }}-sort">
                 <option value="featured">Featured</option>
                 <option value="fit">Best fit for me</option>
@@ -203,6 +203,7 @@
       </div>
       <div class="tcsf__app" data-view="quiz">
         <div class="tcsf__stage">
+          <div class="tcsf__stick">
           <div class="tcsf__fig">
             <ol class="tcsf__zones" aria-hidden="true">
               <li data-zone="tight">Tight</li>
@@ -215,19 +216,20 @@
           </div>
           <div class="tcsf__badge" data-badge><span data-out="badgeLen">20"</span><small data-out="badgeZone">Collarbone</small></div>
           <div class="tcsf__outfit" role="radiogroup" aria-label="Outfit">
-            <label><input type="radio" name="outfit" value="none" checked><span>No shirt</span></label>
-            <label><input type="radio" name="outfit" value="white"><span>White tee</span></label>
-            <label><input type="radio" name="outfit" value="black"><span>Black tee</span></label>
+            <label><input type="radio" form="{{ uid }}-quiz" name="outfit" value="none" checked><span>No shirt</span></label>
+            <label><input type="radio" form="{{ uid }}-quiz" name="outfit" value="white"><span>White tee</span></label>
+            <label><input type="radio" form="{{ uid }}-quiz" name="outfit" value="black"><span>Black tee</span></label>
+          </div>
           </div>
         </div>
 
         <div class="tcsf__panel">
-          <form class="tcsf__quiz" novalidate>
+          <form class="tcsf__quiz" id="{{ uid }}-quiz" novalidate>
             <div class="tcsf__progress" aria-hidden="true"><span data-progress></span></div>
-            <p class="tcsf__stepcount" data-stepcount>Step 1 of 4</p>
+            <p class="tcsf__stepcount" id="{{ uid }}-stepcount" data-stepcount>Step 1 of 4</p>
 
             <section class="tcsf__q" data-step="1">
-              <h3>What's your neck size?</h3>
+              <h3 aria-describedby="{{ uid }}-stepcount">What's your neck size?</h3>
               <div class="tcsf__seg" role="radiogroup" aria-label="How to enter neck size">
                 <label><input type="radio" name="neckMode" value="measure" checked><span>I measured it</span></label>
                 <label><input type="radio" name="neckMode" value="collar"><span>Shirt collar size</span></label>
@@ -238,11 +240,12 @@
                 <div class="tcsf__dial">
                   <button type="button" class="tcsf__step-btn" data-nudge="-1" aria-label="Decrease">&minus;</button>
                   <label class="tcsf__dial-val">
-                    <input type="number" name="neck" id="{{ uid }}-neck" min="10" max="26" step="0.5" value="16" inputmode="decimal" aria-label="Neck measurement">
+                    <input type="number" name="neck" id="{{ uid }}-neck" min="10" max="26" step="0.5" value="16" inputmode="decimal" aria-label="Neck measurement" aria-describedby="{{ uid }}-neck-hint">
                     <span data-out="unitLabel">in</span>
                   </label>
                   <button type="button" class="tcsf__step-btn" data-nudge="1" aria-label="Increase">+</button>
                 </div>
+                <p class="tcsf__hint tcsf__hint--warn" id="{{ uid }}-neck-hint" data-neck-hint hidden></p>
                 <div class="tcsf__seg tcsf__seg--center" role="radiogroup" aria-label="Unit">
                   <label><input type="radio" name="unit" value="in" checked><span>inches</span></label>
                   <label><input type="radio" name="unit" value="cm"><span>cm</span></label>
@@ -283,7 +286,7 @@
             </section>
 
             <section class="tcsf__q" data-step="2" hidden>
-              <h3>Where should it hit?</h3>
+              <h3 aria-describedby="{{ uid }}-stepcount">Where should it hit?</h3>
               <p class="tcsf__sub">Watch the model. The chain moves as you choose.</p>
               <div class="tcsf__cards" role="radiogroup" aria-label="Fit">
                 <label class="tcsf__card"><input type="radio" name="fit" value="choker"><span><i data-icon="tight"></i><strong>Tight</strong><small>Hugs the neck</small></span></label>
@@ -299,7 +302,7 @@
             </section>
 
             <section class="tcsf__q" data-step="3" hidden>
-              <h3>What's your build?</h3>
+              <h3 aria-describedby="{{ uid }}-stepcount">What's your build?</h3>
               <p class="tcsf__sub">A broad chest and traps take up length, so the chain sits higher.</p>
               <div class="tcsf__cards tcsf__cards--4" role="radiogroup" aria-label="Build">
                 <label class="tcsf__card"><input type="radio" name="build" value="slim"><span><i data-build="slim"></i><strong>Slim</strong></span></label>
@@ -314,7 +317,7 @@
             </section>
 
             <section class="tcsf__q" data-step="4" hidden>
-              <h3>How iced out?</h3>
+              <h3 aria-describedby="{{ uid }}-stepcount">How iced out?</h3>
               <p class="tcsf__sub">Pick a width. Wider links are stiffer, so they need a touch more length.</p>
               <div class="tcsf__widths" role="radiogroup" aria-label="Chain width">
                 <label><input type="radio" name="width" value="2"><span><b style="--d:6px"></b>2mm<small>Subtle</small></span></label>
@@ -331,10 +334,12 @@
             </section>
           </form>
 
-          <div class="tcsf__res" hidden aria-live="polite">
-            <p class="tcsf__res-label">Your perfect length</p>
-            <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
-            <p class="tcsf__res-meta"><span data-out="cm">51</span> cm · about <span data-out="stones">120</span> diamonds at <span data-out="widthLabel">3mm</span></p>
+          <div class="tcsf__res" hidden>
+            <div class="tcsf__res-top" tabindex="-1" data-res-top>
+              <p class="tcsf__res-label">Your perfect length</p>
+              <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
+              <p class="tcsf__res-meta"><span data-out="cm">51</span> cm · about <span data-out="stones">120</span> diamonds at <span data-out="widthLabel">3mm</span></p>
+            </div>
             <p class="tcsf__summary" data-out="summary"></p>
 
             <div class="tcsf__tune">
@@ -346,30 +351,30 @@
               <div>
                 <span class="tcsf__tune-title">Width</span>
                 <div class="tcsf__seg tcsf__seg--xs" role="radiogroup" aria-label="Width">
-                  <label><input type="radio" name="width2" value="2"><span>2mm</span></label>
-                  <label><input type="radio" name="width2" value="3"><span>3mm</span></label>
-                  <label><input type="radio" name="width2" value="4"><span>4mm</span></label>
-                  <label><input type="radio" name="width2" value="5"><span>5mm</span></label>
-                  <label><input type="radio" name="width2" value="6"><span>6mm</span></label>
-                  <label><input type="radio" name="width2" value="7"><span>7mm+</span></label>
+                  <label><input type="radio" form="{{ uid }}-quiz" name="width2" value="2"><span>2mm</span></label>
+                  <label><input type="radio" form="{{ uid }}-quiz" name="width2" value="3"><span>3mm</span></label>
+                  <label><input type="radio" form="{{ uid }}-quiz" name="width2" value="4"><span>4mm</span></label>
+                  <label><input type="radio" form="{{ uid }}-quiz" name="width2" value="5"><span>5mm</span></label>
+                  <label><input type="radio" form="{{ uid }}-quiz" name="width2" value="6"><span>6mm</span></label>
+                  <label><input type="radio" form="{{ uid }}-quiz" name="width2" value="7"><span>7mm+</span></label>
                 </div>
               </div>
               <div class="tcsf__tune-split">
                 <div>
                   <span class="tcsf__tune-title">Metal</span>
                   <div class="tcsf__swatches" role="radiogroup" aria-label="Metal">
-                    <label title="White gold"><input type="radio" name="metal" value="white"><span style="--c1:#f4f6f9;--c2:#9ea5b0"></span></label>
-                    <label title="Yellow gold"><input type="radio" name="metal" value="yellow" checked><span style="--c1:#f7dc85;--c2:#b0831f"></span></label>
-                    <label title="Rose gold"><input type="radio" name="metal" value="rose"><span style="--c1:#f4c7b5;--c2:#b06a58"></span></label>
+                    <label title="White gold"><input type="radio" form="{{ uid }}-quiz" name="metal" value="white"><span style="--c1:#f4f6f9;--c2:#9ea5b0"></span></label>
+                    <label title="Yellow gold"><input type="radio" form="{{ uid }}-quiz" name="metal" value="yellow" checked><span style="--c1:#f7dc85;--c2:#b0831f"></span></label>
+                    <label title="Rose gold"><input type="radio" form="{{ uid }}-quiz" name="metal" value="rose"><span style="--c1:#f4c7b5;--c2:#b06a58"></span></label>
                   </div>
                 </div>
                 <div>
                   <span class="tcsf__tune-title">Skin tone</span>
                   <div class="tcsf__swatches" role="radiogroup" aria-label="Skin tone">
-                    <label title="Light"><input type="radio" name="skin" value="1"><span style="--c1:#f3d3bb;--c2:#d9a887"></span></label>
-                    <label title="Medium"><input type="radio" name="skin" value="2" checked><span style="--c1:#d9a178;--c2:#b0754d"></span></label>
-                    <label title="Tan"><input type="radio" name="skin" value="3"><span style="--c1:#a8704a;--c2:#7c4d30"></span></label>
-                    <label title="Deep"><input type="radio" name="skin" value="4"><span style="--c1:#6e4630;--c2:#43291b"></span></label>
+                    <label title="Light"><input type="radio" form="{{ uid }}-quiz" name="skin" value="1"><span style="--c1:#f3d3bb;--c2:#d9a887"></span></label>
+                    <label title="Medium"><input type="radio" form="{{ uid }}-quiz" name="skin" value="2" checked><span style="--c1:#d9a178;--c2:#b0754d"></span></label>
+                    <label title="Tan"><input type="radio" form="{{ uid }}-quiz" name="skin" value="3"><span style="--c1:#a8704a;--c2:#7c4d30"></span></label>
+                    <label title="Deep"><input type="radio" form="{{ uid }}-quiz" name="skin" value="4"><span style="--c1:#6e4630;--c2:#43291b"></span></label>
                   </div>
                 </div>
               </div>
@@ -398,10 +403,11 @@
   </div>
 
   <div class="tcsf-mbar" data-mbar hidden>
-    <button type="button" class="tcsf-btn tcsf-btn--outline" data-open-filters>Filter<span class="tcsf-count" data-out="filterCount2" hidden></span></button>
+    <button type="button" class="tcsf-btn tcsf-btn--outline" data-open-filters aria-controls="{{ uid }}-filters" aria-expanded="false">Filter<span class="tcsf-count" data-out="filterCount2" hidden></span></button>
     <button type="button" class="tcsf-btn tcsf-btn--gold" data-open-fit><span data-out="mbarFit">Find my size</span></button>
   </div>
   <div class="tcsf-toast" data-toast role="status" hidden></div>
+  <p class="tcsf-sr" role="status" data-announce></p>
 </div>
 
 {% schema %}
@@ -415,10 +421,12 @@
     { "type": "textarea", "id": "intro", "label": "Intro", "default": "Shop real diamond tennis chains by length, width and diamond size. Use the size finder to see exactly where each one will sit on you." },
     { "type": "header", "content": "Products" },
     { "type": "collection", "id": "collection", "label": "Tennis chain collection", "info": "Uses the Tennis Chains collection when left empty. Length and width come from the custom.length and custom.width metafields." },
-    { "type": "range", "id": "limit", "label": "Products to load", "min": 12, "max": 248, "step": 4, "default": 120 },
+    { "type": "range", "id": "limit", "label": "Products to load", "min": 12, "max": 248, "step": 4, "default": 248 },
     { "type": "header", "content": "Help" },
-    { "type": "url", "id": "contact_url", "label": "Contact link", "default": "/pages/contact" },
+    { "type": "url", "id": "contact_url", "label": "Contact link" },
     { "type": "text", "id": "contact_label", "label": "Contact link text", "default": "Talk to a jeweler" },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "sticky_offset", "label": "Space for a sticky store header", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 0, "info": "If your header stays on screen when scrolling, set this to its height so filters and scroll targets aren't hidden under it." },
     { "type": "checkbox", "id": "show_promo", "label": "Show sale strip when chains are on sale", "default": true },
     { "type": "header", "content": "Colors" },
     { "type": "color", "id": "color_bg", "label": "Background", "default": "#ffffff" },
