@@ -241,7 +241,7 @@
     var s = Math.max(0, (drop - 140) * 1.05), cy = (drop - 35) / 0.75;
     return '<svg viewBox="70 30 260 380" aria-hidden="true" focusable="false"><ellipse cx="200" cy="66" rx="40" ry="50" fill="currentColor" opacity=".18"/>' +
       '<path d="M176 100 L176 142 C176 158 126 164 96 176 L80 420 L320 420 L304 176 C274 164 224 158 224 142 L224 100 Z" fill="currentColor" opacity=".18"/>' +
-      '<path d="M178 140 C' + f1(178 - s) + ' ' + f1(cy) + ' ' + f1(222 + s) + ' ' + f1(cy) + ' 222 140" fill="none" style="stroke:var(--tcsf-accent)" stroke-width="13" stroke-linecap="round" stroke-dasharray="0.1 19"/></svg>';
+      '<path d="M178 140 C' + f1(178 - s) + ' ' + f1(cy) + ' ' + f1(222 + s) + ' ' + f1(cy) + ' 222 140" fill="none" stroke="#c9a04a" stroke-width="13" stroke-linecap="round" stroke-dasharray="0.1 19"/></svg>';
   }
   function buildIcon(b) {
     return '<svg viewBox="40 20 320 400" aria-hidden="true" focusable="false"><ellipse cx="200" cy="66" rx="40" ry="50" fill="currentColor" opacity=".22"/>' +
@@ -448,6 +448,15 @@
       return out;
     }
     var PRICE_BUCKETS = priceBuckets();
+    (function promo() {
+      var el = q('[data-promo]');
+      if (!el) return;
+      var onSale = products.filter(function (p) { return p.sale; });
+      if (!onSale.length) return;
+      var best = Math.max.apply(null, onSale.map(function (p) { return Math.max.apply(null, p.variants.map(pct)); }));
+      q('[data-out="promo"]').textContent = 'Sale: save up to ' + best + '% on ' + onSale.length + ' tennis ' + (onSale.length === 1 ? 'chain' : 'chains');
+      el.hidden = false;
+    })();
     var ALL_LENS = uniq(products.reduce(function (a, p) { return a.concat(p.lens); }, [])).sort(function (a, b) { return a - b; });
     var ALL_METALS = ['yellow', 'white', 'rose'].filter(function (m) { return products.some(function (p) { return p.metals.indexOf(m) > -1; }); });
 
@@ -605,6 +614,11 @@
       var l = v.len || (p.lens.length === 1 ? p.lens[0] : p.len);
       return { v: v, len: l, diff: l ? l - mySize() : null, zone: l ? zoneOf(yFor(l, p.w || pickedWidth())) : null };
     }
+    var CHECK = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.6 14.2 3.4 10l-1.4 1.4 5.6 5.6 12-12-1.4-1.4z"/></svg>';
+    function stockHtml(p, v, cls) {
+      if (v.a) return '<p class="' + cls + '">' + CHECK + 'In stock' + (v.metal && p.metals.length > 1 ? ' in ' + METAL_NAME[v.metal].toLowerCase() : '') + '</p>';
+      return '<p class="' + cls + ' is-out">' + (p.available ? 'Sold out in this metal' : 'Sold out') + '</p>';
+    }
     function pct(v) { return v.c > v.p ? Math.round((1 - v.p / v.c) * 100) : 0; }
 
     function mediaHtml(p, metal) {
@@ -617,7 +631,7 @@
       if (st.done && f.len && Math.abs(f.diff) <= 0.5) badges.push('<span class="tcsf-badge tcsf-badge--fit">Your size</span>');
       if (off) badges.push('<span class="tcsf-badge tcsf-badge--sale">−' + off + '%</span>');
       if (p.best) badges.push('<span class="tcsf-badge tcsf-badge--best">Best seller</span>');
-      else if (p.isNew) badges.push('<span class="tcsf-badge">New</span>');
+      else if (p.isNew) badges.push('<span class="tcsf-badge tcsf-badge--new">New</span>');
       var fitLine = '';
       if (st.done && f.len) {
         var d = Math.round(f.diff * 2) / 2, near = Math.abs(d) <= 2;
@@ -632,15 +646,16 @@
         return '<button type="button" data-card-metal="' + m + '" aria-pressed="' + (m === v.metal) + '" aria-label="' + METAL_NAME[m] + '" title="' + METAL_NAME[m] + '"' + (avail ? '' : ' disabled') + ' style="background:linear-gradient(135deg,' + c[0] + ',' + c[2] + ')"></button>';
       }).join('');
       return '<article class="tcsf-card" data-pid="' + p.id + '">' +
-        '<div class="tcsf-card__media"><a class="tcsf-card__img" href="' + esc(p.url) + '" tabindex="-1" aria-hidden="true">' + mediaHtml(p, v.metal) + '</a>' +
+        '<div class="tcsf-card__media' + (p.imgs.length ? '' : ' is-drawn') + '"><a class="tcsf-card__img" href="' + esc(p.url) + '" tabindex="-1" aria-hidden="true">' + mediaHtml(p, v.metal) + '</a>' +
           (badges.length ? '<div class="tcsf-card__badges">' + badges.slice(0, 3).join('') + '</div>' : '') +
           '<button type="button" class="tcsf-card__quick" data-qv-open="' + p.id + '">Quick view<span class="tcsf-sr"> of ' + esc(p.title) + '</span></button></div>' +
         '<div class="tcsf-card__body">' + fitLine +
           '<h3><a href="' + esc(p.url) + '">' + esc(p.title) + '</a></h3>' +
           '<p class="tcsf-card__specs">' + specs + '</p>' +
           '<div class="tcsf-card__price' + (off ? ' is-sale' : '') + '"><b>' + money(v.p) + '</b>' + (off ? '<s>' + money(v.c) + '</s><em>Save ' + money(v.c - v.p) + '</em>' : '') + '</div>' +
+          stockHtml(p, v, 'tcsf-card__stock') +
           '<div class="tcsf-card__row"><div class="tcsf-metals" role="group" aria-label="Metal">' + metals + '</div>' +
-            (f.len ? '<button type="button" class="tcsf-link tcsf-card__try" data-qv-open="' + p.id + '" data-onyou>See it on you</button>' : '') + '</div>' +
+            (f.len ? '<button type="button" class="tcsf-link tcsf-card__try" data-qv-open="' + p.id + '" data-onyou>Fit preview</button>' : '') + '</div>' +
           '<button type="button" class="tcsf-btn tcsf-card__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart' : 'Sold out') + '</button>' +
         '</div></article>';
     }
@@ -730,19 +745,21 @@
       var views = p.imgs.map(function (src, k) { return { k: k, src: src }; });
       if (!views.length) views = [{ k: 0, shot: true }];
       var canOnYou = !!len;
-      var main;
+      var main, mainCls = '';
       if (qv.view === 'onyou' && canOnYou) {
+        mainCls = ' is-model';
         var zone = zoneOf(yFor(len, p.w || pickedWidth()));
         main = '<svg viewBox="0 80 400 380" role="img" aria-label="' + esc(inch(len)) + ' chain on a model, sitting at the ' + ZONE_LABEL[zone].toLowerCase() + '" data-qv-model></svg>' +
-          '<span class="tcsf-qv__zone">' + inch(len) + ' · ' + (st.done ? 'sits at your ' : 'sits at the ') + ZONE_LABEL[zone].toLowerCase() + '</span>';
+          '<span class="tcsf-qv__zone">Fit preview: ' + inch(len) + ' · ' + (st.done ? 'sits at your ' : 'sits at the ') + ZONE_LABEL[zone].toLowerCase() + '</span>';
       } else {
         var cur = views[qv.view] || views[0];
+        if (cur.shot) mainCls = ' is-drawn';
         main = cur.shot ? productShot(GID, p, v.metal || 'yellow') : '<img src="' + esc(cur.src) + '" alt="' + esc(p.title) + '" width="800" height="800">';
       }
       var thumbs = views.map(function (t) {
-        return '<button type="button" data-qv-view="' + t.k + '" aria-pressed="' + (qv.view === t.k) + '" aria-label="Photo ' + (t.k + 1) + '">' +
+        return '<button type="button"' + (t.shot ? ' class="is-drawn"' : '') + ' data-qv-view="' + t.k + '" aria-pressed="' + (qv.view === t.k) + '" aria-label="Photo ' + (t.k + 1) + '">' +
           (t.shot ? productShot(GID, p, v.metal || 'yellow') : '<img src="' + esc(t.src) + '" alt="" loading="lazy" width="120" height="120">') + '</button>';
-      }).join('') + (canOnYou ? '<button type="button" class="is-onyou" data-qv-view="onyou" aria-pressed="' + (qv.view === 'onyou') + '" aria-label="See it on a model"><svg viewBox="112 110 176 176" aria-hidden="true" data-qv-thumbmodel></svg></button>' : '');
+      }).join('') + (canOnYou ? '<button type="button" class="is-onyou" data-qv-view="onyou" aria-pressed="' + (qv.view === 'onyou') + '" aria-label="Fit preview on a model"><svg viewBox="112 110 176 176" aria-hidden="true" data-qv-thumbmodel></svg></button>' : '');
 
       var fitBox;
       if (len && st.done) {
@@ -773,17 +790,19 @@
       if (p.isNew) badges.push('<span class="tcsf-badge">New</span>');
 
       qvBody.innerHTML = '<div class="tcsf-qv">' +
-        '<div class="tcsf-qv__media"><div class="tcsf-qv__main">' + main + '</div><div class="tcsf-qv__thumbs">' + thumbs + '</div></div>' +
+        '<div class="tcsf-qv__media"><div class="tcsf-qv__main' + mainCls + '">' + main + '</div><div class="tcsf-qv__thumbs">' + thumbs + '</div>' +
+          (mainCls === ' is-model' ? '<p class="tcsf-qv__note">Illustration of where this length sits' + (st.done ? ' on you, based on your size answers.' : ' on an average 16" neck.') + ' See the photos for the real piece.</p>' : '') + '</div>' +
         '<div class="tcsf-qv__info">' +
           '<button type="button" class="tcsf-iconbtn tcsf-qv__close" data-close aria-label="Close quick view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
           (badges.length ? '<div class="tcsf-card__badges" style="position:static">' + badges.join('') + '</div>' : '') +
           '<h2 id="' + ID + '-qv-title">' + esc(p.title) + '</h2>' +
           '<div class="tcsf-qv__price' + (off ? ' is-sale' : '') + '"><b>' + money(v.p) + '</b>' + (off ? '<s>' + money(v.c) + '</s><em>Save ' + money(v.c - v.p) + '</em>' : '') + '</div>' +
-          fitBox + metalOpts + lenOpts +
+          stockHtml(p, v, 'tcsf-qv__stock') + fitBox + metalOpts + lenOpts +
           (specs ? '<dl class="tcsf-qv__specs">' + specs + '</dl>' : '') +
           '<div class="tcsf-qv__buy"><div class="tcsf-qty"><button type="button" data-qty="-1" aria-label="Decrease quantity">−</button><input type="number" id="' + ID + '-qv-qty" min="1" max="10" value="' + qv.qty + '" aria-label="Quantity" data-qv-qty><button type="button" data-qty="1" aria-label="Increase quantity">+</button></div>' +
-            '<button type="button" class="tcsf-btn tcsf-qv__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart · ' + money(v.p * qv.qty) : 'Sold out') + '</button></div>' +
-          '<div class="tcsf-qv__more"><a href="' + esc(p.url) + '">View full details</a>' + (len && qv.view !== 'onyou' ? '<button type="button" class="tcsf-link" data-qv-view="onyou">See it on a model</button>' : '') + '</div>' +
+            '<button type="button" class="tcsf-btn tcsf-qv__add" data-add="' + v.id + '"' + (v.a ? '' : ' disabled') + '>' + (v.a ? 'Add to cart · ' + money(v.p * qv.qty) : 'Sold out') + '</button>' +
+            (v.a ? '<a class="tcsf-btn tcsf-btn--buy" href="' + esc((root.dataset.cart || '/cart') + '/' + v.id + ':' + qv.qty) + '">Buy now</a>' : '') + '</div>' +
+          '<div class="tcsf-qv__more"><a href="' + esc(p.url) + '">View full details</a>' + (len && qv.view !== 'onyou' ? '<button type="button" class="tcsf-link" data-qv-view="onyou">Fit preview on a model</button>' : '') + '</div>' +
         '</div></div>';
 
       var mp = modelParams(len || 20, p.w || pickedWidth(), v.metal || qv.metal || 'yellow');
@@ -961,6 +980,10 @@
       if (t.hasAttribute('data-open-filters')) openFilters(t);
       if (t.hasAttribute('data-close-filters')) closeFilters();
       if (t.hasAttribute('data-clear-all')) clearAll();
+      if (t.hasAttribute('data-shop-sale')) {
+        F.sale = true; st.shown = PAGE; renderShop();
+        var tb2 = q('.tcsf-toolbar'); if (tb2) tb2.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+      }
       if (d.unchip) {
         if (typeof F[d.unchip] === 'boolean') F[d.unchip] = false; else F[d.unchip][d.v] = false;
         st.shown = PAGE; renderShop();

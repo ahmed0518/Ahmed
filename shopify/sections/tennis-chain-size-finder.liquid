@@ -22,9 +22,16 @@
   data-locale="{{ request.locale.iso_code }}"
   data-cart-add="{{ routes.cart_add_url }}"
   data-cart="{{ routes.cart_url }}"
-  style="--tcsf-bg: {{ section.settings.color_bg }}; --tcsf-fg: {{ section.settings.color_text }}; --tcsf-accent: {{ section.settings.color_accent }};"
+  style="--tcsf-bg: {{ section.settings.color_bg }}; --tcsf-fg: {{ section.settings.color_text }}; --tcsf-accent: {{ section.settings.color_accent }}; --tcsf-sale: {{ section.settings.color_sale }}; --tcsf-good: {{ section.settings.color_good }}; --tcsf-link: {{ section.settings.color_link }};"
 >
   <div class="tcsf__inner">
+    {%- if section.settings.show_promo -%}
+      <div class="tcsf-promo" data-promo hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12Zm5-5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/></svg>
+        <span data-out="promo"></span>
+        <button type="button" class="tcsf-promo__btn" data-shop-sale>Shop the sale</button>
+      </div>
+    {%- endif -%}
     <nav class="tcsf-crumbs" aria-label="Breadcrumb">
       <a href="{{ routes.root_url }}">Home</a>
       <span aria-hidden="true">/</span>
@@ -412,10 +419,14 @@
     { "type": "header", "content": "Help" },
     { "type": "url", "id": "contact_url", "label": "Contact link", "default": "/pages/contact" },
     { "type": "text", "id": "contact_label", "label": "Contact link text", "default": "Talk to a jeweler" },
+    { "type": "checkbox", "id": "show_promo", "label": "Show sale strip when chains are on sale", "default": true },
     { "type": "header", "content": "Colors" },
     { "type": "color", "id": "color_bg", "label": "Background", "default": "#ffffff" },
-    { "type": "color", "id": "color_text", "label": "Text and buttons", "default": "#141414" },
-    { "type": "color", "id": "color_accent", "label": "Accent (gold)", "default": "#c9a04a" }
+    { "type": "color", "id": "color_text", "label": "Text", "default": "#1a1a1a" },
+    { "type": "color", "id": "color_accent", "label": "Add to cart / highlight (yellow)", "default": "#ffd814" },
+    { "type": "color", "id": "color_sale", "label": "Sale (red)", "default": "#d0021b" },
+    { "type": "color", "id": "color_good", "label": "Fit and in stock (green)", "default": "#0a8a3e" },
+    { "type": "color", "id": "color_link", "label": "Links (blue)", "default": "#0a66c2" }
   ],
   "blocks": [
     {
