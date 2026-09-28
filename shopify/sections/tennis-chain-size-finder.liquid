@@ -1,8 +1,10 @@
 {% comment %}
   Diamond Tennis Chain Size Finder
-  Interactive tool that recommends a tennis chain length (and width) based on
-  neck size, desired fit, build and chain width. Self-contained: no apps or
-  external scripts. Add it to any page via Online Store > Customize.
+  A step-by-step quiz that recommends a tennis chain length (and width) from
+  neck size, desired fit, build and chain width, then lets the customer "try on"
+  the result on a live model: drag the length, switch width, metal and skin
+  tone, and preview a layered stack. Self-contained: no apps or external
+  scripts. Add it to any page via Online Store > Customize.
 {% endcomment %}
 
 <div class="tcsf" id="tcsf-{{ section.id }}">
@@ -11,137 +13,237 @@
       <p class="tcsf__eyebrow">{{ section.settings.eyebrow }}</p>
       <h2 class="tcsf__title">{{ section.settings.heading }}</h2>
       <p class="tcsf__intro">{{ section.settings.intro }}</p>
+      <svg class="tcsf__strand" viewBox="0 0 600 24" aria-hidden="true" data-strand></svg>
     </header>
 
-    <div class="tcsf__grid">
-      <form class="tcsf__form" novalidate>
-        <fieldset class="tcsf__step">
-          <legend><span class="tcsf__num">1</span> Your neck size</legend>
-          <div class="tcsf__seg" role="radiogroup" aria-label="How to enter neck size">
-            <label><input type="radio" name="neckMode" value="measure" checked><span>I measured it</span></label>
-            <label><input type="radio" name="neckMode" value="collar"><span>Use shirt collar size</span></label>
-            <label><input type="radio" name="neckMode" value="unknown"><span>I don't know</span></label>
-          </div>
+    <div class="tcsf__app" data-view="quiz">
+      <div class="tcsf__stage">
+        <div class="tcsf__fig">
+        <ol class="tcsf__zones" aria-hidden="true">
+          <li data-zone="tight">Tight</li>
+          <li data-zone="collarbone">Collarbone</li>
+          <li data-zone="upper">Upper chest</li>
+          <li data-zone="mid">Mid chest</li>
+          <li data-zone="low">Low</li>
+        </ol>
+        <svg class="tcsf__model" viewBox="0 0 400 460" role="img" aria-label="Preview of the chain on a model" data-model>
+          <defs>
+            <radialGradient id="tcsf-{{ section.id }}-ice" cx="38%" cy="34%" r="70%">
+              <stop offset="0" stop-color="#ffffff"/>
+              <stop offset=".45" stop-color="#e3ebf6"/>
+              <stop offset="1" stop-color="#8190a8"/>
+            </radialGradient>
+            <linearGradient id="tcsf-{{ section.id }}-metal" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" data-metal="hi"/>
+              <stop offset="1" data-metal="lo"/>
+            </linearGradient>
+            <linearGradient id="tcsf-{{ section.id }}-skin" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" data-skin="hi"/>
+              <stop offset="1" data-skin="lo"/>
+            </linearGradient>
+          </defs>
+          <g data-body></g>
+          <g data-chains></g>
+        </svg>
+        </div>
+        <div class="tcsf__badge" data-badge><span data-out="badgeLen">20"</span><small data-out="badgeZone">Collarbone</small></div>
+      </div>
 
-          <div class="tcsf__neck" data-mode="measure">
-            <div class="tcsf__row">
-              <input class="tcsf__input" type="number" name="neck" min="10" max="26" step="0.25" value="16" inputmode="decimal" aria-label="Neck measurement">
-              <div class="tcsf__seg tcsf__seg--sm" role="radiogroup" aria-label="Unit">
-                <label><input type="radio" name="unit" value="in" checked><span>in</span></label>
+      <div class="tcsf__panel">
+        <!-- Quiz -->
+        <form class="tcsf__quiz" novalidate>
+          <div class="tcsf__progress" aria-hidden="true"><span data-progress></span></div>
+          <p class="tcsf__stepcount" data-stepcount>Step 1 of 4</p>
+
+          <section class="tcsf__q is-active" data-step="1">
+            <h3>What's your neck size?</h3>
+            <div class="tcsf__seg" role="radiogroup" aria-label="How to enter neck size">
+              <label><input type="radio" name="neckMode" value="measure" checked><span>I measured it</span></label>
+              <label><input type="radio" name="neckMode" value="collar"><span>Shirt collar size</span></label>
+              <label><input type="radio" name="neckMode" value="unknown"><span>No idea</span></label>
+            </div>
+
+            <div class="tcsf__neck" data-mode="measure">
+              <div class="tcsf__dial">
+                <button type="button" class="tcsf__step-btn" data-nudge="-1" aria-label="Decrease">&minus;</button>
+                <label class="tcsf__dial-val">
+                  <input type="number" name="neck" min="10" max="26" step="0.5" value="16" inputmode="decimal" aria-label="Neck measurement">
+                  <span data-out="unitLabel">in</span>
+                </label>
+                <button type="button" class="tcsf__step-btn" data-nudge="1" aria-label="Increase">+</button>
+              </div>
+              <div class="tcsf__seg tcsf__seg--center" role="radiogroup" aria-label="Unit">
+                <label><input type="radio" name="unit" value="in" checked><span>inches</span></label>
                 <label><input type="radio" name="unit" value="cm"><span>cm</span></label>
               </div>
+              <details class="tcsf__tip">
+                <summary>How do I measure?</summary>
+                <p>No tape measure? Wrap a phone charger cable or a piece of string around the base of your neck where a chain would sit, mark where it meets, then lay it along a ruler. Keep it snug, not tight.</p>
+              </details>
             </div>
-            <p class="tcsf__hint">Wrap a soft tape (or a string, then measure it with a ruler) around the base of your neck where a chain would sit. Keep it snug but not tight.</p>
-          </div>
 
-          <div class="tcsf__neck" data-mode="collar" hidden>
-            <select class="tcsf__input" name="collar" aria-label="Shirt collar size">
-              <option value="14">14" (Small)</option>
-              <option value="14.5">14.5" (Small)</option>
-              <option value="15">15" (Medium)</option>
-              <option value="15.5">15.5" (Medium)</option>
-              <option value="16" selected>16" (Large)</option>
-              <option value="16.5">16.5" (Large)</option>
-              <option value="17">17" (X-Large)</option>
-              <option value="17.5">17.5" (X-Large)</option>
-              <option value="18">18" (2XL)</option>
-              <option value="18.5">18.5" (2XL)</option>
-              <option value="19">19" (3XL)</option>
-              <option value="20">20" (3XL+)</option>
-            </select>
-            <p class="tcsf__hint">Dress-shirt collar sizes are close to neck size. We subtract a little because collars are cut with room to spare.</p>
-          </div>
-
-          <div class="tcsf__neck" data-mode="unknown" hidden>
-            <div class="tcsf__seg" role="radiogroup" aria-label="Wearer">
-              <label><input type="radio" name="wearer" value="men" checked><span>Men's</span></label>
-              <label><input type="radio" name="wearer" value="women"><span>Women's</span></label>
+            <div class="tcsf__neck" data-mode="collar" hidden>
+              <div class="tcsf__chips" role="radiogroup" aria-label="Shirt collar size">
+                <label><input type="radio" name="collar" value="14"><span>14"<small>S</small></span></label>
+                <label><input type="radio" name="collar" value="14.5"><span>14½"<small>S</small></span></label>
+                <label><input type="radio" name="collar" value="15"><span>15"<small>M</small></span></label>
+                <label><input type="radio" name="collar" value="15.5"><span>15½"<small>M</small></span></label>
+                <label><input type="radio" name="collar" value="16" checked><span>16"<small>L</small></span></label>
+                <label><input type="radio" name="collar" value="16.5"><span>16½"<small>L</small></span></label>
+                <label><input type="radio" name="collar" value="17"><span>17"<small>XL</small></span></label>
+                <label><input type="radio" name="collar" value="17.5"><span>17½"<small>XL</small></span></label>
+                <label><input type="radio" name="collar" value="18"><span>18"<small>2XL</small></span></label>
+                <label><input type="radio" name="collar" value="18.5"><span>18½"<small>2XL</small></span></label>
+                <label><input type="radio" name="collar" value="19"><span>19"<small>3XL</small></span></label>
+                <label><input type="radio" name="collar" value="20"><span>20"<small>3XL+</small></span></label>
+              </div>
+              <p class="tcsf__hint">Collars are cut with a little room, so we take ½" off to get your neck size.</p>
             </div>
-            <p class="tcsf__hint">We'll use an average neck size (15.5" men, 13.5" women). Your build below fine-tunes it.</p>
-          </div>
-        </fieldset>
 
-        <fieldset class="tcsf__step">
-          <legend><span class="tcsf__num">2</span> Where should it sit?</legend>
-          <div class="tcsf__cards" role="radiogroup">
-            <label class="tcsf__card"><input type="radio" name="fit" value="choker"><span><strong>Tight</strong><small>Hugs the base of the neck</small></span></label>
-            <label class="tcsf__card"><input type="radio" name="fit" value="collarbone" checked><span><strong>Collarbone</strong><small>Classic, sits right on the collarbone</small></span></label>
-            <label class="tcsf__card"><input type="radio" name="fit" value="upper"><span><strong>Upper chest</strong><small>Shows over a crew neck tee</small></span></label>
-            <label class="tcsf__card"><input type="radio" name="fit" value="mid"><span><strong>Mid chest</strong><small>Statement drop, good for pendants</small></span></label>
-            <label class="tcsf__card"><input type="radio" name="fit" value="low"><span><strong>Low</strong><small>Long hang, made for layering</small></span></label>
-          </div>
-        </fieldset>
+            <div class="tcsf__neck" data-mode="unknown" hidden>
+              <div class="tcsf__seg" role="radiogroup" aria-label="Wearer">
+                <label><input type="radio" name="wearer" value="men" checked><span>For him</span></label>
+                <label><input type="radio" name="wearer" value="women"><span>For her</span></label>
+              </div>
+              <p class="tcsf__hint">We'll start from an average neck (15½" for men, 13½" for women). Buying a gift? This is a safe bet.</p>
+            </div>
 
-        <fieldset class="tcsf__step">
-          <legend><span class="tcsf__num">3</span> Your build</legend>
-          <div class="tcsf__seg" role="radiogroup">
-            <label><input type="radio" name="build" value="slim"><span>Slim</span></label>
-            <label><input type="radio" name="build" value="average" checked><span>Average</span></label>
-            <label><input type="radio" name="build" value="athletic"><span>Athletic</span></label>
-            <label><input type="radio" name="build" value="large"><span>Broad / Big</span></label>
-          </div>
-          <p class="tcsf__hint">A broader chest and traps take up length, so the chain sits higher than it would on a slim frame.</p>
-        </fieldset>
+            <div class="tcsf__nav">
+              <button type="button" class="tcsf__btn" data-go="next">Next</button>
+            </div>
+          </section>
 
-        <fieldset class="tcsf__step">
-          <legend><span class="tcsf__num">4</span> Chain width</legend>
-          <div class="tcsf__seg" role="radiogroup">
-            <label><input type="radio" name="width" value="2"><span>2mm</span></label>
-            <label><input type="radio" name="width" value="3"><span>3mm</span></label>
-            <label><input type="radio" name="width" value="4" checked><span>4mm</span></label>
-            <label><input type="radio" name="width" value="5"><span>5mm</span></label>
-            <label><input type="radio" name="width" value="6"><span>6mm</span></label>
-            <label><input type="radio" name="width" value="7"><span>7mm+</span></label>
-          </div>
-          <p class="tcsf__hint">Wider tennis links are stiffer and don't curve as tightly, so wide chains need a bit more length to sit in the same spot.</p>
-        </fieldset>
-      </form>
+          <section class="tcsf__q" data-step="2" hidden>
+            <h3>Where should it hit?</h3>
+            <p class="tcsf__sub">Watch the model. The chain moves as you choose.</p>
+            <div class="tcsf__cards" role="radiogroup" aria-label="Fit">
+              <label class="tcsf__card"><input type="radio" name="fit" value="choker"><span><i data-icon="tight"></i><strong>Tight</strong><small>Hugs the neck</small></span></label>
+              <label class="tcsf__card"><input type="radio" name="fit" value="collarbone" checked><span><i data-icon="collarbone"></i><strong>Collarbone</strong><small>The classic</small></span></label>
+              <label class="tcsf__card"><input type="radio" name="fit" value="upper"><span><i data-icon="upper"></i><strong>Upper chest</strong><small>Shows over a tee</small></span></label>
+              <label class="tcsf__card"><input type="radio" name="fit" value="mid"><span><i data-icon="mid"></i><strong>Mid chest</strong><small>Statement drop</small></span></label>
+              <label class="tcsf__card"><input type="radio" name="fit" value="low"><span><i data-icon="low"></i><strong>Low</strong><small>Made to layer</small></span></label>
+            </div>
+            <div class="tcsf__nav">
+              <button type="button" class="tcsf__btn tcsf__btn--ghost" data-go="back">Back</button>
+              <button type="button" class="tcsf__btn" data-go="next">Next</button>
+            </div>
+          </section>
 
-      <aside class="tcsf__result" aria-live="polite">
-        <div class="tcsf__viz" aria-hidden="true">
-          <svg viewBox="0 0 240 260" class="tcsf__svg">
-            <path class="tcsf__body" d="M96 20 C96 8 144 8 144 20 L146 62 C150 72 170 78 200 86 C224 93 236 110 238 140 L240 260 L0 260 L2 140 C4 110 16 93 40 86 C70 78 90 72 94 62 Z"/>
-            <path class="tcsf__guide" d="M60 96 Q120 112 180 96"/>
-            <path class="tcsf__chain" d="M96 62 Q120 142 144 62"/>
-          </svg>
-          <span class="tcsf__viz-label">Collarbone</span>
+          <section class="tcsf__q" data-step="3" hidden>
+            <h3>What's your build?</h3>
+            <p class="tcsf__sub">A broad chest and traps take up length, so the chain sits higher.</p>
+            <div class="tcsf__cards tcsf__cards--4" role="radiogroup" aria-label="Build">
+              <label class="tcsf__card"><input type="radio" name="build" value="slim"><span><i data-build="slim"></i><strong>Slim</strong></span></label>
+              <label class="tcsf__card"><input type="radio" name="build" value="average" checked><span><i data-build="average"></i><strong>Average</strong></span></label>
+              <label class="tcsf__card"><input type="radio" name="build" value="athletic"><span><i data-build="athletic"></i><strong>Athletic</strong></span></label>
+              <label class="tcsf__card"><input type="radio" name="build" value="large"><span><i data-build="large"></i><strong>Broad / Big</strong></span></label>
+            </div>
+            <div class="tcsf__nav">
+              <button type="button" class="tcsf__btn tcsf__btn--ghost" data-go="back">Back</button>
+              <button type="button" class="tcsf__btn" data-go="next">Next</button>
+            </div>
+          </section>
+
+          <section class="tcsf__q" data-step="4" hidden>
+            <h3>How iced out?</h3>
+            <p class="tcsf__sub">Pick a width. Wider links are stiffer, so they need a touch more length.</p>
+            <div class="tcsf__widths" role="radiogroup" aria-label="Chain width">
+              <label><input type="radio" name="width" value="2"><span><b style="--d:6px"></b>2mm<small>Subtle</small></span></label>
+              <label><input type="radio" name="width" value="3"><span><b style="--d:9px"></b>3mm<small>Everyday</small></span></label>
+              <label><input type="radio" name="width" value="4" checked><span><b style="--d:12px"></b>4mm<small>Classic</small></span></label>
+              <label><input type="radio" name="width" value="5"><span><b style="--d:15px"></b>5mm<small>Bold</small></span></label>
+              <label><input type="radio" name="width" value="6"><span><b style="--d:18px"></b>6mm<small>Heavy</small></span></label>
+              <label><input type="radio" name="width" value="7"><span><b style="--d:21px"></b>7mm+<small>Iced out</small></span></label>
+            </div>
+            <div class="tcsf__nav">
+              <button type="button" class="tcsf__btn tcsf__btn--ghost" data-go="back">Back</button>
+              <button type="button" class="tcsf__btn tcsf__btn--glow" data-go="reveal">Reveal my size ✦</button>
+            </div>
+          </section>
+        </form>
+
+        <!-- Result -->
+        <div class="tcsf__res" hidden aria-live="polite">
+          <p class="tcsf__res-label">Your perfect length</p>
+          <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
+          <p class="tcsf__res-meta"><span data-out="cm">51</span> cm · about <span data-out="stones">120</span> diamonds</p>
+          <p class="tcsf__summary" data-out="summary"></p>
+
+          <div class="tcsf__tune">
+            <div class="tcsf__tune-row">
+              <div class="tcsf__tune-head"><span>Try other lengths</span><button type="button" class="tcsf__link" data-reset hidden>Back to my size</button></div>
+              <input class="tcsf__range" type="range" min="16" max="30" step="2" value="20" data-length aria-label="Chain length">
+              <div class="tcsf__ticks" aria-hidden="true"><span>16"</span><span>18"</span><span>20"</span><span>22"</span><span>24"</span><span>26"</span><span>28"</span><span>30"</span></div>
+            </div>
+
+            <div class="tcsf__tune-row">
+              <span class="tcsf__tune-title">Width</span>
+              <div class="tcsf__seg tcsf__seg--xs" role="radiogroup" aria-label="Width" data-mirror="width">
+                <label><input type="radio" name="width2" value="2"><span>2</span></label>
+                <label><input type="radio" name="width2" value="3"><span>3</span></label>
+                <label><input type="radio" name="width2" value="4"><span>4</span></label>
+                <label><input type="radio" name="width2" value="5"><span>5</span></label>
+                <label><input type="radio" name="width2" value="6"><span>6</span></label>
+                <label><input type="radio" name="width2" value="7"><span>7+</span></label>
+              </div>
+            </div>
+
+            <div class="tcsf__tune-row tcsf__tune-row--split">
+              <div>
+                <span class="tcsf__tune-title">Metal</span>
+                <div class="tcsf__swatches" role="radiogroup" aria-label="Metal">
+                  <label title="White gold"><input type="radio" name="metal" value="white" checked><span style="--c1:#f4f6f9;--c2:#9ea5b0"></span></label>
+                  <label title="Yellow gold"><input type="radio" name="metal" value="yellow"><span style="--c1:#f7dc85;--c2:#b0831f"></span></label>
+                  <label title="Rose gold"><input type="radio" name="metal" value="rose"><span style="--c1:#f4c7b5;--c2:#b06a58"></span></label>
+                </div>
+              </div>
+              <div>
+                <span class="tcsf__tune-title">Model</span>
+                <div class="tcsf__swatches" role="radiogroup" aria-label="Skin tone">
+                  <label title="Light"><input type="radio" name="skin" value="1"><span style="--c1:#f3d3bb;--c2:#d9a887"></span></label>
+                  <label title="Medium"><input type="radio" name="skin" value="2" checked><span style="--c1:#d9a178;--c2:#b0754d"></span></label>
+                  <label title="Tan"><input type="radio" name="skin" value="3"><span style="--c1:#a8704a;--c2:#7c4d30"></span></label>
+                  <label title="Deep"><input type="radio" name="skin" value="4"><span style="--c1:#6e4630;--c2:#43291b"></span></label>
+                </div>
+              </div>
+            </div>
+
+            <label class="tcsf__toggle">
+              <input type="checkbox" data-layer>
+              <span class="tcsf__switch" aria-hidden="true"></span>
+              <span>Layer it: add chains 2" and 4" longer</span>
+            </label>
+          </div>
+
+          {%- if section.settings.shop_url != blank -%}
+            <a class="tcsf__btn tcsf__btn--glow tcsf__cta" href="{{ section.settings.shop_url }}" data-cta>{{ section.settings.cta_label }}</a>
+          {%- endif -%}
+          <div class="tcsf__res-foot">
+            <button type="button" class="tcsf__link" data-go="restart">Change my answers</button>
+            <button type="button" class="tcsf__link" data-copy>Copy my size</button>
+          </div>
+          <p class="tcsf__fine">{{ section.settings.fine_print }}</p>
         </div>
-
-        <p class="tcsf__result-label">Your recommended length</p>
-        <p class="tcsf__length"><span data-out="length">20</span><span class="tcsf__unit">"</span></p>
-        <p class="tcsf__cm"><span data-out="cm">51</span> cm</p>
-        <p class="tcsf__summary" data-out="summary"></p>
-
-        <dl class="tcsf__alts">
-          <div><dt>Shorter option</dt><dd data-out="shorter"></dd></div>
-          <div><dt>Longer option</dt><dd data-out="longer"></dd></div>
-          <div><dt>Suggested width</dt><dd data-out="widthTip"></dd></div>
-        </dl>
-
-        {%- if section.settings.shop_url != blank -%}
-          <a class="tcsf__cta" href="{{ section.settings.shop_url }}">{{ section.settings.cta_label }}</a>
-        {%- endif -%}
-        <p class="tcsf__fine">{{ section.settings.fine_print }}</p>
-      </aside>
+      </div>
     </div>
 
     <div class="tcsf__chart">
       <h3>Tennis chain length chart (men's)</h3>
       <div class="tcsf__table-wrap">
         <table>
-          <thead><tr><th>Length</th><th>Where it sits on an average man (15.5"–16" neck)</th></tr></thead>
+          <thead><tr><th>Length</th><th>Where it sits on an average man (15½"–16" neck)</th></tr></thead>
           <tbody>
-            <tr><td>16"</td><td>Tight at the base of the neck. Best for slim necks or a choker look.</td></tr>
-            <tr><td>18"</td><td>Base of the neck to just above the collarbone.</td></tr>
-            <tr><td>20"</td><td>On the collarbone. The classic tennis chain look.</td></tr>
-            <tr><td>22"</td><td>Just below the collarbone. Shows over a crew neck.</td></tr>
-            <tr><td>24"</td><td>Upper chest. A good pick for broad or athletic builds.</td></tr>
-            <tr><td>26"</td><td>Mid chest. A classic length with a pendant.</td></tr>
-            <tr><td>28"–30"</td><td>Low chest / sternum. Made for layering.</td></tr>
+            <tr data-len="16"><td>16"</td><td>Tight at the base of the neck. Best for slim necks or a choker look.</td></tr>
+            <tr data-len="18"><td>18"</td><td>Base of the neck to just above the collarbone.</td></tr>
+            <tr data-len="20"><td>20"</td><td>On the collarbone. The classic tennis chain look.</td></tr>
+            <tr data-len="22"><td>22"</td><td>Just below the collarbone. Shows over a crew neck.</td></tr>
+            <tr data-len="24"><td>24"</td><td>Upper chest. A good pick for broad or athletic builds.</td></tr>
+            <tr data-len="26"><td>26"</td><td>Mid chest. A classic length with a pendant.</td></tr>
+            <tr data-len="28"><td>28"–30"</td><td>Low chest / sternum. Made for layering.</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="tcsf__hint">Wearing more than one chain? Space them about 2" apart (for example 20" + 22" + 24") so they don't tangle.</p>
+      <p class="tcsf__hint">Stacking chains? Space them about 2" apart (for example 20" + 22" + 24") so they don't tangle.</p>
     </div>
   </div>
 </div>
@@ -151,72 +253,154 @@
     --tcsf-bg: {{ section.settings.color_bg }};
     --tcsf-fg: {{ section.settings.color_text }};
     --tcsf-accent: {{ section.settings.color_accent }};
-    --tcsf-card: rgba(127,127,127,.08);
-    --tcsf-line: rgba(127,127,127,.28);
-    --tcsf-muted: rgba(127,127,127,1);
+    --tcsf-card: rgba(127,127,127,.09);
+    --tcsf-line: rgba(127,127,127,.3);
   }
-  .tcsf { background: var(--tcsf-bg); color: var(--tcsf-fg); padding: 56px 16px; }
+  .tcsf { background: var(--tcsf-bg); color: var(--tcsf-fg); padding: 64px 16px; overflow: hidden; }
   .tcsf *, .tcsf *::before, .tcsf *::after { box-sizing: border-box; }
-  .tcsf__inner { max-width: 1120px; margin: 0 auto; }
-  .tcsf__header { text-align: center; max-width: 640px; margin: 0 auto 40px; }
-  .tcsf__eyebrow { text-transform: uppercase; letter-spacing: .18em; font-size: 12px; color: var(--tcsf-accent); margin: 0 0 8px; }
-  .tcsf__title { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 0 0 12px; color: inherit; }
-  .tcsf__intro { margin: 0; opacity: .8; line-height: 1.55; }
-  .tcsf__grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
-  .tcsf__form { display: grid; gap: 20px; }
-  .tcsf__step { border: 1px solid var(--tcsf-line); border-radius: 12px; padding: 20px; margin: 0; min-width: 0; }
-  .tcsf__step legend { font-weight: 600; font-size: 17px; padding: 0 8px; display: flex; align-items: center; gap: 10px; }
-  .tcsf__num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--tcsf-accent); color: var(--tcsf-bg); font-size: 13px; }
-  .tcsf__hint { font-size: 13px; line-height: 1.5; opacity: .7; margin: 10px 0 0; }
-  .tcsf__row { display: flex; gap: 12px; align-items: stretch; margin-top: 14px; }
-  .tcsf__input { font: inherit; font-size: 18px; padding: 10px 14px; border: 1px solid var(--tcsf-line); border-radius: 8px; background: transparent; color: inherit; width: 100%; max-width: 220px; min-height: 46px; }
-  .tcsf__neck[data-mode="collar"] .tcsf__input, .tcsf__neck[data-mode="unknown"] .tcsf__seg { margin-top: 14px; }
-  .tcsf__input:focus-visible { outline: 2px solid var(--tcsf-accent); outline-offset: 2px; }
-  .tcsf select.tcsf__input option { color: #111; }
+  .tcsf [hidden] { display: none !important; }
+  .tcsf__inner { max-width: 1160px; margin: 0 auto; }
+
+  .tcsf__header { text-align: center; max-width: 680px; margin: 0 auto 36px; }
+  .tcsf__eyebrow { text-transform: uppercase; letter-spacing: .22em; font-size: 12px; color: var(--tcsf-accent); margin: 0 0 10px; }
+  .tcsf__title { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.1; margin: 0 0 14px; color: inherit; }
+  .tcsf__intro { margin: 0; opacity: .8; line-height: 1.55; font-size: 17px; }
+  .tcsf__strand { display: block; width: min(100%, 520px); height: auto; margin: 26px auto 0; }
+
+  .tcsf__app { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: stretch; }
+  .tcsf__stage { position: relative; border-radius: 20px; background: radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.07), transparent 60%), var(--tcsf-card); border: 1px solid var(--tcsf-line); min-height: 520px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .tcsf__fig { position: relative; width: 100%; max-width: 480px; }
+  .tcsf__model { width: 100%; height: auto; display: block; }
+  .tcsf__zones { position: absolute; left: 0; top: 0; bottom: 0; margin: 0; padding: 0; list-style: none; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; pointer-events: none; z-index: 1; }
+  .tcsf__zones li { position: absolute; left: 0; white-space: nowrap; opacity: .35; transform: translateY(-50%); transition: opacity .3s, color .3s; padding-left: 14px; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .tcsf__zones li::before { content: ""; position: absolute; left: 0; top: 50%; width: 8px; height: 1px; background: currentColor; }
+  .tcsf__zones li.is-on { opacity: 1; color: var(--tcsf-accent); font-weight: 700; }
+  .tcsf__zones li.is-on::before { width: 10px; height: 2px; margin-top: -1px; }
+  .tcsf__badge { position: absolute; right: 16px; top: 16px; background: var(--tcsf-bg); border: 1px solid var(--tcsf-line); border-radius: 14px; padding: 10px 14px; text-align: center; line-height: 1.1; z-index: 1; }
+  .tcsf__badge span { display: block; font-size: 26px; font-weight: 700; color: var(--tcsf-accent); font-variant-numeric: tabular-nums; }
+  .tcsf__badge small { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; opacity: .7; }
+  .tcsf__badge.is-pop { animation: tcsf-pop .45s ease; }
+
+  .tcsf__panel { border-radius: 20px; border: 1px solid var(--tcsf-line); padding: 28px; min-width: 0; display: flex; flex-direction: column; }
+  .tcsf__progress { height: 4px; border-radius: 4px; background: var(--tcsf-line); overflow: hidden; }
+  .tcsf__progress span { display: block; height: 100%; width: 25%; background: var(--tcsf-accent); border-radius: 4px; transition: width .4s ease; }
+  .tcsf__stepcount { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; opacity: .6; margin: 12px 0 0; }
+  .tcsf__q { animation: tcsf-in .35s ease both; }
+  .tcsf__q h3, .tcsf__res h3 { font-size: clamp(22px, 2.6vw, 28px); margin: 6px 0 6px; color: inherit; line-height: 1.2; }
+  .tcsf__sub { margin: 0 0 18px; opacity: .72; font-size: 15px; line-height: 1.5; }
+  .tcsf__q h3 + .tcsf__seg { margin-top: 16px; }
+  .tcsf__hint { font-size: 13px; line-height: 1.5; opacity: .7; margin: 12px 0 0; }
+
+  .tcsf input[type="radio"], .tcsf input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+  .tcsf label { cursor: pointer; }
   .tcsf__seg { display: flex; flex-wrap: wrap; gap: 8px; }
-  .tcsf__seg label, .tcsf__card { cursor: pointer; }
-  .tcsf__seg input, .tcsf__card input { position: absolute; opacity: 0; pointer-events: none; }
+  .tcsf__seg--center { justify-content: center; }
   .tcsf__seg span { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 16px; border: 1px solid var(--tcsf-line); border-radius: 999px; font-size: 14px; transition: border-color .15s, background .15s, color .15s; }
-  .tcsf__seg--sm span { min-height: 46px; padding: 8px 14px; }
-  .tcsf__seg input:checked + span, .tcsf__card input:checked + span { border-color: var(--tcsf-accent); background: var(--tcsf-accent); color: var(--tcsf-bg); }
-  .tcsf__seg input:focus-visible + span, .tcsf__card input:focus-visible + span { outline: 2px solid var(--tcsf-accent); outline-offset: 2px; }
-  .tcsf__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .tcsf__card span { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 14px; border: 1px solid var(--tcsf-line); border-radius: 10px; transition: border-color .15s, background .15s, color .15s; }
-  .tcsf__card small { font-size: 12px; line-height: 1.4; opacity: .8; }
-  .tcsf__result { position: sticky; top: 24px; background: var(--tcsf-card); border: 1px solid var(--tcsf-line); border-radius: 16px; padding: 24px; text-align: center; }
-  .tcsf__viz { position: relative; max-width: 220px; margin: 0 auto 12px; }
-  .tcsf__svg { display: block; width: 100%; height: auto; }
-  .tcsf__body { fill: var(--tcsf-line); }
-  .tcsf__guide { fill: none; stroke: var(--tcsf-fg); stroke-opacity: .25; stroke-width: 2; stroke-linecap: round; }
-  .tcsf__chain { fill: none; stroke: var(--tcsf-accent); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0.1 7; transition: d .35s ease; }
-  .tcsf__viz-label { position: absolute; left: 0; right: 0; bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; opacity: .7; }
-  .tcsf__result-label { margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .14em; opacity: .7; }
-  .tcsf__length { font-size: 72px; line-height: 1; font-weight: 700; margin: 6px 0 0; color: var(--tcsf-accent); font-variant-numeric: tabular-nums; }
-  .tcsf__unit { font-size: .6em; vertical-align: top; }
-  .tcsf__cm { margin: 4px 0 12px; opacity: .7; }
-  .tcsf__summary { margin: 0 0 16px; line-height: 1.5; font-size: 15px; }
-  .tcsf__alts { display: grid; gap: 8px; margin: 0 0 20px; text-align: left; }
-  .tcsf__alts div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--tcsf-line); font-size: 14px; }
-  .tcsf__alts dt { opacity: .7; }
-  .tcsf__alts dd { margin: 0; font-weight: 600; text-align: right; }
-  .tcsf__cta { display: block; padding: 14px 20px; border-radius: 999px; background: var(--tcsf-accent); color: var(--tcsf-bg); text-decoration: none; font-weight: 600; letter-spacing: .04em; }
-  .tcsf__cta:hover { opacity: .9; }
-  .tcsf__fine { font-size: 12px; opacity: .6; margin: 14px 0 0; line-height: 1.5; }
-  .tcsf__chart { margin-top: 48px; }
+  .tcsf__seg--xs span { min-height: 36px; min-width: 40px; justify-content: center; padding: 6px 10px; }
+  .tcsf input:checked + span { border-color: var(--tcsf-accent); background: var(--tcsf-accent); color: var(--tcsf-bg); }
+  .tcsf input:focus-visible + span, .tcsf input:focus-visible + .tcsf__switch { outline: 2px solid var(--tcsf-accent); outline-offset: 2px; }
+
+  .tcsf__neck { margin-top: 18px; }
+  .tcsf__dial { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 8px 0 14px; }
+  .tcsf__step-btn { width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--tcsf-line); background: transparent; color: inherit; font-size: 24px; cursor: pointer; transition: border-color .15s, transform .1s; }
+  .tcsf__step-btn:hover { border-color: var(--tcsf-accent); }
+  .tcsf__step-btn:active { transform: scale(.94); }
+  .tcsf__dial-val { display: flex; align-items: baseline; gap: 6px; cursor: text; }
+  .tcsf__dial-val input { font: inherit; font-size: 56px; font-weight: 700; width: 3.4ch; text-align: center; background: transparent; border: 0; border-bottom: 2px solid var(--tcsf-line); color: var(--tcsf-accent); padding: 0; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+  .tcsf__dial-val input::-webkit-outer-spin-button, .tcsf__dial-val input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .tcsf__dial-val input:focus { outline: none; border-bottom-color: var(--tcsf-accent); }
+  .tcsf__dial-val span { font-size: 18px; opacity: .7; }
+  .tcsf__tip { margin-top: 16px; border: 1px solid var(--tcsf-line); border-radius: 12px; padding: 12px 16px; font-size: 14px; }
+  .tcsf__tip summary { cursor: pointer; font-weight: 600; }
+  .tcsf__tip p { margin: 10px 0 0; line-height: 1.55; opacity: .8; }
+
+  .tcsf__chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tcsf__chips span { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; border: 1px solid var(--tcsf-line); border-radius: 12px; font-weight: 600; transition: border-color .15s, background .15s, color .15s; }
+  .tcsf__chips small { font-weight: 400; font-size: 11px; opacity: .7; }
+
+  .tcsf__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+  .tcsf__card span { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; height: 100%; padding: 12px 8px 14px; border: 1px solid var(--tcsf-line); border-radius: 14px; transition: border-color .15s, background .15s, color .15s, transform .15s; }
+  .tcsf__card:hover span { transform: translateY(-2px); border-color: var(--tcsf-accent); }
+  .tcsf__card i { display: block; width: 64px; height: 64px; margin-bottom: 6px; }
+  .tcsf__card i svg { width: 100%; height: 100%; display: block; }
+  .tcsf__card strong { font-size: 14px; }
+  .tcsf__card small { font-size: 12px; opacity: .75; }
+
+  .tcsf__widths { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tcsf__widths span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 6px; border: 1px solid var(--tcsf-line); border-radius: 14px; font-weight: 700; transition: border-color .15s, background .15s, color .15s; }
+  .tcsf__widths small { font-weight: 400; font-size: 12px; opacity: .75; }
+  .tcsf__widths b { display: block; height: 24px; width: 72px; margin-bottom: 8px; background: radial-gradient(circle at 38% 34%, #fff 0, #dfe7f3 35%, #7d8aa3 75%, transparent 76%) 0 50% / var(--d) var(--d) repeat-x; }
+
+  .tcsf__nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; }
+  .tcsf__nav .tcsf__btn:only-child { margin-left: auto; }
+  .tcsf__btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 26px; border-radius: 999px; background: var(--tcsf-accent); color: var(--tcsf-bg); border: 1px solid var(--tcsf-accent); font: inherit; font-weight: 700; letter-spacing: .03em; text-decoration: none; cursor: pointer; transition: transform .12s, opacity .15s; }
+  .tcsf__btn:hover { opacity: .92; }
+  .tcsf__btn:active { transform: scale(.97); }
+  .tcsf__btn--ghost { background: transparent; color: inherit; border-color: var(--tcsf-line); }
+  .tcsf__btn--glow { position: relative; overflow: hidden; }
+  .tcsf__btn--glow::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); transform: translateX(-100%); animation: tcsf-shine 3s ease-in-out infinite; }
+  .tcsf__link { background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; opacity: .8; }
+  .tcsf__link:hover { opacity: 1; color: var(--tcsf-accent); }
+
+  .tcsf__res { animation: tcsf-in .5s ease both; text-align: center; }
+  .tcsf__res-label { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .18em; opacity: .7; }
+  .tcsf__length { font-size: 96px; line-height: 1; font-weight: 800; margin: 4px 0 0; color: var(--tcsf-accent); font-variant-numeric: tabular-nums; text-shadow: 0 0 40px color-mix(in srgb, var(--tcsf-accent) 45%, transparent); }
+  .tcsf__unit { font-size: .55em; vertical-align: top; }
+  .tcsf__res-meta { margin: 6px 0 12px; opacity: .75; font-size: 15px; }
+  .tcsf__summary { margin: 0 0 20px; line-height: 1.55; font-size: 15px; }
+  .tcsf__tune { text-align: left; display: grid; gap: 18px; padding: 18px; border: 1px solid var(--tcsf-line); border-radius: 16px; margin-bottom: 20px; }
+  .tcsf__tune-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 600; font-size: 14px; }
+  .tcsf__tune-title { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .tcsf__tune-row--split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tcsf__range { width: 100%; margin: 12px 0 4px; accent-color: var(--tcsf-accent); height: 28px; cursor: pointer; }
+  .tcsf__ticks { display: flex; justify-content: space-between; font-size: 11px; opacity: .6; font-variant-numeric: tabular-nums; padding: 0 2px; }
+  .tcsf__swatches { display: flex; gap: 10px; }
+  .tcsf__swatches span { display: block; width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--c1), var(--c2)); border: 2px solid transparent; box-shadow: 0 0 0 1px var(--tcsf-line); transition: box-shadow .15s; }
+  .tcsf .tcsf__swatches input:checked + span { background: linear-gradient(135deg, var(--c1), var(--c2)); border-color: var(--tcsf-bg); box-shadow: 0 0 0 2px var(--tcsf-accent); }
+  .tcsf__toggle { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .tcsf__switch { flex: none; width: 44px; height: 26px; border-radius: 999px; background: var(--tcsf-line); position: relative; transition: background .2s; }
+  .tcsf__switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--tcsf-fg); transition: transform .2s; }
+  .tcsf__toggle input:checked + .tcsf__switch { background: var(--tcsf-accent); }
+  .tcsf__toggle input:checked + .tcsf__switch::after { transform: translateX(18px); background: var(--tcsf-bg); }
+  .tcsf__cta { width: 100%; }
+  .tcsf__res-foot { display: flex; justify-content: center; gap: 20px; margin-top: 14px; }
+  .tcsf__fine { font-size: 12px; opacity: .6; margin: 12px 0 0; line-height: 1.5; }
+
+  .tcsf__model .tcsf-tw { transform-box: fill-box; transform-origin: center; animation: tcsf-twinkle 2.4s ease-in-out infinite; opacity: 0; }
+  .tcsf__strand .tcsf-tw { transform-box: fill-box; transform-origin: center; animation: tcsf-twinkle 2.4s ease-in-out infinite; opacity: 0; }
+
+  .tcsf__chart { margin-top: 56px; }
   .tcsf__chart h3 { font-size: 22px; margin: 0 0 16px; color: inherit; }
-  .tcsf__table-wrap { overflow-x: auto; border: 1px solid var(--tcsf-line); border-radius: 12px; }
+  .tcsf__table-wrap { overflow-x: auto; border: 1px solid var(--tcsf-line); border-radius: 14px; }
   .tcsf__chart table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  .tcsf__chart th, .tcsf__chart td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--tcsf-line); vertical-align: top; }
+  .tcsf__chart th, .tcsf__chart td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--tcsf-line); vertical-align: top; transition: background .3s; }
   .tcsf__chart tr:last-child td { border-bottom: 0; }
   .tcsf__chart td:first-child { font-weight: 700; white-space: nowrap; color: var(--tcsf-accent); }
-  .tcsf__chart tr.is-match td { background: var(--tcsf-card); }
-  @media (max-width: 860px) {
-    .tcsf { padding: 40px 16px; }
-    .tcsf__grid { grid-template-columns: 1fr; }
-    .tcsf__result { position: static; }
-    .tcsf__step { padding: 16px; }
+  .tcsf__chart tr.is-match td { background: color-mix(in srgb, var(--tcsf-accent) 16%, transparent); }
+
+  @keyframes tcsf-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes tcsf-pop { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  @keyframes tcsf-shine { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  @keyframes tcsf-twinkle { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+
+  @media (max-width: 900px) {
+    .tcsf { padding: 44px 16px; }
+    .tcsf__app { grid-template-columns: 1fr; gap: 16px; }
+    .tcsf__stage { min-height: 0; padding-top: 8px; }
+    .tcsf__fig { max-width: 280px; }
+    .tcsf__panel { padding: 20px 16px; }
+    .tcsf__length { font-size: 76px; }
   }
-  @media (prefers-reduced-motion: reduce) { .tcsf * { transition: none !important; } }
+  @media (max-width: 480px) {
+    .tcsf__chips { grid-template-columns: repeat(3, 1fr); }
+    .tcsf__widths { grid-template-columns: repeat(2, 1fr); }
+    .tcsf__zones { font-size: 10px; left: -8px; }
+    .tcsf__tune-row--split { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tcsf *, .tcsf *::after { animation: none !important; transition: none !important; }
+    .tcsf__model .tcsf-tw, .tcsf__strand .tcsf-tw { opacity: 0; }
+  }
 </style>
 
 <script>
@@ -225,9 +409,19 @@
     if (!root || root.dataset.ready) return;
     root.dataset.ready = '1';
 
-    var form = root.querySelector('.tcsf__form');
+    var ID = 'tcsf-{{ section.id }}';
+    var NS = 'http://www.w3.org/2000/svg';
+    var app = root.querySelector('.tcsf__app');
+    var form = root.querySelector('.tcsf__quiz');
+    var res = root.querySelector('.tcsf__res');
+    var model = root.querySelector('[data-model]');
+    var bodyG = model.querySelector('[data-body]');
+    var chainsG = model.querySelector('[data-chains]');
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ---- Sizing rules -------------------------------------------------------
     var STANDARD = [16, 18, 20, 22, 24, 26, 28, 30];
-    // Inches of extra length beyond neck size needed to reach each spot.
+    // Inches of length beyond neck size needed to reach each spot.
     var FIT = {
       choker:     { add: 2,  label: 'Tight',       sentence: 'snug at the base of your neck' },
       collarbone: { add: 4,  label: 'Collarbone',  sentence: 'right on your collarbone' },
@@ -236,84 +430,358 @@
       low:        { add: 12, label: 'Low',         sentence: 'low on your chest, ready for layering' }
     };
     var BUILD = { slim: -0.5, average: 0, athletic: 1, large: 2 };
+    var SHOULDERS = { slim: 0.9, average: 1, athletic: 1.1, large: 1.22 };
     var WIDTH = { 2: 0, 3: 0, 4: 0, 5: 0.5, 6: 1, 7: 1 };
-    // Lowest point (SVG y) the drawn chain reaches for each fit.
-    var DROP = { choker: 72, collarbone: 102, upper: 126, mid: 160, low: 200 };
+    var METAL = { white: ['#f4f6f9', '#8f97a3'], yellow: ['#f7dc85', '#a8791a'], rose: ['#f4c7b5', '#a8604f'] };
+    var SKIN = { 1: ['#f3d3bb', '#d6a381'], 2: ['#d9a178', '#a86e48'], 3: ['#a8704a', '#74472c'], 4: ['#6e4630', '#3f2619'] };
+
+    // Where the lowest point of the chain lands on the model (SVG y) for a
+    // given "slack" = chain length minus what the neck, build and width use up.
+    var SLACK_TO_Y = [[-2, 146], [1, 152], [2, 160], [4, 190], [6, 226], [9, 284], [12, 346], [16, 420]];
+    var ZONES = [['tight', 172], ['collarbone', 206], ['upper', 252], ['mid', 314], ['low', 999]];
+    var ZONE_LABEL = { tight: 'Tight', collarbone: 'Collarbone', upper: 'Upper chest', mid: 'Mid chest', low: 'Low' };
+    var ZONE_Y = { tight: 158, collarbone: 190, upper: 226, mid: 284, low: 346 };
+
+    var state = { step: 1, override: null, drop: 60, layer: false };
 
     function val(name) {
-      var el = form.querySelector('[name="' + name + '"]:checked') || form.querySelector('[name="' + name + '"]');
+      var el = root.querySelector('[name="' + name + '"]:checked') || root.querySelector('[name="' + name + '"]');
       return el ? el.value : '';
+    }
+    function setRadio(name, v) {
+      var el = root.querySelector('[name="' + name + '"][value="' + v + '"]');
+      if (el) el.checked = true;
     }
 
     function neckInches() {
       var mode = val('neckMode');
       if (mode === 'collar') return parseFloat(val('collar')) - 0.5;
       if (mode === 'unknown') return val('wearer') === 'women' ? 13.5 : 15.5;
-      var n = parseFloat(form.querySelector('[name="neck"]').value);
-      if (!isFinite(n) || n <= 0) return null;
+      var n = parseFloat(root.querySelector('[name="neck"]').value);
+      if (!isFinite(n) || n <= 0) n = 16;
       if (val('unit') === 'cm') n = n / 2.54;
       return Math.min(Math.max(n, 10), 26);
     }
 
-    function nearest(target) {
-      // Round up to the next standard length: a chain slightly long sits fine,
-      // one slightly short sits tighter than wanted.
-      for (var i = 0; i < STANDARD.length; i++) {
-        if (STANDARD[i] >= target - 0.5) return i;
+    function used() { return neckInches() + BUILD[val('build')] + (WIDTH[val('width')] || 0); }
+
+    function recommended() {
+      var target = used() + FIT[val('fit')].add;
+      // Round up: a chain slightly long sits fine, one slightly short sits tighter than wanted.
+      for (var i = 0; i < STANDARD.length; i++) if (STANDARD[i] >= target - 0.5) return { len: STANDARD[i], target: target };
+      return { len: STANDARD[STANDARD.length - 1], target: target };
+    }
+
+    function slackToY(s) {
+      if (s <= SLACK_TO_Y[0][0]) return SLACK_TO_Y[0][1];
+      for (var i = 1; i < SLACK_TO_Y.length; i++) {
+        var a = SLACK_TO_Y[i - 1], b = SLACK_TO_Y[i];
+        if (s <= b[0]) return a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0]);
       }
-      return STANDARD.length - 1;
+      return SLACK_TO_Y[SLACK_TO_Y.length - 1][1];
+    }
+    function zoneOf(y) { for (var i = 0; i < ZONES.length; i++) if (y < ZONES[i][1]) return ZONES[i][0]; return 'low'; }
+
+    // ---- Drawing -----------------------------------------------------------
+    function el(tag, attrs) {
+      var n = document.createElementNS(NS, tag);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
     }
 
-    function fmt(i) { return i < 0 || i >= STANDARD.length ? 'N/A' : STANDARD[i] + '"'; }
-
-    function widthTip(build, fit) {
-      if (fit === 'choker') return '2mm–3mm';
-      if (build === 'slim') return '2mm–4mm';
-      if (build === 'average') return '3mm–5mm';
-      if (build === 'athletic') return '4mm–6mm';
-      return '5mm–7mm+';
+    function drawBody(build) {
+      var W = 118 * SHOULDERS[build], L = 200 - W, R = 200 + W;
+      var muscle = build === 'athletic' || build === 'large';
+      var skin = 'url(#' + ID + '-skin)';
+      bodyG.innerHTML = '';
+      bodyG.appendChild(el('path', { fill: skin, d:
+        'M176 110 L176 142 C176 158 ' + (L + 44) + ' 164 ' + (L + 14) + ' 176 ' +
+        'C' + (L - 6) + ' 184 ' + (L - 14) + ' 212 ' + (L - 16) + ' 252 L' + (L - 8) + ' 470 L' + (R + 8) + ' 470 ' +
+        'L' + (R + 16) + ' 252 C' + (R + 14) + ' 212 ' + (R + 6) + ' 184 ' + (R - 14) + ' 176 ' +
+        'C' + (R - 44) + ' 164 224 158 224 142 L224 110 Z' }));
+      bodyG.appendChild(el('ellipse', { cx: 200, cy: 70, rx: 40, ry: 50, fill: skin }));
+      // Neck shadow, collarbones and chest lines for depth.
+      bodyG.appendChild(el('path', { d: 'M176 128 Q200 150 224 128 L224 142 Q200 160 176 142 Z', fill: '#000', opacity: .12 }));
+      var line = { fill: 'none', stroke: '#000', 'stroke-opacity': .16, 'stroke-width': 2.2, 'stroke-linecap': 'round' };
+      bodyG.appendChild(el('path', Object.assign({ d: 'M190 182 Q' + (200 - W * 0.45) + ' 172 ' + (L + 26) + ' 184' }, line)));
+      bodyG.appendChild(el('path', Object.assign({ d: 'M210 182 Q' + (200 + W * 0.45) + ' 172 ' + (R - 26) + ' 184' }, line)));
+      bodyG.appendChild(el('path', Object.assign({ d: 'M200 196 L200 ' + (muscle ? 330 : 300) }, line, { 'stroke-opacity': .08 })));
+      var pec = muscle ? 296 : 286, pw = W * (muscle ? 0.72 : 0.6);
+      bodyG.appendChild(el('path', Object.assign({ d: 'M' + (200 - pw) + ' ' + (pec - 28) + ' Q' + (200 - pw * 0.55) + ' ' + (pec + 8) + ' 196 ' + (pec - 6) }, line, { 'stroke-opacity': muscle ? .14 : .08 })));
+      bodyG.appendChild(el('path', Object.assign({ d: 'M' + (200 + pw) + ' ' + (pec - 28) + ' Q' + (200 + pw * 0.55) + ' ' + (pec + 8) + ' 204 ' + (pec - 6) }, line, { 'stroke-opacity': muscle ? .14 : .08 })));
     }
 
-    function update() {
+    // A U-shaped curve from both sides of the neck down to `drop`.
+    function chainPoints(drop) {
+      var y0 = 140, s = Math.max(0, (drop - y0) * 1.05), cy = (drop - 0.25 * y0) / 0.75;
+      var p0 = [178, y0], p1 = [178 - s, cy], p2 = [222 + s, cy], p3 = [222, y0];
+      var pts = [];
+      for (var i = 0; i <= 240; i++) {
+        var t = i / 240, u = 1 - t;
+        pts.push([
+          u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
+          u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]
+        ]);
+      }
+      return pts;
+    }
+
+    function stonesAlong(pts, d) {
+      // Returns [x, y, angle] every `d` along the curve, angle = direction of the chain.
+      var out = [], acc = d, gap = d * 1.02;
+      for (var i = 1; i < pts.length; i++) {
+        var dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1];
+        acc += Math.hypot(dx, dy);
+        if (acc >= gap) { out.push([pts[i][0], pts[i][1], Math.atan2(dy, dx) * 180 / Math.PI]); acc = 0; }
+      }
+      return out;
+    }
+
+    function sparkle(x, y, r, delay) {
+      return el('path', { class: 'tcsf-tw', fill: '#fff', style: 'animation-delay:' + delay + 's',
+        d: 'M' + x + ' ' + (y - r) + ' L' + (x + r * .2) + ' ' + (y - r * .2) + ' L' + (x + r) + ' ' + y + ' L' + (x + r * .2) + ' ' + (y + r * .2) +
+           ' L' + x + ' ' + (y + r) + ' L' + (x - r * .2) + ' ' + (y + r * .2) + ' L' + (x - r) + ' ' + y + ' L' + (x - r * .2) + ' ' + (y - r * .2) + ' Z' });
+    }
+
+    // One tennis link: a square metal box setting holding a round brilliant diamond.
+    function stoneSvg(d) {
+      var h = d / 2, r = d * 0.4, t = r * 0.5, f = [];
+      for (var k = 0; k < 8; k++) {
+        var a = k * Math.PI / 4;
+        f.push((t * Math.cos(a)).toFixed(2) + ' ' + (t * Math.sin(a)).toFixed(2));
+      }
+      return '<rect x="' + -h + '" y="' + -h + '" width="' + d + '" height="' + d + '" rx="' + (d * 0.16) + '" fill="url(#' + ID + '-metal)"/>' +
+        '<rect x="' + (-h + 0.6) + '" y="' + (-h + 0.6) + '" width="' + (d - 1.2) + '" height="' + (d - 1.2) + '" rx="' + (d * 0.14) + '" fill="none" stroke="#000" stroke-opacity=".25" stroke-width=".6"/>' +
+        '<circle r="' + r + '" fill="url(#' + ID + '-ice)"/>' +
+        '<polygon points="' + f.join(' ') + '" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width=".6"/>' +
+        '<path d="M' + -r + ' 0 L' + r + ' 0 M0 ' + -r + ' L0 ' + r + '" stroke="#5d6b85" stroke-opacity=".35" stroke-width=".5"/>' +
+        '<circle cx="' + (-r * 0.35) + '" cy="' + (-r * 0.35) + '" r="' + (r * 0.22) + '" fill="#fff" opacity=".95"/>';
+    }
+
+    function drawChain(g, drop, widthMm, seed) {
+      var d = 3.4 + widthMm * 2;
+      var stones = stonesAlong(chainPoints(drop), d);
+      var link = stoneSvg(d), html = '', tw = [];
+      stones.forEach(function (p, i) {
+        html += '<g transform="translate(' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ') rotate(' + p[2].toFixed(1) + ')">' + link + '</g>';
+        if (!reduced && (i * 7 + seed) % 9 === 0) tw.push(sparkle(p[0], p[1], d * 0.95, ((i * 0.37 + seed) % 2.4).toFixed(2)));
+      });
+      g.innerHTML = html;
+      tw.forEach(function (n) { g.appendChild(n); });
+    }
+
+    function renderChains(drop) {
+      chainsG.innerHTML = '';
+      var w = parseFloat(val('width')) || 4;
+      if (state.layer) {
+        // Each extra 2" of length drops the chain further; lighter chains behind.
+        [4, 2].forEach(function (extra, k) {
+          var g = el('g', { opacity: .92 });
+          drawChain(g, slackToY(currentSlack() + extra), Math.max(2, w - 1 - k), 3 + k);
+          chainsG.appendChild(g);
+        });
+      }
+      var main = el('g', {});
+      drawChain(main, drop, w, 0);
+      chainsG.appendChild(main);
+    }
+
+    var anim = null;
+    function animateTo(target, fromTop) {
+      if (anim) cancelAnimationFrame(anim);
+      var start = fromTop ? 120 : state.drop, t0 = null, dur = fromTop ? 900 : 420;
+      if (reduced) { state.drop = target; renderChains(target); return; }
+      function frame(ts) {
+        if (!t0) t0 = ts;
+        var k = Math.min(1, (ts - t0) / dur);
+        // easeOutBack for a small bounce as the chain settles.
+        var c = 1.4, e = 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2);
+        state.drop = start + (target - start) * (fromTop ? e : 1 - Math.pow(1 - k, 3));
+        renderChains(state.drop);
+        if (k < 1) anim = requestAnimationFrame(frame); else { state.drop = target; renderChains(target); }
+      }
+      anim = requestAnimationFrame(frame);
+    }
+
+    function iconSvg(drop) {
+      var s = Math.max(0, (drop - 140) * 1.05), cy = (drop - 35) / 0.75;
+      return '<svg viewBox="100 20 200 400" aria-hidden="true">' +
+        '<ellipse cx="200" cy="70" rx="40" ry="50" fill="currentColor" opacity=".25"/>' +
+        '<path d="M176 110 L176 142 C176 158 126 164 96 176 L80 420 L320 420 L304 176 C274 164 224 158 224 142 L224 110 Z" fill="currentColor" opacity=".25"/>' +
+        '<path d="M178 140 C' + (178 - s) + ' ' + cy + ' ' + (222 + s) + ' ' + cy + ' 222 140" fill="none" style="stroke:var(--tcsf-accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="0.1 20"/>' +
+        '</svg>';
+    }
+    function buildSvg(b) {
+      var W = 118 * SHOULDERS[b], L = 200 - W, R = 200 + W;
+      return '<svg viewBox="40 20 320 400" aria-hidden="true"><ellipse cx="200" cy="70" rx="40" ry="50" fill="currentColor" opacity=".3"/>' +
+        '<path fill="currentColor" opacity=".3" d="M176 110 L176 142 C176 158 ' + (L + 44) + ' 164 ' + (L + 14) + ' 176 C' + (L - 6) + ' 184 ' + (L - 14) + ' 212 ' + (L - 16) + ' 252 L' + (L - 8) + ' 420 L' + (R + 8) + ' 420 L' + (R + 16) + ' 252 C' + (R + 14) + ' 212 ' + (R + 6) + ' 184 ' + (R - 14) + ' 176 C' + (R - 44) + ' 164 224 158 224 142 L224 110 Z"/></svg>';
+    }
+    root.querySelectorAll('[data-icon]').forEach(function (i) { i.innerHTML = iconSvg(ZONE_Y[i.dataset.icon]); });
+    root.querySelectorAll('[data-build]').forEach(function (i) { i.innerHTML = buildSvg(i.dataset.build); });
+
+    // Decorative sparkling strand under the heading.
+    (function () {
+      var s = root.querySelector('[data-strand]');
+      for (var x = 12, i = 0; x < 600; x += 18, i++) {
+        var y = 12 + Math.sin(x / 95) * 4;
+        s.appendChild(el('circle', { cx: x, cy: y, r: 7, style: 'fill:var(--tcsf-accent)', opacity: .9 }));
+        s.appendChild(el('circle', { cx: x, cy: y, r: 5, fill: 'url(#' + ID + '-ice)' }));
+        if (!reduced && i % 4 === 0) s.appendChild(sparkle(x, y, 9, ((i * 0.53) % 2.4).toFixed(2)));
+      }
+    })();
+
+    function setColors() {
+      var m = METAL[val('metal')] || METAL.white, k = SKIN[val('skin')] || SKIN[2];
+      model.querySelector('[data-metal="hi"]').setAttribute('stop-color', m[0]);
+      model.querySelector('[data-metal="lo"]').setAttribute('stop-color', m[1]);
+      model.querySelector('[data-skin="hi"]').setAttribute('stop-color', k[0]);
+      model.querySelector('[data-skin="lo"]').setAttribute('stop-color', k[1]);
+    }
+
+    // ---- State -> UI -------------------------------------------------------
+    function currentLength() { return state.override || recommended().len; }
+    function currentSlack() { return currentLength() - used(); }
+    function fmtNeck(n) { return (Math.round(n * 4) / 4).toString().replace(/\.5$/, '½').replace(/\.25$/, '¼').replace(/\.75$/, '¾'); }
+
+    var lastBadge = '';
+    function update(opts) {
+      opts = opts || {};
       var mode = val('neckMode');
-      root.querySelectorAll('.tcsf__neck').forEach(function (el) { el.hidden = el.dataset.mode !== mode; });
+      root.querySelectorAll('.tcsf__neck').forEach(function (n) { n.hidden = n.dataset.mode !== mode; });
+      root.querySelector('[data-out="unitLabel"]').textContent = val('unit') === 'cm' ? 'cm' : 'in';
 
-      var neck = neckInches();
-      var fit = val('fit'), build = val('build'), width = val('width');
-      if (neck == null) return;
+      var w = val('width'), rec = recommended();
+      var len = currentLength();
+      // During the quiz, show the fit chosen so far; after the reveal, show the real length.
+      var y = app.dataset.view === 'result' || state.step > 2 ? slackToY(len - used()) : ZONE_Y[zoneFromFit(val('fit'))];
+      var zone = zoneOf(y);
 
-      var target = neck + FIT[fit].add + BUILD[build] + (WIDTH[width] || 0);
-      var i = nearest(target);
-      var len = STANDARD[i];
+      drawBody(val('build'));
+      setColors();
+      if (!opts.noAnim) animateTo(y, opts.fromTop);
 
+      root.querySelectorAll('.tcsf__zones li').forEach(function (li) {
+        li.style.top = (ZONE_Y[li.dataset.zone] / 460 * 100) + '%';
+        li.classList.toggle('is-on', li.dataset.zone === zone);
+      });
+      var badge = root.querySelector('[data-badge]');
+      var showLen = app.dataset.view === 'result' || state.step > 1;
+      root.querySelector('[data-out="badgeLen"]').textContent = showLen ? len + '"' : '?';
+      root.querySelector('[data-out="badgeZone"]').textContent = ZONE_LABEL[zone];
+      var key = len + zone;
+      if (key !== lastBadge) { badge.classList.remove('is-pop'); void badge.offsetWidth; badge.classList.add('is-pop'); lastBadge = key; }
+      model.setAttribute('aria-label', 'A ' + len + ' inch chain sitting at the ' + ZONE_LABEL[zone].toLowerCase());
+
+      // Result panel
       root.querySelector('[data-out="length"]').textContent = len;
       root.querySelector('[data-out="cm"]').textContent = Math.round(len * 2.54);
-      root.querySelector('[data-out="shorter"]').textContent = i > 0 ? fmt(i - 1) + ' (sits higher)' : 'N/A';
-      root.querySelector('[data-out="longer"]').textContent = i < STANDARD.length - 1 ? fmt(i + 1) + ' (sits lower)' : 'N/A';
-      root.querySelector('[data-out="widthTip"]').textContent = widthTip(build, fit);
-
+      root.querySelector('[data-out="stones"]').textContent = Math.round(len * 25.4 / ((parseFloat(w) || 4) * 1.05));
+      var wl = w === '7' ? '7mm+' : w + 'mm';
       var note = '';
-      if (target > STANDARD[STANDARD.length - 1] + 0.5) note = ' For an even longer drop, contact us — we can help.';
-      if (target < STANDARD[0] - 1) note = ' For a tighter fit, contact us — we can help.';
-      root.querySelector('[data-out="summary"]').textContent =
-        'With a ' + neck.toFixed(1).replace(/\.0$/, '') + '" neck, a ' + len + '" ' +
-        (width === '7' ? '7mm+' : width + 'mm') + ' tennis chain should sit ' + FIT[fit].sentence + '.' + note;
+      if (!state.override && rec.target > 30.5) note = ' Want it even longer? Contact us and we can help.';
+      if (!state.override && rec.target < 15) note = ' Want it even tighter? Contact us and we can help.';
+      root.querySelector('[data-out="summary"]').textContent = state.override
+        ? 'A ' + len + '" ' + wl + ' chain would sit ' + (zone === 'tight' ? 'tight on your neck' : 'at your ' + ZONE_LABEL[zone].toLowerCase()) + '. Your recommended size is ' + rec.len + '".'
+        : 'With a ' + fmtNeck(neckInches()) + '" neck, a ' + len + '" ' + wl + ' tennis chain sits ' + FIT[val('fit')].sentence + '.' + note;
+      root.querySelector('[data-length]').value = len;
+      root.querySelector('[data-reset]').hidden = !state.override || state.override === rec.len;
+      setRadio('width2', w);
 
-      var chain = root.querySelector('.tcsf__chain');
-      // A quadratic curve's midpoint is halfway between its ends and control point.
-      chain.setAttribute('d', 'M96 62 Q120 ' + (2 * DROP[fit] - 62) + ' 144 62');
-      root.querySelector('.tcsf__viz-label').textContent = FIT[fit].label;
+      var p = root.querySelector('[data-progress]');
+      p.style.width = (state.step / 4 * 100) + '%';
+      root.querySelector('[data-stepcount]').textContent = 'Step ' + state.step + ' of 4';
 
       root.querySelectorAll('.tcsf__chart tbody tr').forEach(function (tr) {
-        var first = parseInt(tr.cells[0].textContent, 10);
-        tr.classList.toggle('is-match', first === len || (len >= 28 && first === 28));
+        var n = parseInt(tr.dataset.len, 10);
+        tr.classList.toggle('is-match', n === len || (len >= 28 && n === 28));
       });
     }
+    function zoneFromFit(f) { return f === 'choker' ? 'tight' : f; }
 
-    form.addEventListener('input', update);
-    form.addEventListener('change', update);
+    function goStep(n) {
+      state.step = Math.max(1, Math.min(4, n));
+      root.querySelectorAll('.tcsf__q').forEach(function (q) {
+        var on = +q.dataset.step === state.step;
+        q.hidden = !on;
+        q.classList.toggle('is-active', on);
+      });
+      update();
+    }
+
+    function reveal() {
+      state.override = null;
+      app.dataset.view = 'result';
+      form.hidden = true;
+      res.hidden = false;
+      update({ fromTop: true });
+      if (window.innerWidth < 900) root.querySelector('.tcsf__stage').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    function restart() {
+      app.dataset.view = 'quiz';
+      res.hidden = true;
+      form.hidden = false;
+      state.override = null;
+      goStep(1);
+    }
+
+    // ---- Events ------------------------------------------------------------
+    var advanceTimer;
+    form.addEventListener('change', function (e) {
+      var n = e.target.name;
+      if (n === 'unit') {
+        var inp = root.querySelector('[name="neck"]'), v = parseFloat(inp.value) || 16;
+        inp.value = e.target.value === 'cm' ? Math.round(v * 2.54) : Math.round(v / 2.54 * 2) / 2;
+        inp.step = e.target.value === 'cm' ? 1 : 0.5;
+        inp.min = e.target.value === 'cm' ? 25 : 10;
+        inp.max = e.target.value === 'cm' ? 66 : 26;
+      }
+      update();
+      // Picture cards move straight to the next question.
+      if ((n === 'fit' || n === 'build') && !reduced) {
+        clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(function () { goStep(state.step + 1); }, 650);
+      }
+    });
+    form.addEventListener('input', function (e) { if (e.target.name === 'neck') update(); });
     form.addEventListener('submit', function (e) { e.preventDefault(); });
-    update();
+
+    root.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-go],[data-nudge],[data-reset],[data-copy]');
+      if (!t) return;
+      if (t.dataset.nudge) {
+        var inp = root.querySelector('[name="neck"]');
+        var step = parseFloat(inp.step) || 0.5;
+        var v = (parseFloat(inp.value) || 16) + step * parseFloat(t.dataset.nudge);
+        inp.value = Math.min(parseFloat(inp.max), Math.max(parseFloat(inp.min), v));
+        update();
+      }
+      var go = t.dataset.go;
+      if (go === 'next') { clearTimeout(advanceTimer); goStep(state.step + 1); }
+      if (go === 'back') { clearTimeout(advanceTimer); goStep(state.step - 1); }
+      if (go === 'reveal') reveal();
+      if (go === 'restart') restart();
+      if (t.hasAttribute('data-reset')) { state.override = null; update(); }
+      if (t.hasAttribute('data-copy')) {
+        var w = val('width'), text = 'My tennis chain size: ' + currentLength() + '" (' + Math.round(currentLength() * 2.54) + ' cm), ' + (w === '7' ? '7mm+' : w + 'mm') + ' wide, ' + val('metal') + ' gold';
+        var done = function () { t.textContent = 'Copied ✓'; setTimeout(function () { t.textContent = 'Copy my size'; }, 1800); };
+        if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {}); else done();
+      }
+    });
+
+    res.addEventListener('input', function (e) {
+      if (e.target.hasAttribute('data-length')) { state.override = parseInt(e.target.value, 10); update(); }
+    });
+    res.addEventListener('change', function (e) {
+      var n = e.target.name;
+      if (n === 'width2') { setRadio('width', e.target.value); update(); }
+      if (n === 'metal' || n === 'skin') { setColors(); }
+      if (e.target.hasAttribute('data-layer')) { state.layer = e.target.checked; update({ noAnim: true }); renderChains(state.drop); }
+    });
+
+    drawBody(val('build'));
+    setColors();
+    goStep(1);
   })();
 </script>
 
@@ -323,9 +791,9 @@
   "tag": "section",
   "class": "section-tennis-chain-size-finder",
   "settings": [
-    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Size guide" },
-    { "type": "text", "id": "heading", "label": "Heading", "default": "Find your perfect tennis chain length" },
-    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Answer four quick questions and we'll tell you which diamond tennis chain length will sit exactly where you want it." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Tennis chain size guide" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Find the length that fits you" },
+    { "type": "textarea", "id": "intro", "label": "Intro", "default": "Four quick questions. Watch the chain move on the model as you answer, then try on different lengths, widths and metals." },
     { "type": "url", "id": "shop_url", "label": "Shop button link", "default": "/search?q=tennis+chain" },
     { "type": "text", "id": "cta_label", "label": "Shop button label", "default": "Shop tennis chains" },
     { "type": "textarea", "id": "fine_print", "label": "Fine print", "default": "Still not sure? Contact us and we'll help you pick the right length." },

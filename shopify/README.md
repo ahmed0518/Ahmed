@@ -1,11 +1,18 @@
 # Tennis Chain Size Finder (Shopify)
 
-An interactive page section that helps customers pick the right diamond tennis
-chain length. Customers enter their neck size (tape measurement in inches or cm,
-shirt collar size, or "I don't know"), choose where they want the chain to sit,
-their build and the chain width. The tool then recommends a standard length
-(16"–30"), a shorter and a longer option, and a width range. A drawing shows
-where the chain will fall, and a length chart highlights the matching row.
+An interactive, step-by-step page section that helps customers pick the right diamond tennis
+chain length.
+
+- **Live model:** a figure wearing a sparkling diamond tennis chain drawn link by link.
+  The chain moves as the customer answers, and the figure's shoulders change with build.
+- **4-step quiz:** neck size (a measurement in inches or cm, a shirt collar size,
+  or "no idea"), where it should sit, build, and width. Picture cards move to the
+  next question automatically.
+- **Reveal:** the chain drops into place and shows the recommended length, cm, and
+  roughly how many diamonds are in it.
+- **Try-on:** a length slider (16"–30"), width, white/yellow/rose gold, 4 skin tones,
+  a "Layer it" switch that adds chains 2" and 4" longer, and "Copy my size".
+- **Length chart:** highlights the row that matches the length shown.
 
 It's self-contained: plain Liquid, CSS and JavaScript, with no apps or external scripts.
 
