@@ -20,7 +20,7 @@
   var SHOULDERS = { slim: 0.9, average: 1, athletic: 1.1, large: 1.22 };
   function widthAdj(w) { return w >= 5.5 ? 1 : w >= 4.75 ? 0.5 : 0; }
 
-  var METAL = { white: ['#fbfcfe', '#c9ced6', '#7f8793'], yellow: ['#fff1b8', '#e3b847', '#8f6512'], rose: ['#ffe0d4', '#dea08b', '#8e4d3f'] };
+  var METAL = { white: ['#ffffff', '#d3d8e0', '#6f7784'], yellow: ['#fff4c2', '#e6b93f', '#7a5408'], rose: ['#ffe6da', '#dc9c86', '#7e4436'] };
   var METAL_NAME = { white: 'White gold', yellow: 'Yellow gold', rose: 'Rose gold' };
   var SKIN = { 1: ['#f6dcc6', '#e3b393', '#b98263'], 2: ['#e2ae87', '#c1865d', '#8d5a39'], 3: ['#b27a52', '#8f5a37', '#5e3720'], 4: ['#7a4e36', '#573522', '#301c11'] };
   var TEE = { white: ['#f7f7f4', '#d9d9d4'], black: ['#2a2a2e', '#141416'] };
@@ -123,16 +123,51 @@
     return '<path class="tcsf-tw" fill="#fff" style="animation-delay:' + delay + 's" d="M' + f1(x) + ' ' + f1(y - r) + 'L' + f1(x + q) + ' ' + f1(y - q) + 'L' + f1(x + r) + ' ' + f1(y) + 'L' + f1(x + q) + ' ' + f1(y + q) +
       'L' + f1(x) + ' ' + f1(y + r) + 'L' + f1(x - q) + ' ' + f1(y + q) + 'L' + f1(x - r) + ' ' + f1(y) + 'L' + f1(x - q) + ' ' + f1(y - q) + 'Z"/>';
   }
+  // A photo-quality tennis link: a four-prong basket setting holding a round brilliant, lit from the top left.
+  function realLinkSvg(d, id) {
+    var h = d / 2, r = d * 0.43, pr = Math.max(0.6, d * 0.085), pd = r * 0.98, prongs = '';
+    for (var q = 0; q < 4; q++) {
+      var pa = Math.PI / 4 + q * Math.PI / 2, px = pd * Math.cos(pa), py = pd * Math.sin(pa);
+      prongs += '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r="' + f1(pr) + '" fill="url(#' + id + '-prong)"/>';
+    }
+    // Table (flat top facet) and crown facets of the stone.
+    var t = r * 0.56, tbl = [], crown = '';
+    for (var k = 0; k < 8; k++) {
+      var a = k * Math.PI / 4 + Math.PI / 8, b = a + Math.PI / 8;
+      tbl.push(f1(t * Math.cos(a)) + ' ' + f1(t * Math.sin(a)));
+      crown += 'M' + f1(t * Math.cos(a)) + ' ' + f1(t * Math.sin(a)) + 'L' + f1(r * Math.cos(b)) + ' ' + f1(r * Math.sin(b)) + 'L' + f1(t * Math.cos(b + Math.PI / 8)) + ' ' + f1(t * Math.sin(b + Math.PI / 8));
+    }
+    return '<rect x="' + f1(-h) + '" y="' + f1(-h) + '" width="' + f1(d) + '" height="' + f1(d) + '" rx="' + f1(d * .12) + '" fill="url(#' + id + '-metal)"/>' +
+      '<rect x="' + f1(-h + d * .09) + '" y="' + f1(-h + d * .09) + '" width="' + f1(d * .82) + '" height="' + f1(d * .82) + '" rx="' + f1(d * .1) + '" fill="url(#' + id + '-metalIn)"/>' +
+      '<rect x="' + f1(-h + d * .05) + '" y="' + f1(-h + d * .05) + '" width="' + f1(d * .9) + '" height="' + f1(d * .9) + '" rx="' + f1(d * .11) + '" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="' + f1(Math.max(.3, d * .05)) + '" stroke-dasharray="' + f1(d * 1.3) + ' ' + f1(d * 2.3) + '"/>' +
+      '<circle r="' + f1(r * 1.06) + '" fill="#3a4258"/>' +
+      '<circle r="' + f1(r) + '" fill="url(#' + id + '-pav)"/>' +
+      '<circle r="' + f1(r * .55) + '" fill="url(#' + id + '-flash)"/>' +
+      '<path d="' + crown + '" fill="#fff" fill-opacity=".22" stroke="#fff" stroke-opacity=".5" stroke-width="' + f1(Math.max(.25, d * .03)) + '"/>' +
+      '<polygon points="' + tbl.join(' ') + '" fill="url(#' + id + '-table)"/>' +
+      '<circle cx="' + f1(-r * .36) + '" cy="' + f1(-r * .4) + '" r="' + f1(r * .2) + '" fill="#fff" fill-opacity=".95"/>' +
+      '<circle cx="' + f1(r * .3) + '" cy="' + f1(r * .34) + '" r="' + f1(r * .09) + '" fill="#fff" fill-opacity=".6"/>' + prongs;
+  }
+  function realGradients(id) {
+    return '<linearGradient id="' + id + '-metalIn" x1="0" y1="1" x2="1" y2="0"><stop offset="0" data-metal="2"/><stop offset=".55" data-metal="1"/><stop offset="1" data-metal="0"/></linearGradient>' +
+      '<radialGradient id="' + id + '-prong" cx="35%" cy="35%" r="70%"><stop offset="0" data-metal="0"/><stop offset="1" data-metal="2"/></radialGradient>' +
+      '<radialGradient id="' + id + '-pav" cx="42%" cy="38%" r="60%"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#e9eef8"/><stop offset=".72" stop-color="#b6c1d6"/><stop offset=".92" stop-color="#6e7b96"/><stop offset="1" stop-color="#45506a"/></radialGradient>' +
+      '<radialGradient id="' + id + '-flash" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".6" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>' +
+      '<linearGradient id="' + id + '-table" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".92"/><stop offset=".5" stop-color="#e8eefb" stop-opacity=".75"/><stop offset="1" stop-color="#9aa7c4" stop-opacity=".7"/></linearGradient>';
+  }
   function chainSvg(pts, widthMm, metal, ice, opts) {
     opts = opts || {};
     var d = opts.scale ? widthMm * opts.scale : 3.4 + widthMm * 2;
-    var links = along(pts, d * 1.02), link = linkSvg(d, metal, ice), html = '', tw = '', seed = opts.seed || 0;
+    var links = along(pts, d * 1.02), link = opts.real ? realLinkSvg(d, opts.real) : linkSvg(d, metal, ice), html = '', tw = '', seed = opts.seed || 0;
     if (opts.shadow) {
       var sdy = opts.shadowDy || 4;
-      html += '<polyline points="' + pts.map(function (p) { return f1(p[0] + sdy * .4) + ',' + f1(p[1] + sdy); }).join(' ') + '" fill="none" stroke="#000" stroke-opacity=".32" stroke-width="' + f1(d * .9) + '" stroke-linecap="round" filter="url(#' + opts.shadow + ')"/>';
+      html += '<polyline points="' + pts.map(function (p) { return f1(p[0] + sdy * .4) + ',' + f1(p[1] + sdy); }).join(' ') + '" fill="none" stroke="#000" stroke-opacity="' + (opts.real ? '.28' : '.32') + '" stroke-width="' + f1(d * (opts.real ? .95 : .9)) + '" stroke-linecap="round" filter="url(#' + opts.shadow + ')"/>';
     }
+    var nL = links.length;
     links.forEach(function (p, i) {
-      html += '<g transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ') rotate(' + f1(p[2]) + ')">' + link + '</g>';
+      // On the photo, links near the sides of the neck turn away from the camera and look narrower.
+      var sc = opts.real ? (0.78 + 0.22 * Math.sin(Math.PI * (i + 0.5) / nL)) : 1;
+      html += '<g transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ') rotate(' + f1(p[2]) + ')' + (sc < 1 ? ' scale(' + f1(sc) + ' 1)' : '') + '">' + link + '</g>';
       if (!REDUCED && opts.twinkle !== false && (i * 7 + seed) % 9 === 0) tw += sparkle(p[0], p[1], d * .95, ((i * .37 + seed) % 2.6).toFixed(2));
     });
     return html + tw;
@@ -241,21 +276,21 @@
     svg.setAttribute('preserveAspectRatio', 'xMidYMin slice');
     svg.innerHTML = '<defs>' + metalGradients(id) +
       '<linearGradient id="' + id + '-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" data-metal="0"/><stop offset=".5" data-metal="1"/><stop offset="1" data-metal="2"/></linearGradient>' +
-      '<filter id="' + id + '-cs" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur stdDeviation="5"/></filter>' +
+      '<filter id="' + id + '-cs" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur stdDeviation="3"/></filter>' + realGradients(id) +
       '<filter id="' + id + '-bl" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="14"/></filter>' +
       '<linearGradient id="' + id + '-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e9ea" stop-opacity="0"/><stop offset="1" stop-color="#e9e9ea" stop-opacity=".9"/></linearGradient>' +
       '<clipPath id="' + id + '-front"><path d="M0 ' + (ph.neck[0][1] + 14) + ' L' + (ph.neck[0][0] + 40) + ' ' + (ph.neck[0][1] + 14) + ' Q' + ((ph.neck[0][0] + ph.neck[1][0]) / 2) + ' ' + (ph.neck[0][1] + 110) + ' ' + (ph.neck[1][0] - 40) + ' ' + (ph.neck[1][1] + 14) + ' L1024 ' + (ph.neck[1][1] + 14) + ' L1024 1700 L0 1700 Z"/></clipPath>' +
       '</defs><image href="' + src + '" x="0" y="0" width="1024" height="1024" preserveAspectRatio="xMidYMid slice"/>' + photoExtension(id, src, ph) + '<g clip-path="url(#' + id + '-front)"><g data-layers></g><g data-chains></g></g>';
     var layersG = svg.querySelector('[data-layers]'), chainsG = svg.querySelector('[data-chains]');
     var drop = null, anim = null;
-    // Link size on the photo: real size (px per inch / 25.4 per mm) scaled up so the stones read on screen, as product photos do.
-    function linkD(w) { return Math.max(11, w * ph.px / 25.4 * 1.7); }
+    // Link size on the photo: the real size (pixels per inch / 25.4 per mm), so a 3mm chain looks like 3mm on this neck.
+    function linkD(w) { return Math.max(9, w * ph.px / 25.4 * 1.45); }
     function colors(p) {
       var m = METAL[p.metal] || METAL.yellow;
       svg.querySelectorAll('[data-metal]').forEach(function (s) { s.setAttribute('stop-color', m[+s.dataset.metal]); });
     }
     function chains(p, d) {
-      chainsG.innerHTML = chainSvg(photoChainPoints(ph, d), p.w, id + '-metal', id + '-ice', { shadow: id + '-cs', twinkle: p.twinkle, scale: linkD(p.w) / p.w, shadowDy: 8 });
+      chainsG.innerHTML = chainSvg(photoChainPoints(ph, d), p.w, id + '-metal', id + '-ice', { shadow: id + '-cs', twinkle: p.twinkle, scale: linkD(p.w) / p.w, shadowDy: 4, real: id });
       // Slide the photo up a little so the lowest point of a long chain stays in view.
       var lowest = photoChainPoints(ph, d)[180][1];
       svg.style.setProperty('--tcsf-pan', (Math.round(Math.min(Math.max(0, lowest - 880), 200) / 1024 * 100 * 100) / 100) + '%');
@@ -264,7 +299,7 @@
     }
     function set(p, o) {
       o = o || {};
-      layersG.innerHTML = (p.layers || []).map(function (l, k) { return chainSvg(photoChainPoints(ph, l.drop), l.w, id + '-metal', id + '-ice', { seed: 3 + k, shadow: id + '-cs', twinkle: p.twinkle, scale: linkD(l.w) / l.w, shadowDy: 8 }); }).join('');
+      layersG.innerHTML = (p.layers || []).map(function (l, k) { return chainSvg(photoChainPoints(ph, l.drop), l.w, id + '-metal', id + '-ice', { seed: 3 + k, shadow: id + '-cs', twinkle: p.twinkle, scale: linkD(l.w) / l.w, shadowDy: 5, real: id }); }).join('');
       colors(p);
       if (anim) cancelAnimationFrame(anim);
       if (REDUCED || o.instant || (drop == null && !o.fromTop)) { drop = p.drop; chains(p, drop); return; }

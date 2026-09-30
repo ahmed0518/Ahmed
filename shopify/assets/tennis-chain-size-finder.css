@@ -230,9 +230,10 @@
 .tcsf-modal__head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 14px 24px; background: var(--tcsf-bg); border-bottom: 1px solid var(--tcsf-line); }
 .tcsf-modal__head h2 { font-size: 18px; font-weight: 800; }
 .tcsf-modal--qv .tcsf-modal__panel { width: min(1000px, 100%); }
+.tcsf-modal--fit .tcsf-modal__panel { width: min(1380px, 100%); }
 
 /* Size finder (inside the dialog) */
-.tcsf__app { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.tcsf__app { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
 .tcsf__stage { align-self: stretch; position: relative; background: radial-gradient(90% 75% at 50% 22%, var(--tcsf-studio-1), var(--tcsf-studio-2)); border-right: 1px solid var(--tcsf-line); }
 .tcsf__stick { position: sticky; top: 65px; }
 .tcsf__fig { position: relative; width: 100%; max-width: 520px; margin: 0 auto; }
@@ -243,6 +244,7 @@
 .tcsf__stage:not(.is-photo) .tcsf__who { display: none; }
 .tcsf__stage.is-photo .tcsf__who { left: 12px; top: 12px; bottom: auto; transform: none; }
 .tcsf__stage.is-photo .tcsf__zones { display: none; }
+.tcsf__stage.is-photo ~ .tcsf__panel .tcsf__skin { display: none; }
 .tcsf__overflow { position: absolute; left: 12px; bottom: 60px; margin: 0; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,.9); color: #111; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.1); z-index: 1; }
 .tcsf__zones { position: absolute; inset: 0 auto 0 12px; margin: 0; padding: 0; list-style: none; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; pointer-events: none; z-index: 1; color: #2b2b2b; }
 .tcsf__zones li { position: absolute; left: 0; white-space: nowrap; transform: translateY(-50%); padding: 1px 6px 1px 14px; border-radius: 4px; background: rgba(255,255,255,.82); opacity: .75; transition: opacity .3s; }
@@ -292,7 +294,7 @@
 .tcsf__chips small { font-weight: 400; font-size: 11px; opacity: .75; }
 .tcsf__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 10px; }
 .tcsf__cards--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-@media (min-width: 901px) { .tcsf__cards:not(.tcsf__cards--4) { grid-template-columns: repeat(5, minmax(0, 1fr)); } .tcsf__stage { overflow: hidden; } .tcsf__stick { position: sticky; top: 65px; } .tcsf__fig { max-width: none; } .tcsf__model { height: calc(100vh - 115px); max-height: 900px; min-height: 380px; } .tcsf__stage.is-photo .tcsf__fig { overflow: hidden; height: calc(100vh - 115px); max-height: 900px; min-height: 380px; } .tcsf__stage.is-photo .tcsf__model { height: auto; aspect-ratio: 1 / 1.55; } }
+@media (min-width: 901px) { .tcsf__cards:not(.tcsf__cards--4) { grid-template-columns: repeat(5, minmax(0, 1fr)); } .tcsf__stage { overflow: hidden; } .tcsf__stick { position: sticky; top: 65px; } .tcsf__fig { max-width: none; } .tcsf__model { height: calc(100vh - 115px); max-height: 900px; min-height: 380px; } .tcsf__stage.is-photo .tcsf__fig { overflow: hidden; height: calc(100vh - 115px); max-height: 900px; min-height: 380px; } .tcsf__stage.is-photo .tcsf__model { height: auto; aspect-ratio: 1 / 1.25; } }
 .tcsf__card span { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; height: 100%; padding: 12px 8px 14px; border: 1px solid var(--tcsf-line-2); border-radius: 12px; transition: border-color .15s, transform .15s; }
 .tcsf__card:hover span { border-color: var(--tcsf-fg); transform: translateY(-2px); }
 .tcsf__card i { display: block; width: 60px; height: 60px; margin-bottom: 6px; }
