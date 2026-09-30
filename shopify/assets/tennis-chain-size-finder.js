@@ -417,6 +417,9 @@
       if (stage) stage.classList.toggle('is-photo', !!fitModel.photo);
       if (miniSvg) miniSvg.parentNode.classList.toggle('is-photo', !!(miniModel && miniModel.photo));
     }
+    // Start on a model that has a photo, so the real photo shows as soon as the finder opens.
+    if (!root.dataset.photoMen && root.dataset.photoWomen && !q('[name="who"][value="women"]').checked) setRadio('who', 'women');
+    if (!root.dataset.photoWomen && root.dataset.photoMen) setRadio('who', 'men');
     ensureModels();
     var grid = q('[data-grid]'), filters = q('[data-filters]'), facetsEl = q('[data-facets]');
 
