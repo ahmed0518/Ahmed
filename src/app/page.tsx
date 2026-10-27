@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { LogoutButton } from '@/components/LogoutButton';
 import { OrderRows } from '@/components/OrderRows';
 import { RecentChips } from '@/components/RecentChips';
 import { SearchBox } from '@/components/SearchBox';
@@ -50,9 +51,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <RecentChips />
 
       {cred?.kind === 'staff' ? (
-        <p className="muted">
-          Logged in as {cred.name} · <Link href="/logout">Log out</Link>
-        </p>
+        <div className="muted">
+          Logged in as {cred.name} · <LogoutButton className="btn--link" />
+        </div>
       ) : (
         <p className="muted">
           <Link href="/login?next=%2F">Log in</Link> to update statuses.

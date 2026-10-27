@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { CLAUDE_TOKEN, MAKS_TOKEN, ORDERS } from './fixtures';
-import { bearer, loginAs, mockOrder, mockState, originHeader, refreshList, seedAll } from './helpers';
+import { bearer, loginAs, mockOrder, mockState, originHeader, refreshList, seedAll, seedExtra } from './helpers';
 
 test.describe('API', () => {
   test.beforeAll(async ({ request }) => {
@@ -67,7 +67,12 @@ test.describe('API', () => {
     expect(numbers).not.toContain(String(ORDERS.freshInProduction));
     expect(numbers).not.toContain(String(ORDERS.untracked));
     const watch = body.orders.find((o) => (o.order as { number: string }).number === String(ORDERS.watchNeverSet))!;
-    expect(watch).toMatchObject({ tracking: 'never_set', stale: true, stale_reason: 'never_set', last_updated_at: null, item_count: 1, untracked_count: 1 });
+    // never set: counts come from the Shopify quantity and untracked_count is unknown (SPEC §4.1 / §7.2)
+    expect(watch).toMatchObject({ tracking: 'never_set', stale: true, stale_reason: 'never_set', last_updated_at: null, item_count: 1, open_items: 1, untracked_count: null });
+    const threeLines = body.orders.find((o) => (o.order as { number: string }).number === String(ORDERS.neverSet))!;
+    expect(threeLines).toMatchObject({ tracking: 'never_set', item_count: 3, open_items: 3, untracked_count: null });
+    expect(numbers).toContain(String(ORDERS.taggedNeverSet));
+    expect(numbers).toContain(String(ORDERS.malformedStatus));
     expect(body.never_set_count).toBeGreaterThanOrEqual(2);
     expect(body.count).toBe(body.orders.length);
     expect(numbers.indexOf(String(ORDERS.watchNeverSet))).toBeLessThan(numbers.indexOf(String(ORDERS.neverSet)));
@@ -130,9 +135,45 @@ test.describe('API', () => {
     const hidden = await request.post(`/api/orders/${ORDERS.neverSet}/items/50788056465496`, { data: { status: 'cad' }, headers: bearer(MAKS_TOKEN) });
     expect((await hidden.json()).code).toBe('item_hidden');
     const removed = await request.post(`/api/orders/${ORDERS.removedLine}/items/60000000000022`, { data: { status: 'cad' }, headers: bearer(MAKS_TOKEN) });
+    expect(removed.status()).toBe(400);
     expect((await removed.json()).code).toBe('item_removed');
+    // an id item_status knows but the order no longer lists is removed too (400), an unknown id is 404
+    const orphan = await request.post(`/api/orders/${ORDERS.orphanEntry}/items/60000000000139`, { data: { status: 'cad' }, headers: bearer(MAKS_TOKEN) });
+    expect(orphan.status()).toBe(400);
+    expect((await orphan.json()).code).toBe('item_removed');
+    const unknownId = await request.post(`/api/orders/${ORDERS.orphanEntry}/items/60000000000199`, { data: { status: 'cad' }, headers: bearer(MAKS_TOKEN) });
+    expect(unknownId.status()).toBe(404);
+    expect((await unknownId.json()).code).toBe('item_not_found');
+    const orphanRead = (await (await request.get(`/api/orders/${ORDERS.orphanEntry}`, { headers: bearer(CLAUDE_TOKEN) })).json()) as { removed_items: { line_item_id: string }[] };
+    expect(orphanRead.removed_items.map((r) => r.line_item_id)).toEqual(['60000000000139']);
     const badNumber = await request.get('/api/orders/251548%20OR%20email:x');
     expect(badNumber.status()).toBe(400);
+  });
+
+  test('reading a tagged order with no readable entries never touches its tag', async ({ request }) => {
+    for (const number of [ORDERS.taggedNeverSet, ORDERS.malformedStatus]) {
+      await seedExtra(request, { clear_calls: true });
+      const pub = (await (await request.get(`/api/orders/${number}`)).json()) as Record<string, unknown>;
+      expect(pub.tracking, String(number)).toBe('never_set');
+      expect(pub.stale_reason, String(number)).toBe('never_set');
+      const full = (await (await request.get(`/api/orders/${number}`, { headers: bearer(CLAUDE_TOKEN) })).json()) as Record<string, unknown> & { order: { tags: string[] } };
+      expect(full.tracking, String(number)).toBe('never_set');
+      expect(full.tag_synced, String(number)).toBe(true);
+      expect(full.order.tags, String(number)).toContain('trax-production');
+      if (number === ORDERS.malformedStatus) expect(full.status_data_unreadable).toBe(true);
+
+      const state = await mockState(request);
+      const order = mockOrder(state, number);
+      expect(order.tags, String(number)).toContain('trax-production');
+      const tagCalls = state.calls.filter((c) => (c.operation === 'RemoveTags' || c.operation === 'AddTags') && c.variables.id === order.id);
+      expect(tagCalls, String(number)).toEqual([]);
+      expect(state.calls.filter((c) => c.operation === 'SetOrderStatus' && (c.variables.metafields as { ownerId: string }[])[0]?.ownerId === order.id)).toEqual([]);
+    }
+    // and both still show up where Maks's AI looks
+    const stale = (await (await request.get('/api/stale')).json()) as { orders: { order: { number: string }; stale_reason: string }[] };
+    for (const number of [ORDERS.taggedNeverSet, ORDERS.malformedStatus]) {
+      expect(stale.orders.find((o) => o.order.number === String(number))?.stale_reason, String(number)).toBe('never_set');
+    }
   });
 
   test('bulk write by Claude with a label default, then the derived metafields match', async ({ request }) => {
@@ -161,6 +202,15 @@ test.describe('API', () => {
     expect(res.headers()['x-content-type-options']).toBe('nosniff');
     expect(res.headers()['x-frame-options']).toBe('DENY');
     expect(res.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+    expect(res.headers()['strict-transport-security']).toContain('max-age=31536000');
+  });
+
+  test('/api/health is memoised: repeated anonymous hits do not reach Shopify', async ({ request }) => {
+    await seedExtra(request, { clear_calls: true });
+    for (let i = 0; i < 5; i++) expect((await request.get('/api/health')).status()).toBe(200);
+    const state = await mockState(request);
+    const shopifyCalls = state.calls.filter((c) => c.operation === 'ShopInfo' || c.operation === 'AccessScopes');
+    expect(shopifyCalls.length).toBeLessThanOrEqual(2); // at most one (ShopInfo + AccessScopes) pair, usually none
   });
 
   test('/llms.txt is plain text for agents', async ({ request }) => {

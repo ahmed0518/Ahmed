@@ -119,7 +119,7 @@ export const AGENT_DOCS: DocBlock[] = [
 
   h3('GET /api/orders?page=1&stale=1'),
   p(
-    'The whole production universe — open orders tagged `trax-production` plus open orders matching the configured watch query — sorted stalest first (never-set orders by order date, then by `stale_since`). 50 per page; `?stale=1` keeps only stale rows; `?fresh=1` (credentialed callers only) bypasses the 60-second cache. Rows carry no line-item details: `items[]` lists only items that have a status, and `untracked_count` says how many visible items have none (`null` when unknown).',
+    'The whole production universe — open orders tagged `trax-production` plus open orders matching the configured watch query — sorted stalest first (never-set orders by order date, then by `stale_since`). 50 per page; `?stale=1` keeps only stale rows; `?fresh=1` (credentialed callers only) bypasses the 60-second cache. Rows carry no line-item details: `items[]` lists only items that have a status, and `untracked_count` says how many visible items have none (`null` when unknown). A never-set row has no item list to count, so its `item_count` and `open_items` are the Shopify line quantity (warranty-type lines included) and `untracked_count` is `null`; `GET /api/orders/{number}` has the exact production items.',
   ),
   code(
     'json',
@@ -190,7 +190,7 @@ export const AGENT_DOCS: DocBlock[] = [
 
   h2('Polite polling'),
   ul(
-    'Unauthenticated reads are limited to 60 requests per minute per IP and cached for 15 seconds per order; the list endpoints are cached for 60 seconds. Do not poll faster than that — nothing changes faster.',
+    'Unauthenticated reads are limited to 60 requests per minute per IP and cached for 15 seconds per order; the list endpoints are cached for 60 seconds and `/api/health` for 30. Do not poll faster than that — nothing changes faster.',
     'For a daily check, call `GET /api/stale` once, then `GET /api/orders/{number}` only for the orders you intend to act on.',
     'Back off on 429, 502 and 503 (wait `Retry-After` seconds, or at least 30 seconds).',
     'Prefer `?stale=1` on the list over fetching every page.',

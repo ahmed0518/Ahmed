@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto';
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 import { PIN_PEPPER, STAFF, buildSeed } from './fixtures';
+import { APP_PORT, MOCK_PORT, NO_ADMIN_PORT } from './ports';
 
-export const MOCK_URL = `http://127.0.0.1:${process.env.MOCK_SHOPIFY_PORT ?? 4001}`;
-export const APP_PORT = Number(process.env.PORT ?? 3000);
-export const NO_ADMIN_URL = `http://localhost:${process.env.NO_ADMIN_PORT ?? APP_PORT + 1}`;
+export { APP_PORT };
+export const MOCK_URL = `http://127.0.0.1:${MOCK_PORT}`;
+export const NO_ADMIN_URL = `http://localhost:${NO_ADMIN_PORT}`;
 
 export function pinHash(id: string, pin: string): string {
   return createHash('sha256').update(`${PIN_PEPPER}:${id}:${pin}`).digest('hex');
@@ -43,6 +44,19 @@ export function mockOrder(state: MockState, number: number) {
   const o = state.orders.find((x) => x.number === number);
   if (!o) throw new Error(`mock has no order ${number}`);
   return o;
+}
+
+/** The staff roster as the mock stores it (hashes included — this is the store, not a response). */
+export function mockStaff(state: MockState): { id: string; failed_attempts: number; locked_until: string | null }[] {
+  const raw = state.shop.metafields['trax_production.staff'];
+  if (!raw) throw new Error('mock has no staff metafield');
+  return (JSON.parse(raw.value) as { staff: { id: string; failed_attempts: number; locked_until: string | null }[] }).staff;
+}
+
+export function mockSettings(state: MockState): { admin_failed_attempts: number; admin_locked_until: string | null } {
+  const raw = state.shop.metafields['trax_production.settings'];
+  if (!raw) throw new Error('mock has no settings metafield');
+  return JSON.parse(raw.value) as { admin_failed_attempts: number; admin_locked_until: string | null };
 }
 
 export function bearer(token: string): Record<string, string> {

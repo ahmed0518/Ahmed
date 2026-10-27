@@ -67,7 +67,12 @@ export interface Computed {
   last_note: string;
   items: ItemComputed[];
   visible_ids: string[];
-  should_have_tag: boolean;
+  /**
+   * Whether the `trax-production` tag belongs on the order — or `null` when it cannot be
+   * derived because `item_status` holds no entries (never set, or unreadable). A read then
+   * leaves whatever tag the order carries alone (SPEC §4.2); writes always have entries.
+   */
+  should_have_tag: boolean | null;
   has_entries: boolean;
 }
 
@@ -195,7 +200,7 @@ export function compute(input: ComputeInput): Computed {
     last_note: lastNote,
     items,
     visible_ids: visible.map((v) => v.id),
-    should_have_tag: hasEntries && !allDone,
+    should_have_tag: hasEntries ? !allDone : null,
     has_entries: hasEntries,
   };
 }

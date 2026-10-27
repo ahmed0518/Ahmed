@@ -1,12 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { APP_PORT, MOCK_PORT, NO_ADMIN_PORT } from './tests/e2e/ports';
 
 /**
  * e2e: mock Shopify server + the built app (`next build` then `next start`) + a second app
- * instance without ADMIN_PASSCODE (to prove /admin answers 404). Honors PORT (default 3000)
- * and MOCK_SHOPIFY_PORT (default 4001). Chromium only, headless; PW_CHROMIUM_PATH overrides
- * the browser binary. The app never sees a real token: SHOPIFY_API_URL points at the mock and
+ * instance without ADMIN_PASSCODE (to prove /admin answers 404). Honors PORT (default 3000),
+ * MOCK_SHOPIFY_PORT (default 4001) and NO_ADMIN_PORT (default PORT+1, skipping the mock's
+ * port) — see tests/e2e/ports.ts. Chromium only, headless; PW_CHROMIUM_PATH overrides the
+ * browser binary. The app never sees a real token: SHOPIFY_API_URL points at the mock and
  * SHOPIFY_ADMIN_TOKEN is `test_e2e`.
  */
 
@@ -26,9 +28,9 @@ function loadEnvFile(file: string): Record<string, string> {
   return out;
 }
 
-const port = Number(process.env.PORT ?? 3000);
-const mockPort = Number(process.env.MOCK_SHOPIFY_PORT ?? 4001);
-const noAdminPort = Number(process.env.NO_ADMIN_PORT ?? port + 1);
+const port = APP_PORT;
+const mockPort = MOCK_PORT;
+const noAdminPort = NO_ADMIN_PORT;
 const apiVersion = '2026-10';
 
 const testEnv = loadEnvFile(path.join(__dirname, 'tests', 'e2e', '.env.test'));

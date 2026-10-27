@@ -6,7 +6,8 @@ const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta
 
 const config = [
   {
-    ignores: ['node_modules/**', '.next/**', 'out/**', 'test-results/**', 'playwright-report/**', 'coverage/**', 'next-env.d.ts'],
+    // .claude/ holds agent scratch (review worktrees), never app code
+    ignores: ['node_modules/**', '.next/**', 'out/**', 'test-results/**', 'playwright-report/**', 'coverage/**', 'next-env.d.ts', '.claude/**'],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {

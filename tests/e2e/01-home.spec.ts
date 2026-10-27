@@ -25,7 +25,13 @@ test.describe('home', () => {
     const neverSet = page.getByTestId(`row-${ORDERS.neverSet}`);
     await expect(neverSet).toBeVisible();
     await expect(neverSet).toContainText('No status yet');
+    // no item_status → no visible_ids: the row counts Shopify lines (warranty included) and never claims "0/3 items"
+    await expect(neverSet).toContainText('3 lines');
+    await expect(neverSet).not.toContainText('/3');
     await expect(page.getByTestId(`row-${ORDERS.watchNeverSet}`)).toBeVisible();
+    await expect(page.getByTestId(`row-${ORDERS.watchNeverSet}`)).toContainText('1 line');
+    // hand-tagged orders without a status stay in the chase list
+    await expect(page.getByTestId(`row-${ORDERS.taggedNeverSet}`)).toBeVisible();
 
     const stale = page.getByTestId(`row-${ORDERS.staleInProduction}`);
     await expect(stale).toBeVisible();
@@ -62,11 +68,28 @@ test.describe('home', () => {
       const widths = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth, body: document.body.scrollWidth }));
       expect(widths.scroll, url).toBeLessThanOrEqual(widths.client);
       expect(widths.body, url).toBeLessThanOrEqual(390);
+      // the header nav never wraps "Log in" / "Log out" onto a second line
+      const nav = await page.locator('.site-header__nav').boundingBox();
+      expect(nav?.height, url).toBeLessThanOrEqual(48);
     }
     await page.goto(`/orders/${ORDERS.mobile}`);
     const select = page.locator('select.select-status').nth(1);
     const box = await select.boundingBox();
     expect(box?.height).toBeGreaterThanOrEqual(55);
     expect((box?.width ?? 0) + (box?.x ?? 0)).toBeLessThanOrEqual(390);
+
+    // tap targets: every button, note input, disclosure and chip is at least 44 px tall
+    const stillHere = await page.getByRole('button', { name: 'Still here' }).first().boundingBox();
+    expect(stillHere?.height).toBeGreaterThanOrEqual(44);
+    const note = await page.getByLabel('Note for Second Item').boundingBox();
+    expect(note?.height).toBeGreaterThanOrEqual(44);
+    const history = await page.locator('details summary').first().boundingBox();
+    expect(history?.height).toBeGreaterThanOrEqual(44);
+    const logout = await page.getByRole('button', { name: 'Log out' }).first().boundingBox();
+    expect(logout?.height).toBeGreaterThanOrEqual(44);
+    await page.goto('/');
+    await expect(page.locator('.chip').first()).toBeVisible();
+    const chip = await page.locator('.chip').first().boundingBox();
+    expect(chip?.height).toBeGreaterThanOrEqual(44);
   });
 });

@@ -11,6 +11,8 @@ export const PIN_PEPPER = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcb
 export const STAFF = [
   { id: 'ahmed', name: 'Ahmed', pin: '1234' },
   { id: 'igor', name: 'Igor', pin: '2468' },
+  // used only by the lockout test, which leaves the name locked
+  { id: 'lena', name: 'Lena', pin: '1357' },
 ];
 
 const STATUSES = [
@@ -72,6 +74,12 @@ export const ORDERS = {
   stillHere: 251607,
   shipped: 251608,
   mobile: 251610,
+  /** tagged trax-production by hand, no item_status at all — must stay in the chase list */
+  taggedNeverSet: 251611,
+  /** tagged, item_status is not even JSON — the tag must be left alone */
+  malformedStatus: 251612,
+  /** item_status knows a line item id that is no longer on the order */
+  orphanEntry: 251613,
 };
 
 /** Needs sha256 hashes; computed by the caller with node:crypto (see seedAll). */
@@ -224,6 +232,36 @@ export function buildSeed(now: Date, pinHash: (id: string, pin: string) => strin
           v: 1,
           visible_ids: ['60000000000091', '60000000000092'],
           items: { '60000000000091': entry('Extremely Long Product Title', 'engraving', daysAgo(now, 2), 'Ahmed') },
+        },
+      },
+    },
+    {
+      number: ORDERS.taggedNeverSet,
+      created_at: daysAgo(now, 9),
+      tags: ['trax-production'],
+      line_items: [{ id: '60000000000111', title: 'Hand-tagged Bangle', quantity: 1 }],
+      metafields: {},
+    },
+    {
+      number: ORDERS.malformedStatus,
+      created_at: daysAgo(now, 9),
+      tags: ['trax-production'],
+      line_items: [{ id: '60000000000121', title: 'Garbled Pendant', quantity: 1 }],
+      metafields: { 'trax_production.item_status': '{not json' },
+    },
+    {
+      number: ORDERS.orphanEntry,
+      created_at: daysAgo(now, 3),
+      tags: ['trax-production'],
+      line_items: [{ id: '60000000000131', title: 'Eternity Band', quantity: 1 }],
+      metafields: {
+        'trax_production.item_status': {
+          v: 1,
+          visible_ids: ['60000000000131'],
+          items: {
+            '60000000000131': entry('Eternity Band', 'casting', daysAgo(now, 1), 'Ahmed'),
+            '60000000000139': entry('Vanished Charm', 'mold', daysAgo(now, 2), 'Ahmed'),
+          },
         },
       },
     },

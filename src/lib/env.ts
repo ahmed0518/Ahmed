@@ -9,6 +9,15 @@ export interface ApiToken {
   token: string;
 }
 
+/**
+ * Which request headers may name the client (SPEC §5). `none` (unset): no header is
+ * trusted, every anonymous caller shares one rate-limit bucket. `vercel`: the platform
+ * headers `x-real-ip` / `x-vercel-forwarded-for`. `forwarded` (`TRUST_PROXY=1`): the address
+ * appended by the one reverse proxy in front of the app (last entry of `x-forwarded-for`).
+ * The same setting decides whether `x-forwarded-host` may stand in for `host`.
+ */
+export type ProxyTrust = 'none' | 'vercel' | 'forwarded';
+
 export interface Env {
   SHOPIFY_STORE_DOMAIN: string;
   SHOPIFY_ADMIN_TOKEN: string | null;
@@ -23,7 +32,7 @@ export interface Env {
   ADMIN_PASSCODE: string | null;
   API_TOKENS: ApiToken[];
   READ_TOKEN: string | null;
-  TRUST_PROXY: boolean;
+  TRUST_PROXY: ProxyTrust;
   DISPLAY_TZ: string;
   isProduction: boolean;
   /** Full GraphQL endpoint URL. */
@@ -76,6 +85,14 @@ export function parseApiTokens(raw: string | null): { tokens: ApiToken[]; proble
     tokens.push({ label, token });
   }
   return { tokens, problems };
+}
+
+export function parseProxyTrust(raw: string | null): ProxyTrust | null {
+  const v = (raw ?? '').trim().toLowerCase();
+  if (v === '' || v === '0' || v === 'false' || v === 'none') return 'none';
+  if (v === '1' || v === 'true' || v === 'forwarded') return 'forwarded';
+  if (v === 'vercel') return 'vercel';
+  return null;
 }
 
 function validTimeZone(tz: string): boolean {
@@ -165,6 +182,9 @@ export function buildEnv(source: EnvSource = process.env): Env {
   const displayTz = read('DISPLAY_TZ', source) ?? 'America/New_York';
   if (!validTimeZone(displayTz)) problems.push(`DISPLAY_TZ "${displayTz}" is not a valid IANA time zone`);
 
+  const trustProxy = parseProxyTrust(read('TRUST_PROXY', source));
+  if (trustProxy === null) problems.push('TRUST_PROXY must be empty, "vercel" (Vercel platform headers) or "1" (one reverse proxy setting x-forwarded-for)');
+
   if (problems.length > 0) throw new EnvError(problems);
 
   return {
@@ -180,7 +200,7 @@ export function buildEnv(source: EnvSource = process.env): Env {
     ADMIN_PASSCODE: adminPasscode,
     API_TOKENS: apiTokens,
     READ_TOKEN: readToken,
-    TRUST_PROXY: read('TRUST_PROXY', source) === '1',
+    TRUST_PROXY: trustProxy ?? 'none',
     DISPLAY_TZ: displayTz,
     isProduction: source.NODE_ENV === 'production',
     graphqlUrl,

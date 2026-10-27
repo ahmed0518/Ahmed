@@ -15,7 +15,7 @@ const base = (overrides: Partial<ComputeInput>): ComputeInput => ({
 });
 
 describe('tracking, done and tag', () => {
-  it('never set: stale from created_at, tag not wanted', () => {
+  it('never set: stale from created_at, the tag cannot be derived and is left alone', () => {
     const c = compute(base({}));
     expect(c.tracking).toBe('never_set');
     expect(c.stale_since).toBe('2026-10-14T05:46:01Z');
@@ -25,8 +25,11 @@ describe('tracking, done and tag', () => {
     expect(c.open_items).toBe(1);
     expect(c.untracked_count).toBe(1);
     expect(c.summary).toBe('No status yet');
-    expect(c.should_have_tag).toBe(false);
+    expect(c.should_have_tag).toBeNull();
+    expect(c.has_entries).toBe(false);
     expect(c.last_updated_at).toBeNull();
+    // an item_status without entries (or an unreadable one, parsed as null) is the same case
+    expect(compute(base({ itemStatus: itemStatus({}) })).should_have_tag).toBeNull();
   });
 
   it('an untracked visible item keeps the order not done; a done status on every item removes the tag', () => {

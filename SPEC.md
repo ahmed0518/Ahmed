@@ -50,7 +50,12 @@ This document is the single source of truth for the build. Keep it in sync with 
   `next start` with a **mock Shopify Admin GraphQL server** (small Node http server that
   dispatches on operation name and keeps state in memory). The Playwright config sets
   `SHOPIFY_API_URL` (the mock) and `SHOPIFY_ADMIN_TOKEN=test_e2e` explicitly. Never hit the
-  real store in tests.
+  real store in tests. Ports: `PORT` (app, 3000), `MOCK_SHOPIFY_PORT` (4001) and
+  `NO_ADMIN_PORT` (the passcode-less app copy; default `PORT+1`, or `PORT+2` when that is the
+  mock's port) — resolved once in `tests/e2e/ports.ts`, which refuses a collision.
+- Dependencies: `npm run audit:prod` (`scripts/audit.mjs`) runs `npm audit --omit=dev` against
+  an explicit allow-list. Accepted: the four `postcss <= 8.5.22` advisories Next 15.x pulls in
+  (build-time handling of the app's own CSS; fixed from Next 16.3 — drop them with the 15.x pin).
 - Deploy targets: Vercel (first-class) and any Docker host (`output: 'standalone'`, Dockerfile).
 
 ## 4. Data model (in Shopify)
@@ -100,6 +105,9 @@ metafields.
   single-order read refreshes it after an order edit (§4.6). When it is missing (older or
   partial direct write) list rows fall back to `currentSubtotalLineItemsQuantity` for
   `item_count` and report `untracked_count: null` until the next single-order read repairs it.
+  A never-set order has no `item_status` at all, so its list row uses the same fallback for
+  good: `item_count` and `open_items` are the Shopify quantity (hidden lines included) and
+  `untracked_count` is `null`; the home page shows such rows as `N lines`, never `0/N items`.
 - `source` ∈ `web` (staff cookie) · `api` (bearer token) · `claude` (direct Shopify write) ·
   `import`. The server sets it from the credential; it is never read from the request body.
 - `via` = `web:<staff name>` · `token:<token label>` · `claude`; shown when it differs from `by`.
@@ -134,9 +142,10 @@ metafields.
   write starts from empty `items`. Items are kept in a null-prototype object or `Map` (no
   `__proto__` keys).
 - `summary` = `{done}/{visible} done · ` + groups `{status name} ×{n}` for open items in
-  dropdown order, joined with ` · `, + ` — {by}, {Mon D}` (America/New_York; year appended when
-  not the current year). Over 200 chars: drop groups from the end and append ` +{k} more`.
-  Nothing set: `No status yet`.
+  dropdown order, then `Not set ×{n}` for open items without a status (no entry or `status:
+  null`), joined with ` · `, + ` — {by}, {Mon D}` (America/New_York; year appended when not
+  the current year), e.g. `0/2 done · CAD ×1 · Not set ×1 — Ahmed, Oct 27`. Over 200 chars:
+  drop groups from the end and append ` +{k} more`. Nothing set: `No status yet`.
 
 ### 4.2 Order tag
 
@@ -155,6 +164,11 @@ metafields.
 - Reconciliation: every read of a single order (`GET /api/orders/{n}`, the order page)
   recomputes the tag from `item_status` (§4.6) and fixes it if it differs. Changing a status's
   `done` flag in `/admin` does not touch tags immediately; the next read of each order does.
+- The tag is only ever derived from **entries**. When `item_status` has none — missing,
+  `items: {}`, or unreadable (§4.1) — nothing can be derived and the tag is left exactly as it
+  is: a tagged never-set order stays in the lists and in `/api/stale` (`stale_reason:
+  never_set`) until someone sets a status. Writes always leave entries behind, so every write
+  decides the tag; reads of entry-less orders never issue `tagsAdd` or `tagsRemove`.
 - Closed (archived) and cancelled orders keep whatever tag they have: every list query adds
   `status:open`, so they drop out of the lists on their own (verified: `status:open` excludes
   both archived and cancelled orders; `-status:cancelled` alone does not exclude archived ones).
@@ -269,7 +283,9 @@ a single order (`GET /api/orders/{n}`, the order page) recomputes them and, when
 something different (a partial direct write by Claude, a failed tag mutation, a `done` flag
 changed in `/admin`, an order edit), rewrites them with `compareDigest` and fixes the tag. The
 repair is awaited (serverless functions may freeze after the response), its errors are logged,
-and it never fails the read. Reads served from the 15 s public cache (§7) do not repair.
+and it never fails the read. Reads served from the 15 s public cache (§7) do not repair. An
+order whose `item_status` holds no entries (never set, or unreadable) is left untouched by a
+read: no metafield write, no tag mutation (§4.2); `tag_synced` is `true` for it.
 
 ## 5. Auth
 
@@ -282,19 +298,26 @@ and it never fails the read. Reads served from the 15 s public cache (§7) do no
   `{ "t": "staff", "id": "ahmed", "name": "Ahmed", "sv": 1, "exp": <unix seconds> }`, 30 days.
   Verification order: parse → `timingSafeEqual` on the signature → `t === "staff"` → `exp` in
   the future → `id` present in the roster with `active: true` and `sv === staff.session_version`
-  (the cached roster is fine here). `/logout` clears it. `/admin` "reset PIN" and "deactivate"
-  increment that person's `session_version`, which logs them out everywhere within the 30 s
-  cache window.
+  (the cached roster is fine here). `POST /logout` clears it (a "Log out" form button in the
+  header and on the home page; there is no GET — a link would be prefetched by `<Link>` and
+  could be triggered cross-site). `/admin` "reset PIN" and "deactivate" increment that
+  person's `session_version`, which logs them out everywhere within the 30 s cache window.
   - Lockout is **persisted, not in-memory**: each `staff[]` entry carries `failed_attempts` and
     `locked_until`; after 5 consecutive failures the name is locked for 15 minutes, doubling
     for each further streak (max 24 h); a successful login resets the counter; `/admin` can
-    clear a lock. The login handler reads `staff` uncached and writes the counter with CAS, so
-    every instance sees the lock. The in-memory limiter (10 attempts/min per IP+name) stays only
-    as a best-effort throttle — it is per-instance on serverless and is not the protection.
-    Client IP comes from the platform header (`x-real-ip` / `x-vercel-forwarded-for` on Vercel;
-    in Docker `x-forwarded-for` is honoured only when `TRUST_PROXY=1`). Every failed login is
-    logged with name and IP. Never log PINs, passcodes, tokens, cookie values or
-    `Authorization` headers.
+    clear a lock. **The attempt is counted before the PIN is verified**: the login handler
+    increments `failed_attempts` inside the CAS mutator from the freshly read entry (writes to
+    each shop metafield are also serialized per instance), refuses a locked name with 429
+    `locked` without verifying anything, and refuses the login (429) when the attempt could not
+    be recorded — so N parallel guesses cost N counted attempts and the lock lands on the 5th.
+    The PIN is compared only after the claim; on success the counter is reset with a second
+    write. The in-memory limiter (10 attempts/min **per name**, so a spoofed IP header cannot
+    widen it) stays only as a best-effort throttle — it is per-instance on serverless and is
+    not the protection. Client IP for the per-IP limiters follows `TRUST_PROXY` (§9): `vercel`
+    → the platform's `x-real-ip` / `x-vercel-forwarded-for`; `1` → the entry the one reverse
+    proxy appended to `x-forwarded-for` (the last one); unset → no header is believed and every
+    anonymous caller shares one bucket. Every failed login is logged with name and IP. Never
+    log PINs, passcodes, tokens, cookie values or `Authorization` headers.
   - `/login?next=<path>` returns to that page after login; `next` must match `^/[^/\\]`
     (same-origin path) or is ignored. A 401 on a save from the order page shows "Session
     expired — log in" with a `/login?next=` link.
@@ -312,22 +335,28 @@ and it never fails the read. Reads served from the 15 s public cache (§7) do no
 - **`/admin`** requires `ADMIN_PASSCODE`: ≥ 16 characters, generated (README:
   `openssl rand -base64 24`). When it is unset or shorter than 16 characters the app serves 404
   for `/admin` and logs a warning at boot. Same persisted lockout as PINs, stored in
-  `settings.admin_failed_attempts` / `admin_locked_until` (5 failures → 15 min, doubling). On
-  success: cookie `trax_admin`, same attributes as `trax_staff`, payload `{ "t": "admin", "exp" }`
-  signed with `SESSION_SECRET`, 12 h. Failed attempts are logged with IP.
+  `settings.admin_failed_attempts` / `admin_locked_until` (5 failures → 15 min, doubling), with
+  the same claim-before-verify rule. On success: cookie `trax_admin`, same attributes as
+  `trax_staff`, payload `{ "t": "admin", "exp", "ph" }` signed with `SESSION_SECRET`, 12 h —
+  `ph` = the first 16 hex chars of `sha256(ADMIN_PASSCODE)`, checked on every request, so
+  rotating the passcode revokes every admin session without touching `SESSION_SECRET` (staff
+  stay logged in). Failed attempts are logged with IP.
 - Auth is enforced inside every route handler and server component through shared helpers
   (`readCredential()`, `requireStaff()`, `requireWriter()`, `requireAdmin()`); `middleware.ts`,
   if used at all, is not the auth boundary.
 - CSRF (defense in depth on top of SameSite=Lax + JSON bodies): cookie-authenticated mutating
-  requests (status POSTs, `/login`, `/admin` forms) are rejected with 403 unless
+  requests (status POSTs, `/login`, `/logout`, `/admin` forms) are rejected with 403 unless
   `Sec-Fetch-Site` is `same-origin` or `none`, or — when the header is absent — `Origin`
-  matches the app's host. Bearer requests skip this check. JSON endpoints require
-  `Content-Type: application/json` (415 otherwise).
+  matches the app's host. "The app's host" is `host`; `x-forwarded-host` stands in for it only
+  when `TRUST_PROXY` is set (§9), so a client cannot pick the host it is compared against.
+  Bearer requests skip this check. JSON endpoints require `Content-Type: application/json`
+  (415 otherwise).
 
 ### 5.1 Headers and encoding
 
-`next.config.ts` `headers()` on every route: `X-Content-Type-Options: nosniff`,
-`Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`,
+`next.config.ts` `headers()` on every route: `Strict-Transport-Security: max-age=31536000;
+includeSubDomains` (Vercel adds its own; a Docker deploy behind a self-managed TLS proxy needs
+this one), `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`,
 `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'`,
 `Permissions-Policy: camera=(), microphone=(), geolocation=()`. No `dangerouslySetInnerHTML`
 anywhere; every string from Shopify, settings or request bodies is rendered as React text.
@@ -350,9 +379,13 @@ anywhere; every string from Shopify, settings or request bodies is rendered as R
   - Header: `Order #251548`, link to Shopify admin
     (`https://admin.shopify.com/store/<SHOPIFY_ADMIN_HANDLE>/orders/<legacyResourceId>`),
     created date, fulfillment status, context fields (ships-by, due date, custody with line
-    breaks, give-to) if present, **Last updated … by …** for the order, and when logged in
-    "Updating as Ahmed — Switch" (→ `/login?next=`).
-  - Card titled **Production Status by Product**. Top of the card: "Set all N items to…"
+    breaks, give-to) if present, and when logged in "Updating as Ahmed — Switch"
+    (→ `/login?next=`).
+  - Card titled **Production Status by Product**. It opens with the order-level line: the
+    `summary`, the red **stale** / grey **waiting** / green **done** badges, and **Last updated
+    … by …** for the order (omitted while nothing is set — the summary already says
+    `No status yet`). The card re-renders this line from every write's response, so the page
+    never shows two different order states. Then: "Set all N items to…"
     select (→ `POST /api/orders/{number}`, one Shopify write) and an **All still here** button
     (same endpoint, current statuses → `kind: confirm`). For each visible item: black pill =
     title, then ` — {variantTitle}` when present and not "Default Title", then
@@ -364,17 +397,22 @@ anywhere; every string from Shopify, settings or request bodies is rendered as R
     **Last updated Oct 27, 3:12 PM by Ahmed** (`by Maks (via maks-ai)` when `via` is not
     `web:…`), or "Not set yet" / "Not set (cleared by Ahmed, Oct 27)". A "History" disclosure
     lists the entries newest first with kind, by, via and note.
-  - Changing the select saves immediately (optimistic, shows "Saving…/Saved", rolls back and
-    shows the error on failure). If not logged in, selects are disabled with a "Log in to
-    update" link and the page renders the public shape only (no history, context, tags, hidden
-    or removed items).
+  - Changing the select saves immediately (optimistic, shows "Saving…" in place of the
+    last-updated line, then "Saved · …", rolls back and shows the error on failure; a later
+    successful bulk write clears every per-item error). If not logged in, selects are disabled
+    with a "Log in to update" link and the page renders the public shape only (no history,
+    context, tags, hidden or removed items).
   - Hidden items are collapsed: "2 non-production items hidden". Removed items are collapsed:
     "1 removed item", stored status shown read-only.
-- `/login`, `/logout`.
+  - Every control staff tap is at least 44 px tall (selects 56 px; buttons, note inputs,
+    disclosures, chips, header links and inline action links 44 px).
+- `/login`; `POST /logout` (form button in the header, which shows the logged-in name and
+  "Log out", or "Log in" when there is no session).
 - `/admin` — statuses (add, rename label, reorder, toggle done, toggle waiting, retire), stale
   days, work days, hide patterns, watch query, staff roster (the form has exactly: name, PIN,
   active; actions: set/reset PIN, deactivate, clear lock). Never shows `pin_hash`. Renaming a
-  status does not rewrite history (items store ids).
+  status does not rewrite history (items store ids). The tables keep a 560 px minimum width and
+  scroll sideways inside their wrapper on phones instead of squeezing.
 - `/agents` (HTML) and `/llms.txt` (text/plain) — how AI agents use this: base URL, endpoints,
   examples with `curl`, the meaning of `stale`, `stale_reason`, `tracking` and `blocked_on`,
   which fields need a token, how to write with a bearer token. State that `title`, `by`,
@@ -399,8 +437,10 @@ server log next to `ref`, never to the response. No stack traces.
 `tracking`, `summary`, `last_updated_at`, `last_updated_by`, `stale_since`,
 `days_since_update`, `business_days_since_update`, `stale`, `stale_reason`,
 `stale_after_days`, `all_done`, `open_items`, `done_items`, `item_count`, `untracked_count`,
-`blocked_on`, `items[] = { line_item_id, title, status, status_name, done, waiting,
-days_since_update, stale, updated_at, updated_by }`. Everything else (`order.id`,
+`blocked_on`, `items[] = { line_item_id, title, label, status, status_name, done, waiting,
+days_since_update, stale, updated_at, updated_by }` — `label` is the pill text (title, variant,
+`×n`, `(1 of 2)`, §6), deliberately public so an agent can name the right line; it exposes the
+variant and quantity and nothing else. Everything else (`order.id`,
 `created_at`, `admin_url`, `tags`, `fulfillment_status`, `closed`, `cancelled_at`, `context`,
 `history`, `note`, `via`, `source`, `last_note`, `untracked_items`, `hidden_items`,
 `removed_items`, `tag_synced`) requires a credential (staff cookie, `API_TOKENS` bearer or
@@ -470,9 +510,11 @@ substrings, never regex.
   orders matching `settings.watch_query`, deduplicated by id, minus `FULFILLED` ones. Rows =
   the order object without `items[].history`, `untracked_items`, `hidden_items`,
   `removed_items` (rows come from `item_status` + `visible_ids`, not line items:
-  `item_count = visible_ids.length`, `untracked_count = item_count − tracked`). Sorted stalest
-  first (never-set by `created_at` first, then by `stale_since`). `?page=N` (50 per page),
-  `?stale=1` filter, `?fresh=1` bypasses the 60 s cache. Response
+  `item_count = visible_ids.length`, `untracked_count = item_count − tracked`; a never-set row
+  has neither, so `item_count` / `open_items` = `currentSubtotalLineItemsQuantity` and
+  `untracked_count: null`, §4.1). Sorted stalest first (never-set by `created_at` first, then
+  by `stale_since`). `?page=N` (50 per page), `?stale=1` filter, `?fresh=1` bypasses the 60 s
+  cache for credentialed callers only (anonymous callers get the cache). Response
   `{ page, per_page, total, truncated, checked_at, orders: [...] }`; `truncated: true` when the
   walk cap (§8) was hit.
 - `GET /api/stale?days=3` → `{ days, checked_at, count, never_set_count, truncated,
@@ -489,7 +531,9 @@ substrings, never regex.
 - `GET /api/health` → `{ ok, shop, api_version, served_api_version, scopes_ok }` (no secrets).
   `served_api_version` = the `X-Shopify-API-Version` response header, so a fall-forward from
   a retired version is visible; `scopes_ok` is false unless the token has `write_orders` and
-  `read_all_orders`.
+  `read_all_orders`. Anonymous calls count against the public read limiter like every other
+  read, and the answer is memoised per instance (30 s; 5 s after a failure), so the endpoint
+  cannot be used to drain the Shopify cost bucket.
 
 **Rate limits**: unauthenticated reads — best-effort in-memory limiter, 60 requests/min per IP
 per instance → 429 with `Retry-After`, plus a 15 s in-memory cache of the public shape keyed
@@ -501,8 +545,12 @@ staff id). The real backstop is a Vercel Firewall rate-limit rule for `/api/*` a
 60 days, which is shorter than many production runs (the four `in-production` orders found
 live are all from 2025). `scripts/setup-shopify.ts` fails and `/api/health` reports
 `scopes_ok: false` unless both `write_orders` and `read_all_orders` are present
-(`{ currentAppInstallation { accessScopes { handle } } }`). No Shopify approval is needed for
-a Dev Dashboard app in the TraxNYC organization.
+(`{ currentAppInstallation { accessScopes { handle } } }`). The app version declares
+`write_orders` and `read_all_orders` (`read_orders` is implied by `write_orders`; the
+installation may still report it, which the setup script accepts). No Shopify approval is
+needed when the app is created in the Dev Dashboard organization that owns `05nbj6-yr` (a
+merchant organization); an app under a Partner organization must request and receive approval
+for `read_all_orders` before declaring it, or the version fails with an `app_access` error.
 
 ## 8. Shopify client
 
@@ -521,10 +569,15 @@ a Dev Dashboard app in the TraxNYC organization.
   `https://${SHOPIFY_STORE_DOMAIN}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`. Throttling
   arrives as HTTP 200 with `errors[].extensions.code == "THROTTLED"` (not 429): wait
   `(requestedQueryCost - throttleStatus.currentlyAvailable) / throttleStatus.restoreRate`
-  seconds and retry; retry HTTP 5xx with backoff; 3 attempts in total, then 503
-  `shopify_throttled` / 502 `shopify_error`. Other GraphQL `errors` and `userErrors` become
-  thrown errors (full text to the log, generic text to the client, §7). The
-  `X-Shopify-API-Version` response header is kept for `/api/health`.
+  seconds and retry; HTTP 429 and network errors retry with backoff; HTTP 5xx retries with
+  backoff **for queries only** — a mutation whose response was lost may already have been
+  committed (a retry would answer `STALE_OBJECT`, re-read and record the same change twice as
+  `set` + `confirm`), so a mutation 5xx goes straight to 502 `shopify_error`; 3 attempts in
+  total, then 503 `shopify_throttled` / 502 `shopify_error`. Every request carries a deadline
+  (`AbortSignal.timeout`, 20 s for GraphQL, 10 s for the token grant) so a stalled connection
+  becomes a retried network error instead of hanging the function. Other GraphQL `errors`
+  and `userErrors` become thrown errors (full text to the log, generic text to the client,
+  §7). The `X-Shopify-API-Version` response header is kept for `/api/health`.
 - `SHOPIFY_API_URL` (test override) is read once at boot; when set, the client refuses to
   start unless `SHOPIFY_ADMIN_TOKEN` starts with `test_` (a real token can never be sent to a
   mock host), and the effective GraphQL host is logged at startup. The app never fetches a URL
@@ -548,10 +601,14 @@ a Dev Dashboard app in the TraxNYC organization.
     custody:        metafield(namespace: "custom", key: "custody") { value }
     giveTo:         metafield(namespace: "custom", key: "give_to") { value }
     dueDate:        metafield(namespace: "trax_production", key: "due_date") { value }
+    lastUpdatedAt:  metafield(namespace: "trax_production", key: "last_updated_at") { value }
+    lastUpdatedBy:  metafield(namespace: "trax_production", key: "last_updated_by") { value }
+    summary:        metafield(namespace: "trax_production", key: "summary") { value }
   } }
   ```
-  Pick the node whose `number` equals the requested integer (404 if none). No
-  `product { id }` / `variant { id }` (not needed; they would require `read_products`).
+  The last three are what the §4.6 repair compares against. Pick the node whose `number`
+  equals the requested integer (404 if none). No `product { id }` / `variant { id }` (not
+  needed; they would require `read_products`).
 - `OrdersByQuery`: `orders(first: 50, query: $q, sortKey: CREATED_AT, reverse: true,
   after: $cursor) { nodes { id legacyResourceId name number createdAt closed cancelledAt
   displayFulfillmentStatus tags currentSubtotalLineItemsQuantity itemStatus: … productionDate: …
@@ -570,8 +627,9 @@ a Dev Dashboard app in the TraxNYC organization.
 - **Cost budget**: a single query may not exceed 1,000 points (object 1, scalar/enum 0,
   connection 2 + first × node, mutation 10; Plus restores 1,000/s — read
   `extensions.cost.throttleStatus.maximumAvailable` at runtime). `OrdersByQuery` ≈ 2 + 50 ×
-  (1 + 5 metafield objects) = 302; `OrderByName` with `first: 3` ≈ 330 (≤ 630 if
-  `customAttributes` is costed per line; verified to execute with `first: 5`). **Never add
+  (1 + 5 metafield objects) = 302; `OrderByName` with `first: 3` and 8 metafield objects per
+  order ≈ 2 + 3 × (1 + 8 + (2 + 100 × 1)) = 335 (≤ 635 if `customAttributes` is costed per
+  line; verified to execute with `first: 5`). **Never add
   `lineItems` to the list query** (50 × 102 points is rejected with `MAX_COST_EXCEEDED`); list
   rows use `item_status` + `visible_ids`, with `currentSubtotalLineItemsQuantity` (a 0-cost
   scalar) as the item-count fallback.
@@ -580,8 +638,8 @@ a Dev Dashboard app in the TraxNYC organization.
 
 ```
 SHOPIFY_STORE_DOMAIN=05nbj6-yr.myshopify.com # the myshopify domain (traxnyc.com is the storefront)
-SHOPIFY_ADMIN_TOKEN=                         # optional: token of an EXISTING admin-created custom app (new ones cannot be created); scopes read_orders, write_orders, read_all_orders — nothing else
-SHOPIFY_CLIENT_ID=                           # Dev Dashboard app in the TraxNYC organization; used with the secret when SHOPIFY_ADMIN_TOKEN is empty
+SHOPIFY_ADMIN_TOKEN=                         # optional: token of an EXISTING admin-created custom app (new ones cannot be created); scopes write_orders, read_all_orders (read_orders implied) — nothing else
+SHOPIFY_CLIENT_ID=                           # Dev Dashboard app in the merchant organization that owns the store; used with the secret when SHOPIFY_ADMIN_TOKEN is empty
 SHOPIFY_CLIENT_SECRET=
 SHOPIFY_API_VERSION=2026-10
 SHOPIFY_API_URL=                             # test-only override: full URL to …/graphql.json (the mock server); requires SHOPIFY_ADMIN_TOKEN=test_…
@@ -591,7 +649,7 @@ PIN_PEPPER=<32+ random bytes, hex>           # must differ from SESSION_SECRET
 ADMIN_PASSCODE=                              # ≥ 16 chars (openssl rand -base64 24); /admin is 404 until set
 API_TOKENS=claude:<random>,maks-ai:<random>  # optional; label:token pairs, each token ≥ 32 chars
 READ_TOKEN=                                  # optional; ≥ 32 random chars; empty = public reads
-TRUST_PROXY=                                 # Docker only: 1 = trust x-forwarded-for from the reverse proxy
+TRUST_PROXY=                                 # which header may name the client IP: vercel = Vercel's x-real-ip / x-vercel-forwarded-for; 1 = the entry the ONE reverse proxy appended to x-forwarded-for (Docker); empty = none (shared bucket). Also gates x-forwarded-host
 DISPLAY_TZ=America/New_York
 ```
 
@@ -599,13 +657,16 @@ Boot validation (`src/lib/env.ts`, imported by every route and page): `SESSION_S
 `PIN_PEPPER` must each be ≥ 64 hex chars and must differ; `ADMIN_PASSCODE` ≥ 16 chars or
 `/admin` is disabled; `API_TOKENS` tokens and `READ_TOKEN` ≥ 32 chars when present; either
 `SHOPIFY_ADMIN_TOKEN` or `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET` must be set (or
-`SHOPIFY_API_URL` with a `test_` token). Any violation throws with a clear message. The code
-contains no default value for any secret; tests supply explicit values via
-`tests/e2e/.env.test`. In Vercel, mark the secrets as Sensitive and scope the Shopify
-credentials to the Production environment only (previews get `SHOPIFY_API_URL` pointing at the
-mock, or no credentials at all). Rotation (README): Shopify credentials (re-issue in the Dev
-Dashboard or the custom app, redeploy), `SESSION_SECRET` (logs everyone out), `PIN_PEPPER`
-(invalidates every PIN — re-set them in `/admin`).
+`SHOPIFY_API_URL` with a `test_` token); `TRUST_PROXY` must be empty, `1` or `vercel`. Any
+violation throws with a clear message. The code contains no default value for any secret;
+tests supply explicit values via `tests/e2e/.env.test`. In Vercel, mark the secrets as
+Sensitive, set `TRUST_PROXY=vercel`, and scope the Shopify credentials to the Production
+environment only — preview deployments then have no Shopify credentials, refuse to boot and
+answer 500 on every URL, which is expected (the README says to ignore or disable them; the
+mock cannot serve previews, it binds 127.0.0.1). Rotation (README): Shopify credentials
+(re-issue in the Dev Dashboard or the custom app, redeploy), `SESSION_SECRET` (logs everyone
+out), `PIN_PEPPER` (invalidates every PIN — re-set them in `/admin`), `ADMIN_PASSCODE` (ends
+every admin session, §5).
 
 `.env.example` lists all of them with comments. Nothing secret is committed.
 
@@ -676,18 +737,28 @@ Dockerfile, .dockerignore, .env.example, .gitignore, package.json, next.config.t
   `stale_reason: "never_set"`; a removed line (`currentQuantity: 0`) renders read-only; write
   without auth → 401; cookie POST containing `by` → 400; `/admin` with empty passcode env →
   404, wrong passcode → 401; `/admin` HTML and every JSON response contain no `pin_hash`;
-  mobile viewport (390 px) renders without horizontal scroll.
+  mobile viewport (390 px) renders without horizontal scroll and every tap target is ≥ 44 px;
+  a tagged order with no / unreadable `item_status` is read publicly and with a credential and
+  the mock receives no tag mutation; an id in `item_status` that is not on the order → 400
+  `item_removed`; the order-level header follows a write without a reload; a failed single
+  save (mock 5xx, sent once) shows its error until a later bulk write succeeds; visiting `/`
+  while logged in keeps the session, `GET /logout` → 405, cross-site `POST /logout` → 403, the
+  header's Log out button ends it; 8 parallel wrong PINs → five 401 + three 429 `locked`,
+  `failed_attempts` 5, the right PIN refused while locked (same for `/admin` passcodes);
+  `/api/health` is memoised.
 - Mock Shopify server: dispatches on operation name, keeps orders / metafields / tags in
   memory, evaluates the `tag:` and `status:` terms of `$q` (other terms match everything),
   compares `compareDigest` and returns `STALE_OBJECT`, can return `THROTTLED` on demand,
   implements the client-credentials token endpoint, and sends `X-Shopify-API-Version`.
 - Every GraphQL document validated against the Admin schema (use the Shopify MCP
   `validate_graphql_codeblocks` tool when available).
-- README: Vercel deploy + custom domain + Firewall rate-limit rule; Shopify Dev Dashboard steps
-  (create the app under the TraxNYC organization → add a version with scopes `read_orders`,
-  `write_orders`, `read_all_orders` → release → install on `05nbj6-yr` → copy Client ID /
-  Client secret; the 24 h token lifetime; the legacy `shpat_` path only for an existing
-  admin-created app); env table + rotation; Docker reverse proxy (`TRUST_PROXY`); how staff
+- README: Vercel deploy (Production Branch = `production-status`, previews do not boot) +
+  custom domain + Firewall rate-limit rule; Shopify Dev Dashboard steps (create the app in the
+  merchant organization that owns `05nbj6-yr` — a Partner-organization app must get
+  `read_all_orders` approved first → add a version with scopes `write_orders`,
+  `read_all_orders` → release → install on `05nbj6-yr` → copy Client ID / Client secret; the
+  24 h token lifetime; the legacy `shpat_` path only for an existing admin-created app); env
+  table + rotation; Docker reverse proxy (`TRUST_PROXY`); how staff
   log in; how agents read (which fields need a token); how Claude writes.
 
 ## 12. Look

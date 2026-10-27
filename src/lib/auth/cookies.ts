@@ -1,9 +1,10 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 /**
  * Signed cookies (SPEC §5): `base64url(payload).base64url(HMAC-SHA256(secret, payload))`.
  * Verification: parse → constant-time signature check → `t` → `exp`. The roster check for
- * staff cookies happens in `credential.ts`.
+ * staff cookies happens in `credential.ts`; the admin cookie carries a fingerprint of the
+ * passcode it was issued for (`ph`), so rotating `ADMIN_PASSCODE` revokes every admin session.
  */
 
 export const STAFF_COOKIE = 'trax_staff';
@@ -22,10 +23,17 @@ export interface StaffSession {
 export interface AdminSession {
   t: 'admin';
   exp: number;
+  /** `passcodeFingerprint(ADMIN_PASSCODE)` at issue time */
+  ph: string;
 }
 
 function hmac(secret: string, payload: string): Buffer {
   return createHmac('sha256', secret).update(payload).digest();
+}
+
+/** 16 hex chars of SHA-256(passcode): identifies which passcode an admin session was issued for. */
+export function passcodeFingerprint(passcode: string): string {
+  return createHash('sha256').update(passcode).digest('hex').slice(0, 16);
 }
 
 export function signCookie(payload: StaffSession | AdminSession, secret: string): string {
@@ -69,7 +77,8 @@ export function parseAdminCookie(value: string | null | undefined, secret: strin
   const p = verifySignature(value, secret);
   if (!p || p.t !== 'admin') return null;
   if (!expValid(p.exp, now)) return null;
-  return { t: 'admin', exp: p.exp };
+  if (typeof p.ph !== 'string' || !/^[0-9a-f]{16}$/.test(p.ph)) return null;
+  return { t: 'admin', exp: p.exp, ph: p.ph };
 }
 
 export function serializeCookie(name: string, value: string, opts: { maxAge: number; secure: boolean }): string {

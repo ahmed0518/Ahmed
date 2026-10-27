@@ -2,7 +2,7 @@ import { getEnv } from '@/lib/env';
 import { forbidden, unauthorized } from '@/lib/errors';
 import { getStaff } from '@/lib/settings/store';
 import type { StaffRoster } from '@/lib/status/types';
-import { ADMIN_COOKIE, STAFF_COOKIE, parseAdminCookie, parseCookieHeader, parseStaffCookie, type StaffSession } from './cookies';
+import { ADMIN_COOKIE, STAFF_COOKIE, parseAdminCookie, parseCookieHeader, parseStaffCookie, passcodeFingerprint, type StaffSession } from './cookies';
 import { csrfOk, type HeaderReader } from './csrf';
 import { bearerFromHeader, constantTimeEqual, matchApiToken } from './tokens';
 
@@ -42,7 +42,7 @@ export async function readCredential(headers: HeaderReader): Promise<Credential 
 export async function requireWriter(headers: HeaderReader): Promise<Extract<Credential, { kind: 'staff' | 'token' }>> {
   const cred = await readCredential(headers);
   if (!cred || cred.kind === 'read_token') throw unauthorized();
-  if (cred.kind === 'staff' && !csrfOk(headers)) throw forbidden('csrf');
+  if (cred.kind === 'staff' && !csrfOk(headers, getEnv().TRUST_PROXY)) throw forbidden('csrf');
   return cred;
 }
 
@@ -53,16 +53,18 @@ export async function requireReader(headers: HeaderReader): Promise<Credential |
   return cred;
 }
 
+/** A valid `trax_admin` cookie that was issued for the passcode currently configured. */
 export function isAdmin(headers: HeaderReader): boolean {
   const env = getEnv();
   if (!env.ADMIN_PASSCODE) return false;
   const cookies = parseCookieHeader(headers.get('cookie'));
-  return parseAdminCookie(cookies.get(ADMIN_COOKIE), env.SESSION_SECRET) !== null;
+  const session = parseAdminCookie(cookies.get(ADMIN_COOKIE), env.SESSION_SECRET);
+  return session !== null && constantTimeEqual(session.ph, passcodeFingerprint(env.ADMIN_PASSCODE));
 }
 
 export function requireAdmin(headers: HeaderReader): void {
   if (!isAdmin(headers)) throw unauthorized('admin_required');
-  if (!csrfOk(headers)) throw forbidden('csrf');
+  if (!csrfOk(headers, getEnv().TRUST_PROXY)) throw forbidden('csrf');
 }
 
 /** True when HTML pages need a staff login (READ_TOKEN set) and this request has none. */

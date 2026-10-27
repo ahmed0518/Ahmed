@@ -294,8 +294,13 @@ async function setTag(orderId: string, present: boolean): Promise<void> {
   }
 }
 
-/** Make the tag match `shouldHaveTag`; never throws — returns whether it is in sync. */
-async function syncTag(raw: RawOrderNode, shouldHaveTag: boolean): Promise<boolean> {
+/**
+ * Make the tag match `shouldHaveTag`; never throws — returns whether it is in sync. `null`
+ * (no readable entries, SPEC §4.2) leaves the tag alone: a tagged never-set order must stay
+ * in the chase list, and an unreadable `item_status` says nothing about the tag.
+ */
+async function syncTag(raw: RawOrderNode, shouldHaveTag: boolean | null): Promise<boolean> {
+  if (shouldHaveTag === null) return true;
   const hasTag = raw.tags.includes(PRODUCTION_TAG);
   if (hasTag === shouldHaveTag) return true;
   try {
@@ -322,27 +327,33 @@ function sameIds(a: readonly string[] | undefined, b: readonly string[]): boolea
   return b.every((id) => set.has(id));
 }
 
+/** True when the tag matches what `item_status` implies (or nothing can be implied). */
+function tagInSync(view: OrderView): boolean {
+  const wanted = view.computed.should_have_tag;
+  return wanted === null || view.raw.tags.includes(PRODUCTION_TAG) === wanted;
+}
+
 /**
  * Self-healing on read (SPEC §4.6): when Shopify holds derived data that differs from what
  * `item_status` implies, rewrite it (with compareDigest) and fix the tag. Awaited, logged,
- * never fails the read.
+ * never fails the read. An order without readable entries is left exactly as it is: nothing
+ * is written and the tag is not touched.
  */
 async function repair(view: OrderView): Promise<boolean> {
   const { raw, computed } = view;
+  if (!view.parseOk || !view.itemStatus || !computed.has_entries) return tagInSync(view);
   try {
-    if (view.parseOk && view.itemStatus && computed.has_entries) {
-      const needsMeta =
-        !sameTimestamp(raw.lastUpdatedAt?.value, computed.last_updated_at) ||
-        (raw.lastUpdatedBy?.value ?? null) !== computed.last_updated_by ||
-        (raw.summary?.value ?? null) !== computed.summary.slice(0, SUMMARY_MAX) ||
-        !sameIds(view.itemStatus.visible_ids, computed.visible_ids);
-      if (needsMeta) {
-        const next = cloneItemStatus(view.itemStatus);
-        next.visible_ids = computed.visible_ids;
-        const res = await setOrderMetafields(raw.id, next, computed, raw.itemStatus?.compareDigest ?? null);
-        if (res.stale) log.warn('repair skipped: item_status changed meanwhile', { order: raw.name });
-        else log.info('derived metafields repaired', { order: raw.name });
-      }
+    const needsMeta =
+      !sameTimestamp(raw.lastUpdatedAt?.value, computed.last_updated_at) ||
+      (raw.lastUpdatedBy?.value ?? null) !== computed.last_updated_by ||
+      (raw.summary?.value ?? null) !== computed.summary.slice(0, SUMMARY_MAX) ||
+      !sameIds(view.itemStatus.visible_ids, computed.visible_ids);
+    if (needsMeta) {
+      const next = cloneItemStatus(view.itemStatus);
+      next.visible_ids = computed.visible_ids;
+      const res = await setOrderMetafields(raw.id, next, computed, raw.itemStatus?.compareDigest ?? null);
+      if (res.stale) log.warn('repair skipped: item_status changed meanwhile', { order: raw.name });
+      else log.info('derived metafields repaired', { order: raw.name });
     }
     return await syncTag(raw, computed.should_have_tag);
   } catch (e) {
@@ -368,7 +379,7 @@ export async function readOrder(number: string, opts: { repair?: boolean; staleA
   if (!raw) throw notFound('order_not_found', 'Order not found');
   const settings = await getSettings();
   const view = buildView(raw, { settings, now: new Date(), staleAfterDays: opts.staleAfterDays });
-  const tagSynced = opts.repair === false ? raw.tags.includes(PRODUCTION_TAG) === view.computed.should_have_tag : await repair(view);
+  const tagSynced = opts.repair === false ? tagInSync(view) : await repair(view);
   return { ...view.payload, order: orderMeta(raw), tag_synced: tagSynced };
 }
 
@@ -412,12 +423,18 @@ export async function writeOrderStatus(number: string, changes: readonly RawChan
     const hiddenIds = new Set(classified.hidden.map((li) => li.id));
     const removedIds = new Set(classified.removed.map((li) => li.id));
 
+    const parsed = parseItemStatus(raw.itemStatus?.value);
+    let current: ItemStatus | null = null;
+    if (parsed.ok) current = parsed.value;
+    else log.warn('item_status unreadable — starting from empty', { order: raw.name, reason: parsed.reason });
+
     const resolved: Change[] = [];
     for (const change of changes) {
       if (hiddenIds.has(change.lineItemId)) {
         throw badRequest('item_hidden', `Line item ${change.lineItemId} is not a production item`);
       }
-      if (removedIds.has(change.lineItemId)) {
+      // Removed = currentQuantity 0, or an id that item_status knows but the order no longer lists (SPEC §4.1).
+      if (removedIds.has(change.lineItemId) || (!visibleById.has(change.lineItemId) && current?.items[change.lineItemId])) {
         throw badRequest('item_removed', `Line item ${change.lineItemId} was removed from the order`);
       }
       if (!visibleById.has(change.lineItemId)) {
@@ -435,11 +452,6 @@ export async function writeOrderStatus(number: string, changes: readonly RawChan
       }
       resolved.push({ lineItemId: change.lineItemId, status: statusId, note: change.note });
     }
-
-    const parsed = parseItemStatus(raw.itemStatus?.value);
-    let current: ItemStatus | null = null;
-    if (parsed.ok) current = parsed.value;
-    else log.warn('item_status unreadable — starting from empty', { order: raw.name, reason: parsed.reason });
 
     const titles = new Map(classified.visible.map((li) => [li.id, li.title]));
     const { next } = applyChanges(current, resolved, actor, titles, now);
@@ -498,11 +510,15 @@ async function walk(q: string): Promise<{ nodes: RawOrderNode[]; truncated: bool
   return { nodes, truncated: true };
 }
 
-/** Every list query adds `status:open` (SPEC §4.2). */
+/**
+ * Every list query adds `status:open` (SPEC §4.2) unless it already carries that exact,
+ * unnegated term — `-status:cancelled` or `NOT status:cancelled` alone would let archived
+ * orders in, so they still get the filter appended.
+ */
 export function withOpenFilter(query: string): string {
   const q = query.trim();
   if (!q) return q;
-  return /\bstatus:/i.test(q) ? q : `(${q}) status:open`;
+  return /(^|[\s(])status:open(?=[\s)]|$)/i.test(q) ? q : `(${q}) status:open`;
 }
 
 async function loadUniverse(fresh: boolean): Promise<ListCache> {
@@ -553,9 +569,12 @@ function buildListRow(raw: RawOrderNode, settings: Settings, now: Date, staleAft
     itemCountOverride = fallbackCount;
     untrackedUnknown = true;
   } else {
-    // never set: every item is open since the order was created
+    // Never set: every line is open since the order was created. The list query has no line
+    // items, so item_count / open_items come from the Shopify quantity (hidden lines included)
+    // and untracked_count is unknown (null) — SPEC §4.1 / §7.2.
     visible = Array.from({ length: Math.max(1, fallbackCount) }, () => ({ id: '', title: null }));
     itemCountOverride = fallbackCount;
+    untrackedUnknown = true;
   }
 
   const computed = compute({

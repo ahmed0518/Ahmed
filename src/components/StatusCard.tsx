@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { HistoryOut, ItemOut, OrderPayload, PublicItem, PublicOrder } from '@/lib/orders/types';
+import type { StaleReason } from '@/lib/status/compute';
 import { viaLabel } from '@/lib/text';
 import { formatAbsolute, formatMonD } from '@/lib/time';
+import { RelativeTime } from './RelativeTime';
 import styles from './StatusCard.module.css';
 
 export interface StatusOption {
@@ -18,6 +20,7 @@ export interface StatusOption {
 /** One item as the card renders it — the public fields plus whatever a credential adds. */
 type ItemView = PublicItem & Partial<Pick<ItemOut, 'attributes' | 'history' | 'via' | 'source'>>;
 
+/** Everything the card renders, from the payload — the order-level header is derived from it too. */
 interface OrderView {
   items: ItemView[];
   summary: string;
@@ -25,6 +28,10 @@ interface OrderView {
   hidden: OrderPayload['hidden_items'];
   last_updated_at: string | null;
   last_updated_by: string | null;
+  stale: boolean;
+  stale_reason: StaleReason;
+  all_done: boolean;
+  blocked_on: string[];
 }
 
 function toView(p: OrderPayload | PublicOrder): OrderView {
@@ -36,6 +43,10 @@ function toView(p: OrderPayload | PublicOrder): OrderView {
     hidden: credentialed ? p.hidden_items : [],
     last_updated_at: p.last_updated_at,
     last_updated_by: p.last_updated_by,
+    stale: p.stale,
+    stale_reason: p.stale_reason,
+    all_done: p.all_done,
+    blocked_on: [...p.blocked_on],
   };
 }
 
@@ -47,7 +58,6 @@ interface Props {
   loginHref: string;
   tz: string;
   unreadable: boolean;
-  onOrderChange?: (p: OrderPayload) => void;
 }
 
 type Pending = 'saving' | 'saved' | 'error';
@@ -61,7 +71,6 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [bulkState, setBulkState] = useState<{ pending: Pending | null; message: string | null }>({ pending: null, message: null });
   const [sessionExpired, setSessionExpired] = useState(false);
-  const [lastWrite, setLastWrite] = useState<{ at: string; by: string } | null>(null);
 
   const selectable = statuses.filter((s) => !s.retired);
   const byId = new Map(statuses.map((s) => [s.id, s]));
@@ -86,9 +95,9 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
     window.setTimeout(() => setPending((p) => (p[id] === 'saved' ? { ...p, [id]: undefined as unknown as Pending } : p)), 2500);
   }
 
+  /** Every successful write replaces the whole view, header included, so nothing goes stale. */
   function applyResponse(next: OrderPayload) {
     setOrder(toView(next));
-    if (next.last_updated_at && next.last_updated_by) setLastWrite({ at: next.last_updated_at, by: next.last_updated_by });
   }
 
   async function changeStatus(id: string, value: string | null, note = '') {
@@ -121,6 +130,9 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
     try {
       const next = await post(`/api/orders/${number}`, { items });
       applyResponse(next);
+      // The order now reflects this write: an earlier per-item failure is no longer true.
+      setErrors({});
+      setPending({});
       setBulkState({ pending: 'saved', message: label });
       window.setTimeout(() => setBulkState((s) => (s.pending === 'saved' ? { pending: null, message: null } : s)), 2500);
     } catch (e) {
@@ -149,6 +161,7 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
 
   const busy = bulkState.pending === 'saving';
   const n = order.items.length;
+  const lastUpdated = order.last_updated_at && order.last_updated_by ? { at: new Date(order.last_updated_at), by: order.last_updated_by } : null;
 
   return (
     <section className={`card ${styles.card}`} aria-labelledby="status-card-title">
@@ -156,17 +169,38 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
         Production Status by Product
       </h2>
 
+      <p className={`small ${styles.summary}`} data-testid="order-summary">
+        {order.summary}{' '}
+        {order.stale ? <span className="badge badge--stale">stale</span> : null}{' '}
+        {order.blocked_on.length > 0 ? <span className="badge badge--waiting">waiting</span> : null}{' '}
+        {order.all_done ? <span className="badge badge--done">done</span> : null}
+        {order.stale_reason === 'shipped' ? <span className="muted"> · shipped</span> : null}
+      </p>
+      {lastUpdated ? (
+        <p className={`muted ${styles.orderMeta}`} data-testid="order-last-updated">
+          Last updated {formatAbsolute(lastUpdated.at, tz)} by {lastUpdated.by} (
+          <RelativeTime iso={order.last_updated_at ?? ''} tz={tz} fallback={formatMonD(lastUpdated.at, tz)} />)
+        </p>
+      ) : null}
+
       {unreadable ? <div className="notice notice--error">Status data unreadable — contact admin. The next save starts fresh.</div> : null}
 
       {sessionExpired ? (
         <div className="notice notice--error" role="alert">
-          Session expired — <Link href={loginHref}>log in</Link> to keep updating.
+          Session expired —{' '}
+          <Link href={loginHref} className="action-link">
+            log in
+          </Link>{' '}
+          to keep updating.
         </div>
       ) : null}
 
       {!canEdit ? (
         <div className="notice notice--warn">
-          <Link href={loginHref}>Log in to update</Link> — statuses are read-only until you pick your name and PIN.
+          <Link href={loginHref} className="action-link">
+            Log in to update
+          </Link>{' '}
+          — statuses are read-only until you pick your name and PIN.
         </div>
       ) : null}
 
@@ -201,12 +235,6 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
             </span>
           ) : null}
         </div>
-      ) : null}
-
-      {lastWrite ? (
-        <p className="muted" data-testid="order-last-updated">
-          Last updated {formatAbsolute(new Date(lastWrite.at), tz)} by {lastWrite.by}
-        </p>
       ) : null}
 
       {n === 0 ? <p className="muted">No production items on this order.</p> : null}
@@ -274,8 +302,14 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
               </div>
             ) : null}
             <div className={`muted ${styles.meta}`} data-testid={`last-updated-${item.line_item_id}`}>
-              {state === 'saving' ? 'Saving… ' : state === 'saved' ? 'Saved · ' : ''}
-              <LastUpdated item={item} tz={tz} />
+              {state === 'saving' ? (
+                'Saving…'
+              ) : (
+                <>
+                  {state === 'saved' ? 'Saved · ' : ''}
+                  <LastUpdated item={item} tz={tz} />
+                </>
+              )}
             </div>
             {err ? (
               <div className="notice notice--error" role="alert">

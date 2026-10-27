@@ -9,7 +9,9 @@ import { defaultSettings, defaultStaff, validateSettings, validateStaff } from '
 /**
  * The two shop metafields `trax_production.settings` and `trax_production.staff` (SPEC §4.3):
  * read together, cached 30 s, validated on every read (invalid → defaults, logged), written
- * separately with `compareDigest` (SPEC §4.5).
+ * separately with `compareDigest` (SPEC §4.5). Read-modify-write cycles are serialized per
+ * key inside this instance (so concurrent requests never clobber each other's increment)
+ * and CAS-protected against other instances.
  */
 
 export interface ShopData {
@@ -113,37 +115,61 @@ async function writeShopMetafield(key: Key, shopId: string, value: string, diges
   return { stale: false, digest: written?.compareDigest ?? null };
 }
 
-/** Read-modify-write with CAS; the mutator receives a fresh copy on every attempt. */
-export async function updateSettings(mutate: (current: Settings) => Settings): Promise<Settings> {
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const data = await loadShopData({ fresh: true });
-    const next = mutate(structuredClone(data.settings));
-    const valid = validateSettings(next);
-    if (!valid) throw new AppError(400, 'invalid_settings', 'Settings are invalid');
-    const res = await writeShopMetafield('settings', data.shopId, JSON.stringify(valid), data.settingsDigest);
-    if (res.stale) {
-      log.warn('settings write hit STALE_OBJECT, retrying', { attempt });
-      continue;
-    }
-    cache = { ...data, settings: valid, settingsDigest: res.digest, settingsStored: true, fetchedAt: Date.now() };
-    return valid;
-  }
-  throw conflict();
+const CAS_ATTEMPTS = 4;
+
+const queues: Record<Key, Promise<unknown>> = { settings: Promise.resolve(), staff: Promise.resolve() };
+
+/** Run `fn` after every earlier read-modify-write of the same key on this instance. */
+function serialized<T>(key: Key, fn: () => Promise<T>): Promise<T> {
+  const run = queues[key].then(fn, fn);
+  queues[key] = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
 }
 
-export async function updateStaff(mutate: (current: StaffRoster) => StaffRoster): Promise<StaffRoster> {
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const data = await loadShopData({ fresh: true });
-    const next = mutate(structuredClone(data.staff));
-    const valid = validateStaff(next);
-    if (!valid) throw new AppError(400, 'invalid_staff', 'Staff roster is invalid');
-    const res = await writeShopMetafield('staff', data.shopId, JSON.stringify(valid), data.staffDigest);
-    if (res.stale) {
-      log.warn('staff write hit STALE_OBJECT, retrying', { attempt });
-      continue;
+/**
+ * Read-modify-write with CAS; the mutator receives a fresh copy on every attempt and may
+ * return `null` to leave the metafield untouched. A mutator that throws aborts the update
+ * without writing (used by the login lockout to refuse a locked name).
+ */
+export function updateSettings(mutate: (current: Settings) => Settings | null): Promise<Settings> {
+  return serialized('settings', async () => {
+    for (let attempt = 0; attempt < CAS_ATTEMPTS; attempt++) {
+      const data = await loadShopData({ fresh: true });
+      const next = mutate(structuredClone(data.settings));
+      if (next === null) return data.settings;
+      const valid = validateSettings(next);
+      if (!valid) throw new AppError(400, 'invalid_settings', 'Settings are invalid');
+      const res = await writeShopMetafield('settings', data.shopId, JSON.stringify(valid), data.settingsDigest);
+      if (res.stale) {
+        log.warn('settings write hit STALE_OBJECT, retrying', { attempt });
+        continue;
+      }
+      cache = { ...data, settings: valid, settingsDigest: res.digest, settingsStored: true, fetchedAt: Date.now() };
+      return valid;
     }
-    cache = { ...data, staff: valid, staffDigest: res.digest, staffStored: true, fetchedAt: Date.now() };
-    return valid;
-  }
-  throw conflict();
+    throw conflict();
+  });
+}
+
+export function updateStaff(mutate: (current: StaffRoster) => StaffRoster | null): Promise<StaffRoster> {
+  return serialized('staff', async () => {
+    for (let attempt = 0; attempt < CAS_ATTEMPTS; attempt++) {
+      const data = await loadShopData({ fresh: true });
+      const next = mutate(structuredClone(data.staff));
+      if (next === null) return data.staff;
+      const valid = validateStaff(next);
+      if (!valid) throw new AppError(400, 'invalid_staff', 'Staff roster is invalid');
+      const res = await writeShopMetafield('staff', data.shopId, JSON.stringify(valid), data.staffDigest);
+      if (res.stale) {
+        log.warn('staff write hit STALE_OBJECT, retrying', { attempt });
+        continue;
+      }
+      cache = { ...data, staff: valid, staffDigest: res.digest, staffStored: true, fetchedAt: Date.now() };
+      return valid;
+    }
+    throw conflict();
+  });
 }

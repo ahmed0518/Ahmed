@@ -16,7 +16,8 @@
     "e2e": "playwright test",
     "mock:shopify": "tsx tests/mock-shopify/server.ts",
     "setup:shopify": "tsx scripts/setup-shopify.ts",
-    "agents:md": "tsx scripts/write-agents-md.ts"
+    "agents:md": "tsx scripts/write-agents-md.ts",
+    "audit:prod": "node scripts/audit.mjs"
   },
   "dependencies": {
     "next": "15.5.28",

@@ -19,9 +19,12 @@ export interface TokenProviderOptions {
   tokenUrl: string;
   fetchImpl?: typeof fetch;
   now?: () => number;
+  /** Deadline for the token request in milliseconds (default 10 000). */
+  timeoutMs?: number;
 }
 
 const EARLY_REFRESH_SECONDS = 300;
+const DEFAULT_TOKEN_TIMEOUT_MS = 10_000;
 
 export function createTokenProvider(opts: TokenProviderOptions): TokenProvider {
   if (opts.staticToken) {
@@ -35,6 +38,7 @@ export function createTokenProvider(opts: TokenProviderOptions): TokenProvider {
   const clientSecret = opts.clientSecret;
   const fetchImpl = opts.fetchImpl ?? fetch;
   const now = opts.now ?? Date.now;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TOKEN_TIMEOUT_MS;
 
   let cached: { token: string; expiresAt: number } | null = null;
   let inflight: Promise<string> | null = null;
@@ -47,6 +51,7 @@ export function createTokenProvider(opts: TokenProviderOptions): TokenProvider {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
         body: body.toString(),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (e) {
       throw new ShopifyRequestError(`token request failed: ${e instanceof Error ? e.message : String(e)}`, { operation: 'AccessToken' });

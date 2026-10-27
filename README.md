@@ -28,17 +28,24 @@ The app talks to Shopify with the Admin API. You need **one** of these two:
 
 ### Option A (recommended): a Dev Dashboard app, client credentials
 
-1. Go to <https://dev.shopify.com> → the **TraxNYC** organization → **Apps** → **Create app**.
-   Name it `Trax Production Status`.
-2. Open the app → **Versions** → create a version. Under **Access scopes** add exactly:
-   `read_orders`, `write_orders`, `read_all_orders`. Nothing else.
+1. Go to <https://dev.shopify.com> and open the organization that **owns the store**: the
+   TraxNYC organization whose **Stores** list contains `05nbj6-yr` (a *merchant* organization).
+   **Apps** → **Create app**, name it `Trax Production Status`.
+   If the only organization you can see is a *Partner* organization (one set up by an agency,
+   with no `05nbj6-yr` under Stores), `read_all_orders` needs Shopify's approval first: open
+   the app → **API access requests** → **Read all orders** → **Request access**, wait for the
+   approval, and only then do step 2 — declaring the scope before approval makes the version
+   fail with an `app_access` validation error.
+2. Open the app → **Versions** → create a version. Under **Access scopes** add
+   `write_orders` and `read_all_orders`, nothing else (`read_orders` is implied by
+   `write_orders`; listing it too is harmless).
    `read_all_orders` matters: without it Shopify only shows orders from the last 60 days, and
    production runs are often longer.
 3. **Release** the version, then **Install** the app on the store `05nbj6-yr` (traxnyc.com).
 4. From the app's **Settings / Credentials** copy the **Client ID** and **Client secret**.
    These go into `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET`. The app mints its own 24-hour
-   access token from them (one server-to-server call, no install screens). No Shopify approval
-   is needed for an app used only inside its own organization.
+   access token from them (one server-to-server call, no install screens). An app created in
+   the merchant organization that owns the store needs no Shopify approval.
 
 ### Option B (legacy): an existing admin-created custom app
 
@@ -51,6 +58,11 @@ keep working. When `SHOPIFY_ADMIN_TOKEN` is set, the client ID/secret are not us
 
 1. Push this repository to GitHub, then in Vercel **Add New → Project → Import** it. Framework
    preset: Next.js. No build settings to change.
+   **The app lives on the `production-status` branch; `main` currently contains only a
+   README.** Vercel builds the repository's default branch as Production, so either merge
+   `production-status` into `main` before importing, or right after importing set
+   **Settings → Git → Production Branch** to `production-status`. Otherwise the first
+   production build has no `package.json` and fails.
 2. **Environment variables** (Settings → Environment Variables). Generate the secrets on your
    Mac in Terminal:
 
@@ -73,10 +85,13 @@ keep working. When `SHOPIFY_ADMIN_TOKEN` is set, the client ID/secret are not us
    | `ADMIN_PASSCODE` | 16+ chars | Sensitive. `/admin` is a 404 until this is set |
    | `API_TOKENS` | `claude:<token>,maks-ai:<token>` | Sensitive. One label per agent that may write |
    | `READ_TOKEN` | leave empty | set only if reads must stop being public (then agents need it, and staff must log in to see any page) |
+   | `TRUST_PROXY` | `vercel` | tells the app that Vercel's `x-real-ip` header is the real client IP (per-IP rate limits). Leave it empty and every anonymous caller shares one 60-requests-per-minute bucket |
    | `DISPLAY_TZ` | `America/New_York` | |
 
-   Preview deployments should get **no** Shopify credentials (or `SHOPIFY_API_URL` pointing at a
-   mock); scope the Shopify ones to **Production**.
+   Scope the Shopify credentials to the **Production** environment only. **Preview deployments
+   (every branch other than the production one) will not start:** without Shopify credentials
+   the app refuses to boot and every preview URL answers 500. That is expected — ignore them,
+   or turn previews off under **Settings → Git → Ignored Build Step**.
 3. **Deploy.** Check `https://<your-vercel-url>/api/health` → `"ok": true`, `"scopes_ok": true`,
    `"served_api_version": "2026-10"`.
 4. **Custom domain**: Settings → Domains → add `production.traxnyc.com`, then add the CNAME
@@ -88,7 +103,9 @@ keep working. When `SHOPIFY_ADMIN_TOKEN` is set, the client ID/secret are not us
 
 Rotation: Shopify credentials — re-issue in the Dev Dashboard (or the custom app) and redeploy.
 `SESSION_SECRET` — everyone has to log in again. `PIN_PEPPER` — every PIN stops working; set
-them again in `/admin`. `API_TOKENS` — give the agent its new token.
+them again in `/admin`. `API_TOKENS` — give the agent its new token. `ADMIN_PASSCODE` — every
+open `/admin` session ends immediately (the admin cookie is bound to the passcode it was
+issued for), staff logins are untouched.
 
 ## 3. First setup
 
@@ -114,14 +131,16 @@ them again in `/admin`. `API_TOKENS` — give the agent its new token.
   order page shows one black pill per product and a dropdown under each, exactly like the old
   block, plus **Last updated Oct 27, 3:12 PM by Ahmed** under every dropdown.
 - First time: **Log in** → pick your name → PIN. The login lasts 30 days on that phone. On a
-  shared phone, "Updating as Ahmed — Switch" changes the person.
+  shared phone, "Updating as Ahmed — Switch" changes the person; **Log out** (in the header)
+  ends the session.
 - Changing a dropdown saves immediately. **Still here** confirms the current status without
   changing it (so the AI stops nagging about a piece that is legitimately slow). **Set all N
   items to…** and **All still here** do the whole order at once.
 - The home page lists **Never set** (orders in production that nobody has touched) and **In
   production** (stalest first, red **stale** badge after 3 work days — configurable in `/admin`).
 - Warranties, shipping protection and other non-shipping lines are hidden automatically.
-- Five wrong PINs lock a name for 15 minutes (doubling after that). `/admin` can clear a lock,
+- Five wrong PINs lock a name for 15 minutes (doubling after that) — every attempt is counted
+  before the PIN is checked, so a burst of guesses cannot slip past. `/admin` can clear a lock,
   reset a PIN or deactivate a person — which also logs them out everywhere.
 
 ## 5. How agents read
@@ -137,8 +156,9 @@ Everything is documented for machines at `/agents` (HTML), `/llms.txt` (plain te
 - `GET /api/orders`, `GET /api/statuses`, `GET /api/health`.
 
 Reads are public by default (no customer data is ever exposed; the public shape has no dates
-other than status timestamps, no tags, notes or custody). Writes always need a token from
-`API_TOKENS`.
+other than status timestamps, no tags, notes or custody — it does carry each item's `label`,
+i.e. title plus variant and quantity, so an agent can name the right line). Writes always need
+a token from `API_TOKENS`.
 
 ## 6. How Claude writes
 
@@ -169,9 +189,13 @@ Seed it with `curl -X POST http://127.0.0.1:4001/__seed -H 'Content-Type: applic
 (see `tests/e2e/fixtures.ts` for the shape) and inspect it at `http://127.0.0.1:4001/__state`.
 
 Docker: `docker build -t trax-production-status .` then run it with the same environment
-variables (`-e …` or `--env-file`). Behind your own reverse proxy that terminates TLS, set
-`TRUST_PROXY=1` so client IPs come from `x-forwarded-for`, and add a rate-limit rule for
-`/api/*` and `/orders/*` there.
+variables (`-e …` or `--env-file`). Run it behind **exactly one** reverse proxy that terminates
+TLS and sets `x-forwarded-for` (nginx, Caddy and Traefik all do), set `TRUST_PROXY=1` so client
+IPs come from the entry that proxy appended, and add a rate-limit rule for `/api/*` and
+`/orders/*` there. Never expose the container directly: with `TRUST_PROXY` empty every
+anonymous caller shares one rate-limit bucket, and with `TRUST_PROXY=1` a directly connected
+client could name its own IP. The app sends `Strict-Transport-Security` itself, so the proxy
+needs no extra header for that.
 
 ## 8. Tests
 
@@ -187,4 +211,13 @@ npm run e2e         # Playwright against the mock Shopify server (never the real
 second copy on 3001 without an admin passcode to prove `/admin` answers 404), then runs the
 browser tests in headless Chromium. On a laptop, run `npx playwright install chromium` once
 first. If a pre-installed browser lives elsewhere, set `PLAYWRIGHT_BROWSERS_PATH` or
-`PW_CHROMIUM_PATH=/path/to/chrome`. `PORT` and `MOCK_SHOPIFY_PORT` change the ports.
+`PW_CHROMIUM_PATH=/path/to/chrome`. `PORT`, `MOCK_SHOPIFY_PORT` and `NO_ADMIN_PORT` (the
+passcode-less copy, default `PORT+1`, or `PORT+2` when that is the mock's port) change the
+ports; keep the three different — `tests/e2e/ports.ts` refuses to start otherwise.
+
+Dependencies: `npm run audit:prod` runs `npm audit --omit=dev` and fails on any advisory that is
+not on the accepted list in `scripts/audit.mjs`. Accepted today: four `postcss <= 8.5.22`
+advisories (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-fxqj-rqcc-2cmp, GHSA-r28c-9q8g-f849)
+pulled in by Next 15.x — build-time CSS/source-map handling of the app's own stylesheets, not
+reachable from a request. The fix lands with Next ≥ 16.3; drop them from the list when the
+15.x pin goes.

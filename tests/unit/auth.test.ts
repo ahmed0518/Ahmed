@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { parseAdminCookie, parseStaffCookie, serializeCookie, signCookie } from '@/lib/auth/cookies';
+import { parseAdminCookie, parseStaffCookie, passcodeFingerprint, serializeCookie, signCookie, type AdminSession } from '@/lib/auth/cookies';
 import { resolveStaffSession } from '@/lib/auth/credential';
 import { csrfOk, clientIp } from '@/lib/auth/csrf';
+import { claimAttempt } from '@/lib/auth/lockout';
 import { LOCK_BASE_MS, LOCK_MAX_MS, hashPin, isLocked, recordFailure, recordSuccess, verifyPin, type LockState } from '@/lib/auth/pin';
+import { AppError } from '@/lib/errors';
 import { RateLimiter } from '@/lib/auth/ratelimit';
 import { bearerFromHeader, constantTimeEqual, matchApiToken } from '@/lib/auth/tokens';
 import { parseApiTokens } from '@/lib/env';
@@ -51,6 +53,28 @@ describe('lockout state machine', () => {
     for (let i = 0; i < 100; i++) s = recordFailure(s, t0);
     expect(new Date(s.locked_until!).getTime() - t0.getTime()).toBe(LOCK_MAX_MS);
   });
+
+  it('claimAttempt counts before anything is verified and refuses a locked name with 429', () => {
+    let s: LockState = { failed_attempts: 0, locked_until: null };
+    for (let i = 0; i < 5; i++) s = claimAttempt(s, t0, 'PINs');
+    expect(s.failed_attempts).toBe(5);
+    expect(isLocked(s, t0)).toBe(true);
+    const refused = (() => {
+      try {
+        claimAttempt(s, at(1000), 'PINs');
+        return null;
+      } catch (e) {
+        return e;
+      }
+    })();
+    expect(refused).toBeInstanceOf(AppError);
+    expect(refused).toMatchObject({ status: 429, code: 'locked' });
+    expect((refused as AppError).retryAfter).toBeGreaterThan(0);
+    // refused attempts are not counted: the state is unchanged
+    expect(s.failed_attempts).toBe(5);
+    // after the lock expires the next attempt counts again
+    expect(claimAttempt(s, at(LOCK_BASE_MS + 1000), 'PINs').failed_attempts).toBe(6);
+  });
 });
 
 describe('signed cookies', () => {
@@ -72,10 +96,16 @@ describe('signed cookies', () => {
     expect(parseStaffCookie(`${tampered}.${sig}`, SECRET, now)).toBeNull();
     expect(parseStaffCookie(`${body}.${sig.slice(0, -2)}xx`, SECRET, now)).toBeNull();
     expect(parseStaffCookie('garbage', SECRET, now)).toBeNull();
-    const admin = signCookie({ t: 'admin', exp }, SECRET);
+    const ph = passcodeFingerprint('correct horse battery staple');
+    expect(ph).toMatch(/^[0-9a-f]{16}$/);
+    expect(passcodeFingerprint('another passcode')).not.toBe(ph);
+    const admin = signCookie({ t: 'admin', exp, ph }, SECRET);
     expect(parseStaffCookie(admin, SECRET, now)).toBeNull();
-    expect(parseAdminCookie(admin, SECRET, now)).toEqual({ t: 'admin', exp });
+    expect(parseAdminCookie(admin, SECRET, now)).toEqual({ t: 'admin', exp, ph });
     expect(parseAdminCookie(v, SECRET, now)).toBeNull();
+    // an admin cookie without the passcode fingerprint is not accepted
+    const legacy = signCookie({ t: 'admin', exp } as unknown as AdminSession, SECRET);
+    expect(parseAdminCookie(legacy, SECRET, now)).toBeNull();
   });
 
   it('a session_version bump logs the session out; inactive staff too', () => {
@@ -129,13 +159,29 @@ describe('csrf and client ip', () => {
     expect(csrfOk(h({ origin: 'https://app.test', host: 'app.test' }))).toBe(true);
     expect(csrfOk(h({ origin: 'https://evil.test', host: 'app.test' }))).toBe(false);
     expect(csrfOk(h({ host: 'app.test' }))).toBe(false);
-    expect(csrfOk(h({ origin: 'https://app.test', 'x-forwarded-host': 'app.test', host: 'internal' }))).toBe(true);
   });
 
-  it('uses the platform header and x-forwarded-for only when trusted', () => {
-    expect(clientIp(h({ 'x-real-ip': '1.2.3.4', 'x-forwarded-for': '9.9.9.9' }), false)).toBe('1.2.3.4');
-    expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9, 10.0.0.1' }), false)).toBe('unknown');
-    expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9, 10.0.0.1' }), true)).toBe('9.9.9.9');
+  it('believes x-forwarded-host for the Origin fallback only behind a trusted proxy', () => {
+    const forwarded = h({ origin: 'https://app.test', 'x-forwarded-host': 'app.test', host: 'internal' });
+    expect(csrfOk(forwarded)).toBe(false);
+    expect(csrfOk(forwarded, 'none')).toBe(false);
+    expect(csrfOk(forwarded, 'forwarded')).toBe(true);
+    expect(csrfOk(forwarded, 'vercel')).toBe(true);
+    // a client cannot pick the host it is compared against when nothing is trusted
+    expect(csrfOk(h({ origin: 'http://evil.test', 'x-forwarded-host': 'evil.test', host: 'app.test' }), 'none')).toBe(false);
+  });
+
+  it('client ip: nothing is trusted by default, platform headers on Vercel, the proxy-appended hop behind one proxy', () => {
+    const spoof = h({ 'x-real-ip': '1.2.3.4', 'x-vercel-forwarded-for': '5.6.7.8', 'x-forwarded-for': '9.9.9.9, 10.0.0.1' });
+    expect(clientIp(spoof, 'none')).toBe('unknown');
+    expect(clientIp(h({}), 'none')).toBe('unknown');
+    expect(clientIp(spoof, 'vercel')).toBe('1.2.3.4');
+    expect(clientIp(h({ 'x-vercel-forwarded-for': '5.6.7.8', 'x-forwarded-for': '9.9.9.9' }), 'vercel')).toBe('5.6.7.8');
+    expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9' }), 'vercel')).toBe('unknown');
+    // behind one reverse proxy the last entry is the one the proxy appended; x-real-ip is ignored
+    expect(clientIp(spoof, 'forwarded')).toBe('10.0.0.1');
+    expect(clientIp(h({ 'x-forwarded-for': '9.9.9.9' }), 'forwarded')).toBe('9.9.9.9');
+    expect(clientIp(h({ 'x-real-ip': '1.2.3.4' }), 'forwarded')).toBe('unknown');
   });
 });
 

@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { LogoutButton } from '@/components/LogoutButton';
+import { readCredential } from '@/lib/auth/credential';
+import { AppError } from '@/lib/errors';
+import { log } from '@/lib/log';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,7 +20,20 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+/** The staff name behind this request's cookie, or null — a Shopify hiccup never fails a page over it. */
+async function currentStaffName(): Promise<string | null> {
+  const h = await headers(); // outside the try: Next's dynamic-rendering bailout must propagate
+  try {
+    const cred = await readCredential(h);
+    return cred?.kind === 'staff' ? cred.name : null;
+  } catch (e) {
+    log.warn('header session check failed', { detail: e instanceof AppError ? (e.detail ?? e.message) : String(e) });
+    return null;
+  }
+}
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const staffName = await currentStaffName();
   return (
     <html lang="en">
       <body>
@@ -27,7 +45,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <nav className="site-header__nav" aria-label="Main">
               <Link href="/">Orders</Link>
               <Link href="/agents">Agents</Link>
-              <Link href="/login">Log in</Link>
+              {staffName ? (
+                <>
+                  <span className="site-header__who">{staffName}</span>
+                  <LogoutButton className="btn--link" />
+                </>
+              ) : (
+                <Link href="/login">Log in</Link>
+              )}
             </nav>
           </div>
         </header>

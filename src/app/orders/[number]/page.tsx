@@ -2,7 +2,6 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { RememberRecent } from '@/components/RecentChips';
-import { RelativeTime } from '@/components/RelativeTime';
 import { StatusCard } from '@/components/StatusCard';
 import { pageNeedsLogin, readCredential } from '@/lib/auth/credential';
 import { getEnv } from '@/lib/env';
@@ -12,7 +11,7 @@ import { readOrder, readOrderPublic } from '@/lib/orders/service';
 import type { OrderPayload, PublicOrder } from '@/lib/orders/types';
 import { publicStatuses } from '@/lib/settings/model';
 import { getSettings } from '@/lib/settings/store';
-import { formatAbsolute, formatDateValue, formatMonD } from '@/lib/time';
+import { formatAbsolute, formatDateValue } from '@/lib/time';
 import { parseOrderNumber } from '@/lib/validate';
 
 export const dynamic = 'force-dynamic';
@@ -74,7 +73,10 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
       <h1 style={{ margin: 0 }}>Order #{number}</h1>
       {staffName ? (
         <span className="muted">
-          Updating as {staffName} — <Link href={loginHref}>Switch</Link>
+          Updating as {staffName} —{' '}
+          <Link href={loginHref} className="action-link">
+            Switch
+          </Link>
         </span>
       ) : null}
     </div>
@@ -109,6 +111,8 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
   const status = loaded.kind === 'full' ? loaded.payload : loaded.body;
   const full = loaded.kind === 'full' ? loaded.payload : null;
 
+  // The order-level status line (summary, badges, "Last updated … by …") lives in StatusCard,
+  // which re-renders it from every write's response so the page never shows two states.
   return (
     <>
       <RememberRecent number={number} />
@@ -116,7 +120,7 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
         {header}
         {full ? (
           <p className="muted">
-            <a href={full.order.admin_url} target="_blank" rel="noreferrer">
+            <a href={full.order.admin_url} target="_blank" rel="noreferrer" className="action-link">
               Open in Shopify
             </a>{' '}
             · ordered {formatAbsolute(new Date(full.order.created_at), tz, now)} · {full.order.fulfillment_status.toLowerCase().replace(/_/g, ' ')}
@@ -148,23 +152,6 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
             ) : null}
           </dl>
         ) : null}
-        <p className="small" style={{ margin: '8px 0 4px' }}>
-          {status.summary}{' '}
-          {status.stale ? <span className="badge badge--stale">stale</span> : null}{' '}
-          {status.blocked_on.length > 0 ? <span className="badge badge--waiting">waiting</span> : null}{' '}
-          {status.all_done ? <span className="badge badge--done">done</span> : null}
-        </p>
-        <p className="muted" style={{ margin: 0 }} data-testid="order-header-updated">
-          {status.last_updated_at && status.last_updated_by ? (
-            <>
-              Last updated {formatAbsolute(new Date(status.last_updated_at), tz, now)} by {status.last_updated_by} (
-              <RelativeTime iso={status.last_updated_at} tz={tz} fallback={formatMonD(new Date(status.last_updated_at), tz, now)} />)
-            </>
-          ) : (
-            <>No status set yet</>
-          )}
-          {status.stale_reason === 'shipped' ? ' · shipped' : null}
-        </p>
       </div>
 
       <StatusCard

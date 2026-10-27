@@ -37,6 +37,14 @@ describe('environment validation', () => {
     expect(buildEnv({ ...good, ADMIN_PASSCODE: '' }).warnings[0]).toMatch(/ADMIN_PASSCODE/);
   });
 
+  it('TRUST_PROXY names the one header source that may be believed', () => {
+    expect(buildEnv(good).TRUST_PROXY).toBe('none');
+    expect(buildEnv({ ...good, TRUST_PROXY: '' }).TRUST_PROXY).toBe('none');
+    expect(buildEnv({ ...good, TRUST_PROXY: '1' }).TRUST_PROXY).toBe('forwarded');
+    expect(buildEnv({ ...good, TRUST_PROXY: 'vercel' }).TRUST_PROXY).toBe('vercel');
+    expect(() => buildEnv({ ...good, TRUST_PROXY: 'yes' })).toThrow(/TRUST_PROXY/);
+  });
+
   it('mock mode requires a test_ token and wins over the store domain', () => {
     const mock = { ...good, SHOPIFY_API_URL: 'http://127.0.0.1:4001/admin/api/2026-10/graphql.json', SHOPIFY_ADMIN_TOKEN: 'test_e2e' };
     const env = buildEnv(mock);

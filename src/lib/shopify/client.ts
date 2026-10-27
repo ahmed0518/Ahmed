@@ -6,9 +6,12 @@ import { createTokenProvider, type TokenProvider } from './token';
 /**
  * Admin GraphQL via fetch (SPEC §8). Throttling arrives as HTTP 200 with
  * `errors[].extensions.code == "THROTTLED"`: wait for the cost to restore and retry; HTTP
- * 5xx retries with backoff; 3 attempts in total. One re-mint on HTTP 401 when the token
- * comes from the client-credentials grant. GraphQL errors become thrown errors whose full
- * text goes to the log only.
+ * 429 and network errors retry with backoff; HTTP 5xx retries with backoff for queries only
+ * (a mutation whose response was lost may already have been committed, so it is never
+ * re-sent); 3 attempts in total. Every request carries a deadline (`timeoutMs`, default
+ * 20 s) so a stalled connection surfaces as a network error instead of hanging the caller.
+ * One re-mint on HTTP 401 when the token comes from the client-credentials grant. GraphQL
+ * errors become thrown errors whose full text goes to the log only.
  */
 
 export interface ShopifyClient {
@@ -23,6 +26,14 @@ export interface ClientOptions {
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   maxAttempts?: number;
+  /** Per-request deadline in milliseconds (default 20 000). */
+  timeoutMs?: number;
+}
+
+export const DEFAULT_TIMEOUT_MS = 20_000;
+
+export function isMutation(document: string): boolean {
+  return /^\s*mutation\b/.test(document);
 }
 
 interface GraphQLErrorShape {
@@ -53,10 +64,12 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
   const fetchImpl = opts.fetchImpl ?? fetch;
   const sleep = opts.sleep ?? defaultSleep;
   const maxAttempts = opts.maxAttempts ?? 3;
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   let servedVersion: string | null = null;
 
   async function graphql<T>(document: string, variables: Record<string, unknown> = {}): Promise<T> {
     const op = operationName(document);
+    const mutation = isMutation(document);
     let reminted = false;
     let throttled = false;
     let lastDetail = '';
@@ -74,6 +87,7 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
             'X-Shopify-Access-Token': token,
           },
           body: JSON.stringify({ query: document, variables, operationName: op }),
+          signal: AbortSignal.timeout(timeoutMs),
         });
       } catch (e) {
         lastDetail = `network error: ${e instanceof Error ? e.message : String(e)}`;
@@ -94,7 +108,9 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
         continue;
       }
 
-      if (res.status === 429 || res.status >= 500) {
+      // A 429 was rejected before execution, so it is safe to re-send anything. A 5xx may
+      // have executed the mutation already (lost response) — only queries are retried.
+      if (res.status === 429 || (res.status >= 500 && !mutation)) {
         throttled = res.status === 429;
         const retryAfter = Number(res.headers.get('retry-after')) || 0;
         lastDetail = `HTTP ${res.status}`;

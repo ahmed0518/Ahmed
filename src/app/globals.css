@@ -69,12 +69,66 @@ textarea {
   color: var(--text);
   font-size: 17px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .site-header__nav {
   display: flex;
+  align-items: center;
   gap: 16px;
   font-size: 14px;
+  flex-shrink: 0;
+}
+
+.site-header__nav a,
+.site-header__nav .btn--link {
+  display: inline-block;
+  padding: 10px 0;
+  white-space: nowrap;
+  font-size: 14px;
+  min-height: 44px;
+}
+
+.site-header__who {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 479px) {
+  .site-header__who {
+    display: none;
+  }
+}
+
+/* A form that sits inline in running text (the POST "Log out" button). */
+.inline-form {
+  display: inline;
+}
+
+/* A button that reads as a link but keeps a 44 px tap target. */
+.btn--link {
+  display: inline-block;
+  background: none;
+  border: 0;
+  padding: 12px 0;
+  min-height: 44px;
+  color: var(--link);
+  font: inherit;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.btn--link:hover {
+  text-decoration: underline;
+}
+
+/* Inline action links (Switch, Log in to update, log in): padded to a 44 px tap target. */
+.action-link {
+  display: inline-block;
+  padding: 12px 0;
+  line-height: 1.25;
 }
 
 .container {
@@ -188,7 +242,7 @@ h2 {
 }
 
 .btn--small {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 12px;
   font-size: 14px;
 }
@@ -324,7 +378,7 @@ textarea.input {
 
 .chip {
   display: inline-block;
-  padding: 6px 12px;
+  padding: 11px 14px;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   font-size: 14px;
@@ -343,6 +397,9 @@ details summary {
   cursor: pointer;
   color: var(--muted);
   font-size: 13px;
+  /* 44 px tap target; display stays list-item so the disclosure marker is kept */
+  min-height: 44px;
+  padding: 12px 0;
 }
 
 .history {
@@ -368,6 +425,8 @@ details summary {
 
 .table {
   width: 100%;
+  /* never squeeze below this: the wrapper scrolls sideways on phones instead */
+  min-width: 560px;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -380,8 +439,13 @@ details summary {
   vertical-align: middle;
 }
 
+.table th {
+  white-space: nowrap;
+}
+
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .doc h2 {

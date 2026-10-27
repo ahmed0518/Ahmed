@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { ADMIN_PASSCODE } from './fixtures';
-import { NO_ADMIN_URL, mockState, originHeader, seedAll } from './helpers';
+import { ADMIN_PASSCODE, SETTINGS } from './fixtures';
+import { NO_ADMIN_URL, mockSettings, mockState, originHeader, seedAll, seedExtra } from './helpers';
 
 test.describe('admin', () => {
   test.beforeAll(async ({ request }) => {
@@ -75,6 +75,15 @@ test.describe('admin', () => {
     });
     expect(del.status()).toBe(400);
     expect((await del.json()).error).toContain('cannot be deleted');
+
+    // phone: the tables scroll inside their wrapper instead of squeezing the page
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/admin');
+    await expect(page.getByTestId('staff-table')).toBeVisible();
+    const widths = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+    expect(widths.scroll).toBeLessThanOrEqual(widths.client);
+    const wrap = await page.getByTestId('staff-table').locator('xpath=..').evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+    expect(wrap.scroll).toBeGreaterThan(wrap.client);
   });
 
   test('admin endpoints require the admin cookie', async ({ request }) => {
@@ -82,5 +91,19 @@ test.describe('admin', () => {
     expect(res.status()).toBe(401);
     const staff = await request.post('/api/admin/staff', { data: { action: 'add', name: 'X', pin: '1234' }, headers: originHeader() });
     expect(staff.status()).toBe(401);
+  });
+
+  test('parallel wrong passcodes are all counted and lock /admin; the right one is refused while locked', async ({ request }) => {
+    const burst = await Promise.all(Array.from({ length: 5 }, () => request.post('/api/admin/login', { data: { passcode: 'wrong-passcode-wrong' }, headers: originHeader() })));
+    expect(burst.map((r) => r.status())).toEqual([401, 401, 401, 401, 401]);
+    const stored = mockSettings(await mockState(request));
+    expect(stored.admin_failed_attempts).toBe(5);
+    expect(stored.admin_locked_until).not.toBeNull();
+
+    const right = await request.post('/api/admin/login', { data: { passcode: ADMIN_PASSCODE }, headers: originHeader() });
+    expect(right.status()).toBe(429);
+    expect((await right.json()).code).toBe('locked');
+
+    await seedExtra(request, { settings: SETTINGS }); // clear the lock for whoever runs next
   });
 });

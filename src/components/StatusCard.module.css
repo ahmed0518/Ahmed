@@ -2,6 +2,14 @@
   padding: 16px;
 }
 
+.summary {
+  margin: 0 0 4px;
+}
+
+.orderMeta {
+  margin: 0 0 12px;
+}
+
 .bulk {
   display: grid;
   grid-template-columns: 1fr;
@@ -48,7 +56,7 @@
 }
 
 .stillHere input {
-  min-height: 40px;
+  min-height: 44px;
   font-size: 14px;
 }
 

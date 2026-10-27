@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { ORDERS, STAFF } from './fixtures';
-import { loginAs, mockOrder, mockState, seedAll, seedExtra } from './helpers';
+import { loginAs, mockOrder, mockStaff, mockState, originHeader, seedAll, seedExtra } from './helpers';
 
 test.describe('order page updates', () => {
   test.beforeAll(async ({ request }) => {
@@ -31,10 +31,20 @@ test.describe('order page updates', () => {
     await expect(item.locator('.pill')).toHaveText('14K Gold 20 Pt Lab Diamond Tennis Bracelet 71679 — Yellow Gold / 8 Inches');
     await expect(page.getByTestId('item-50788056432728').locator('.pill')).toHaveText('14K Gold 20 Pt Lab Diamond Tennis Bracelet 71679 — Yellow Gold / 7 Inches');
     await expect(page.getByTestId('last-updated-50788056399960')).toHaveText('Not set yet');
+    // never set: one summary line, no contradictory "No status set yet" under it
+    await expect(page.getByTestId('order-summary')).toContainText('No status yet');
+    await expect(page.getByTestId('order-summary')).toContainText('stale');
+    await expect(page.getByTestId('order-last-updated')).toHaveCount(0);
+    await expect(page.getByText('No status set yet')).toHaveCount(0);
 
     await item.locator('select.select-status').selectOption('cad');
     await expect(page.getByTestId('last-updated-50788056399960')).toContainText(/Last updated \w{3} \d{1,2}, \d{1,2}:\d{2} [AP]M by Ahmed/);
-    await expect(page.getByTestId('order-last-updated')).toContainText('by Ahmed');
+    // the order-level header follows the write without a reload
+    await expect(page.getByTestId('order-last-updated')).toContainText(/Last updated \w{3} \d{1,2}, \d{1,2}:\d{2} [AP]M by Ahmed/);
+    await expect(page.getByTestId('order-summary')).toContainText('0/2 done · CAD ×1 · Not set ×1 — Ahmed');
+    // the updated item is fresh, but the order stays stale: its other item has had no status since the order date
+    await expect(item.locator('.badge--stale')).toHaveCount(0);
+    await expect(page.getByTestId('order-summary')).toContainText('stale');
 
     const state = await mockState(request);
     const order = mockOrder(state, ORDERS.neverSet);
@@ -92,6 +102,8 @@ test.describe('order page updates', () => {
     await page.getByLabel('Set all 2 items to').selectOption('sent_to_store');
     await expect(page.getByText('All 2 items set to Sent to Store')).toBeVisible();
     await expect(page.getByTestId('item-60000000000061').locator('select.select-status')).toHaveValue('sent_to_store');
+    await expect(page.getByTestId('order-summary')).toContainText('2/2 done');
+    await expect(page.getByTestId('order-summary').getByText('done', { exact: true })).toBeVisible();
     const state = await mockState(request);
     expect(mockOrder(state, ORDERS.allDone).tags).not.toContain('trax-production');
     expect(state.calls.some((c) => c.operation === 'RemoveTags')).toBe(true);
@@ -130,5 +142,74 @@ test.describe('order page updates', () => {
     await expect(page.getByTestId('item-60000000000001').locator('select.select-status')).toBeDisabled();
     await expect(page.getByText('History (')).toHaveCount(0);
     await expect(page.getByText('Open in Shopify')).toHaveCount(0);
+  });
+
+  test('a failed single save shows its error until a later bulk write succeeds, then it is gone', async ({ page, request }) => {
+    await loginAs(page, 'ahmed');
+    await page.goto(`/orders/${ORDERS.mobile}`); // the first read repairs derived metafields; arm the failure after it
+    const item = page.getByTestId('item-60000000000092');
+    await expect(item.locator('select.select-status')).toHaveValue('');
+    await seedExtra(request, { failures: [{ operation: 'SetOrderStatus', kind: 'HTTP_500' }], clear_calls: true });
+
+    await item.locator('select.select-status').selectOption('casting');
+    await expect(item.locator('.notice--error')).toContainText('Shopify request failed');
+    await expect(item.locator('select.select-status')).toHaveValue(''); // rolled back
+    // a mutation is never re-sent after a 5xx: exactly one SetOrderStatus reached the mock
+    const failed = await mockState(request);
+    expect(failed.calls.filter((c) => c.operation === 'SetOrderStatus').map((c) => c.outcome)).toEqual(['HTTP_500']);
+    expect(failed.failures).toEqual([]);
+
+    await page.getByLabel('Set all 2 items to').selectOption('polishing');
+    await expect(page.getByText('All 2 items set to Polishing')).toBeVisible();
+    await expect(item.locator('select.select-status')).toHaveValue('polishing');
+    await expect(item.locator('.notice--error')).toHaveCount(0);
+    await expect(page.getByTestId('order-summary')).toContainText('Polishing ×2');
+  });
+
+  test('visiting the home page keeps the session: logging out is a POST button, never a prefetchable link', async ({ page, request }) => {
+    await loginAs(page, 'ahmed');
+    await page.goto('/');
+    await expect(page.getByText('Logged in as Ahmed')).toBeVisible();
+    await page.waitForTimeout(1000); // give any <Link> prefetch time to fire
+    await page.goto(`/orders/${ORDERS.freshInProduction}`);
+    await expect(page.getByText('Updating as Ahmed')).toBeVisible();
+    expect((await page.context().cookies()).some((c) => c.name === 'trax_staff')).toBe(true);
+
+    // a bare GET cannot clear the cookie (405: the route only has POST), nor can a cross-site POST (403)
+    const get = await page.request.get('/logout', { maxRedirects: 0 });
+    expect(get.status()).toBe(405);
+    const crossSite = await page.request.post('/logout', { maxRedirects: 0, headers: { Origin: 'https://evil.test' } });
+    expect(crossSite.status()).toBe(403);
+    expect((await page.context().cookies()).some((c) => c.name === 'trax_staff')).toBe(true);
+
+    // the header shows the session, and its Log out button ends it
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: 'Log in' })).toHaveCount(0);
+    await page.locator('.site-header__nav').getByRole('button', { name: 'Log out' }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    expect((await page.context().cookies()).some((c) => c.name === 'trax_staff')).toBe(false);
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: 'Log in' }).first()).toBeVisible();
+    await expect(page.getByText('Logged in as Ahmed')).toHaveCount(0);
+    void request;
+  });
+
+  test('parallel wrong PINs are all counted: the lock lands on the 5th and the right PIN is refused while locked', async ({ request }) => {
+    const lena = STAFF.find((s) => s.id === 'lena')!;
+    const burst = await Promise.all(Array.from({ length: 8 }, () => request.post('/api/login', { data: { id: 'lena', pin: '0000' }, headers: originHeader() })));
+    const statuses = burst.map((r) => r.status()).sort();
+    expect(statuses).toEqual([401, 401, 401, 401, 401, 429, 429, 429]);
+    const bodies = await Promise.all(burst.map((r) => r.json() as Promise<{ code: string }>));
+    expect(bodies.filter((b) => b.code === 'locked')).toHaveLength(3);
+
+    const stored = mockStaff(await mockState(request)).find((s) => s.id === 'lena')!;
+    expect(stored.failed_attempts).toBe(5);
+    expect(stored.locked_until).not.toBeNull();
+
+    const right = await request.post('/api/login', { data: { id: 'lena', pin: lena.pin }, headers: originHeader() });
+    expect(right.status()).toBe(429);
+    expect(right.headers()['retry-after']).toMatch(/^\d+$/);
+    expect((await right.json()).code).toBe('locked');
+    expect(await right.text()).not.toContain('pin_hash');
   });
 });

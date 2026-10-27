@@ -23,7 +23,7 @@ src/lib/
   orders/service.ts read with self-repair, CAS write with STALE_OBJECT retry, universe list (60 s cache)
   orders/shape.ts   public vs credentialed response shapes
   settings/         model.ts (defaults, validation) · store.ts (shop metafields, 30 s cache, CAS updates)
-  auth/             cookies.ts · pin.ts (hash + lockout) · tokens.ts · csrf.ts · ratelimit.ts · credential.ts
+  auth/             cookies.ts · pin.ts (hash + lockout math) · lockout.ts (persisted, claim-before-verify) · tokens.ts · csrf.ts · ratelimit.ts · credential.ts
   admin/model.ts    settings form + staff actions (never exposes pin_hash)
   agent-docs.ts     source of /agents, /llms.txt and docs/AGENTS.md (`npm run agents:md`)
 src/components/     StatusCard (client, optimistic saves), OrderRows, LoginForm, AdminPanel …
@@ -34,7 +34,7 @@ scripts/setup-shopify.ts     idempotent metafield definitions + defaults
 ## Commands
 
 ```
-npm run dev · build · start · lint · typecheck · test · e2e · mock:shopify · setup:shopify · agents:md
+npm run dev · build · start · lint · typecheck · test · e2e · mock:shopify · setup:shopify · agents:md · audit:prod
 ```
 
 All five checks (`lint`, `typecheck`, `build`, `test`, `e2e`) must be green before a change is
@@ -112,6 +112,11 @@ SHOP `staff` (`json`): names, PIN hashes and lockout state — **never read or w
 1. Read the order with `OrderByName` (see `src/lib/shopify/queries.ts`):
    `orders(first: 3, query: "name:#251548") { nodes { id number lineItems(first: 100) { nodes { id title currentQuantity requiresShipping isGiftCard } } itemStatus: metafield(namespace: "trax_production", key: "item_status") { value compareDigest } } }`
    — pick the node whose `number` equals the requested integer.
+   Also read the settings (the `ShopSettings` query):
+   `shop { metafield(namespace: "trax_production", key: "settings") { value } }` and take
+   `statuses` (ids, and the `done` flags for the tag decision) and `hide_items_matching` (the
+   patterns behind `visible_ids` and the never-write-to-hidden rule — `/admin` can change them)
+   from it. Read only; the roster lives in the separate `staff` metafield, never touch it.
 2. Build the new `item_status` from the current value: validate it (`v == 1`), keep every
    existing entry, update the addressed entries (set / confirm / clear semantics, append history),
    refresh `visible_ids`, compute the derived values.
@@ -121,7 +126,8 @@ SHOP `staff` (`json`): names, PIN hashes and lockout state — **never read or w
    On `code == "STALE_OBJECT"` re-read and retry (max 3). `INVALID_COMPARE_DIGEST` means a bug.
 4. Tag: `tagsAdd(id: $orderId, tags: ["trax-production"])` when any visible item is open;
    `tagsRemove` when every visible item is in a `done` status. Never rewrite the whole tag list.
-   Do `metafieldsSet` first, then the tag mutation.
+   Do `metafieldsSet` first, then the tag mutation. The tag is only ever derived from entries:
+   an order whose `item_status` has none (never set, or unreadable) keeps whatever tag it has.
 
 ### Rules
 

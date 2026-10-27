@@ -19,3 +19,6 @@ coverage
 .DS_Store
 *.tsbuildinfo
 npm-debug.log*
+
+# agent scratch: review worktrees checked out under the repo
+.claude/worktrees/
