@@ -5,7 +5,7 @@ import { LogoutButton } from '@/components/LogoutButton';
 import { OrderRows } from '@/components/OrderRows';
 import { RecentChips } from '@/components/RecentChips';
 import { SearchBox } from '@/components/SearchBox';
-import { pageNeedsLogin, readCredential } from '@/lib/auth/credential';
+import { pageNeedsLogin, readCredentialSafe } from '@/lib/auth/credential';
 import { getEnv } from '@/lib/env';
 import { AppError } from '@/lib/errors';
 import { log } from '@/lib/log';
@@ -24,7 +24,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const h = await headers();
   if (await pageNeedsLogin(h)) redirect('/login?next=%2F');
   const env = getEnv();
-  const cred = await readCredential(h);
+  // A roster read that fails renders the page as anonymous; the list read below then shows the error notice.
+  const cred = await readCredentialSafe(h);
   const page = parsePage(typeof sp.page === 'string' ? sp.page : null) ?? 1;
 
   let universe: UniverseResult | null = null;

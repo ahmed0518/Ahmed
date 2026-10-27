@@ -136,14 +136,25 @@ export function formatDateValue(value: string, now: Date = new Date(), tz = 'UTC
   return y === civilDate(now, tz).y ? base : `${base}, ${y}`;
 }
 
+/** How many days back a relative label is still used; from here on the absolute date says it better. */
+export const RELATIVE_DAYS_MAX = 14;
+
+/**
+ * `today` · `yesterday` · `N days ago` (calendar days in `tz`), or null from 14 days on —
+ * for a label that sits next to an absolute time and must not repeat its date.
+ */
+export function relativeDaysOrNull(d: Date, now: Date, tz: string): string | null {
+  const days = calendarDaysBetween(d, now, tz);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < RELATIVE_DAYS_MAX) return `${days} days ago`;
+  return null;
+}
+
 /**
  * `today` · `yesterday` · `N days ago` (calendar days in `tz`); 14 days or more shows the
  * absolute date. Rendered on the client.
  */
 export function relativeDays(d: Date, now: Date, tz: string): string {
-  const days = calendarDaysBetween(d, now, tz);
-  if (days <= 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 14) return `${days} days ago`;
-  return formatMonD(d, tz, now);
+  return relativeDaysOrNull(d, now, tz) ?? formatMonD(d, tz, now);
 }

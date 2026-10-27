@@ -45,6 +45,21 @@ describe('environment validation', () => {
     expect(() => buildEnv({ ...good, TRUST_PROXY: 'yes' })).toThrow(/TRUST_PROXY/);
   });
 
+  it('refuses the published e2e values in a real production boot, accepts them in mock mode and in development', () => {
+    const testSecret = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    const prod = { ...good, NODE_ENV: 'production' };
+    expect(() => buildEnv({ ...prod, SESSION_SECRET: testSecret })).toThrow(/SESSION_SECRET is the published test value from tests\/e2e\/\.env\.test/);
+    expect(() => buildEnv({ ...prod, PIN_PEPPER: 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210' })).toThrow(/PIN_PEPPER/);
+    expect(() => buildEnv({ ...prod, ADMIN_PASSCODE: 'e2e-admin-passcode-not-secret' })).toThrow(/ADMIN_PASSCODE/);
+    expect(() => buildEnv({ ...prod, READ_TOKEN: 'e2e_claude_token_0123456789abcdef0123456789' })).toThrow(/READ_TOKEN/);
+    expect(() => buildEnv({ ...prod, API_TOKENS: 'maks-ai:e2e_maks_token_0123456789abcdef0123456789abc' })).toThrow(/API_TOKENS token for "maks-ai"/);
+    expect(buildEnv(prod).isProduction).toBe(true);
+    // the e2e run itself: production build, mock host — allowed
+    const mock = { ...prod, SESSION_SECRET: testSecret, SHOPIFY_API_URL: 'http://127.0.0.1:4001/admin/api/2026-10/graphql.json', SHOPIFY_ADMIN_TOKEN: 'test_e2e' };
+    expect(buildEnv(mock).SESSION_SECRET).toBe(testSecret);
+    expect(buildEnv({ ...good, NODE_ENV: 'development', SESSION_SECRET: testSecret }).SESSION_SECRET).toBe(testSecret);
+  });
+
   it('mock mode requires a test_ token and wins over the store domain', () => {
     const mock = { ...good, SHOPIFY_API_URL: 'http://127.0.0.1:4001/admin/api/2026-10/graphql.json', SHOPIFY_ADMIN_TOKEN: 'test_e2e' };
     const env = buildEnv(mock);

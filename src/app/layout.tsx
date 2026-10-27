@@ -3,9 +3,7 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { LogoutButton } from '@/components/LogoutButton';
-import { readCredential } from '@/lib/auth/credential';
-import { AppError } from '@/lib/errors';
-import { log } from '@/lib/log';
+import { readCredentialSafe } from '@/lib/auth/credential';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -20,20 +18,10 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
 };
 
-/** The staff name behind this request's cookie, or null — a Shopify hiccup never fails a page over it. */
-async function currentStaffName(): Promise<string | null> {
-  const h = await headers(); // outside the try: Next's dynamic-rendering bailout must propagate
-  try {
-    const cred = await readCredential(h);
-    return cred?.kind === 'staff' ? cred.name : null;
-  } catch (e) {
-    log.warn('header session check failed', { detail: e instanceof AppError ? (e.detail ?? e.message) : String(e) });
-    return null;
-  }
-}
-
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const staffName = await currentStaffName();
+  // A Shopify hiccup never fails a page over the header: readCredentialSafe logs and renders "Log in".
+  const cred = await readCredentialSafe(await headers());
+  const staffName = cred?.kind === 'staff' ? cred.name : null;
   return (
     <html lang="en">
       <body>

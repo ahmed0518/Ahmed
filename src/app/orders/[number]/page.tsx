@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { RememberRecent } from '@/components/RecentChips';
 import { StatusCard } from '@/components/StatusCard';
-import { pageNeedsLogin, readCredential } from '@/lib/auth/credential';
+import { pageNeedsLogin, readCredentialSafe } from '@/lib/auth/credential';
 import { getEnv } from '@/lib/env';
 import { AppError } from '@/lib/errors';
 import { log } from '@/lib/log';
@@ -51,7 +51,8 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
   const loginHref = `/login?next=${encodeURIComponent(`/orders/${number}`)}`;
   if (await pageNeedsLogin(h)) redirect(loginHref);
   const env = getEnv();
-  const cred = await readCredential(h);
+  // A roster read that fails renders the public view; the settings/order reads below then show the error card.
+  const cred = await readCredentialSafe(h);
   const staffName = cred?.kind === 'staff' ? cred.name : null;
   const tz = env.DISPLAY_TZ;
   const now = new Date();

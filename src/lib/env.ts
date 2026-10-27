@@ -54,6 +54,19 @@ const HEX64 = /^[0-9a-fA-F]{64,}$/;
 const API_VERSION_RE = /^(\d{4}-(01|04|07|10)|unstable)$/;
 const LABEL_RE = /^[A-Za-z0-9_-]{1,40}$/;
 
+/**
+ * The published, non-secret values in tests/e2e/.env.test. A real production boot
+ * (NODE_ENV=production without the mock SHOPIFY_API_URL) refuses them: with that
+ * SESSION_SECRET anyone who can read the repository could mint a staff cookie.
+ */
+const TEST_VALUES = new Set([
+  '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+  'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
+  'e2e-admin-passcode-not-secret',
+  'e2e_claude_token_0123456789abcdef0123456789',
+  'e2e_maks_token_0123456789abcdef0123456789abc',
+]);
+
 export type EnvSource = Record<string, string | undefined>;
 
 function read(name: string, source: EnvSource): string | null {
@@ -173,6 +186,19 @@ export function buildEnv(source: EnvSource = process.env): Env {
     if (storeDomain) {
       graphqlUrl = `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`;
       tokenUrl = `https://${storeDomain}/admin/oauth/access_token`;
+    }
+  }
+
+  if (!apiUrl && source.NODE_ENV === 'production') {
+    const secrets: [string, string | null][] = [
+      ['SESSION_SECRET', sessionSecret],
+      ['PIN_PEPPER', pinPepper],
+      ['ADMIN_PASSCODE', adminPasscodeRaw],
+      ['READ_TOKEN', readToken],
+      ...apiTokens.map((t): [string, string] => [`API_TOKENS token for "${t.label}"`, t.token]),
+    ];
+    for (const [name, value] of secrets) {
+      if (value && TEST_VALUES.has(value)) problems.push(`${name} is the published test value from tests/e2e/.env.test — generate a real secret (README §2)`);
     }
   }
 

@@ -17,9 +17,18 @@ import { createTokenProvider, type TokenProvider } from './token';
  * thrown errors whose full text goes to the log only.
  */
 
+/** `extensions.cost.throttleStatus` as Shopify reports it on every response. */
+export interface ThrottleStatus {
+  maximumAvailable: number;
+  currentlyAvailable: number;
+  restoreRate: number;
+}
+
 export interface ShopifyClient {
   graphql<T>(document: string, variables?: Record<string, unknown>): Promise<T>;
   servedApiVersion(): string | null;
+  /** The last throttle status seen (SPEC §8: the bucket the page walk is sized for), null before the first response. */
+  throttleStatus(): ThrottleStatus | null;
   readonly url: string;
 }
 
@@ -86,6 +95,15 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
   const maxAttempts = opts.maxAttempts ?? 3;
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   let servedVersion: string | null = null;
+  let lastThrottle: ThrottleStatus | null = null;
+
+  /** Keep the bucket size and restore rate from every response; log them once so a deploy shows which plan it runs on. */
+  function noteThrottleStatus(json: GraphQLResponse): void {
+    const ts = json.extensions?.cost?.throttleStatus;
+    if (!ts || typeof ts.maximumAvailable !== 'number' || typeof ts.restoreRate !== 'number') return;
+    if (!lastThrottle) log.info('shopify cost bucket', { maximum_available: ts.maximumAvailable, restore_rate: ts.restoreRate });
+    lastThrottle = { maximumAvailable: ts.maximumAvailable, currentlyAvailable: ts.currentlyAvailable ?? 0, restoreRate: ts.restoreRate };
+  }
 
   async function graphql<T>(document: string, variables: Record<string, unknown> = {}): Promise<T> {
     const op = operationName(document);
@@ -164,6 +182,8 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
         throw new ShopifyRequestError('response was not JSON', { operation: op, requestId: lastRequestId });
       }
 
+      noteThrottleStatus(json);
+
       if (json.errors && json.errors.length > 0) {
         const isThrottled = json.errors.some((e) => e.extensions?.code === 'THROTTLED');
         if (isThrottled) {
@@ -171,7 +191,7 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
           const cost = json.extensions?.cost;
           const requested = cost?.requestedQueryCost ?? 0;
           const available = cost?.throttleStatus?.currentlyAvailable ?? 0;
-          const restore = cost?.throttleStatus?.restoreRate ?? 50;
+          const restore = cost?.throttleStatus?.restoreRate ?? lastThrottle?.restoreRate ?? 50;
           const waitSeconds = Math.max(0.2, Math.min(10, (requested - available) / Math.max(1, restore)));
           log.warn('shopify throttled', { operation: op, attempt, waitSeconds, requestId: lastRequestId });
           if (attempt < maxAttempts) await sleep(waitSeconds * 1000);
@@ -190,7 +210,7 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
     throw new ShopifyRequestError(lastDetail || 'exhausted retries', { operation: op, requestId: lastRequestId });
   }
 
-  return { graphql, servedApiVersion: () => servedVersion, url: opts.url };
+  return { graphql, servedApiVersion: () => servedVersion, throttleStatus: () => lastThrottle, url: opts.url };
 }
 
 let instance: ShopifyClient | null = null;
@@ -217,6 +237,10 @@ export function shopifyGraphQL<T>(document: string, variables?: Record<string, u
 
 export function servedApiVersion(): string | null {
   return instance?.servedApiVersion() ?? null;
+}
+
+export function throttleStatus(): ThrottleStatus | null {
+  return instance?.throttleStatus() ?? null;
 }
 
 /** First userError with one of the given codes, or null. */

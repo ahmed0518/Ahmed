@@ -42,6 +42,12 @@ test.describe('API', () => {
     expect(f.items[0]!.attributes).toEqual({ Engraving: 'MOM' });
     expect(f.tag_synced).toBe(true);
     expect(f.last_note).toBe('');
+
+    // a bearer token that matches nothing is 401, never a quiet downgrade to the public shape
+    const wrong = await request.get(`/api/orders/${ORDERS.staleInProduction}`, { headers: bearer('this-token-is-wrong-0123456789abcdef0123456789') });
+    expect(wrong.status()).toBe(401);
+    expect((await wrong.json()).code).toBe('unauthorized');
+    expect((await request.get('/api/stale', { headers: bearer('wrong') })).status()).toBe(401);
   });
 
   test('an order outside the production universe is tracked:false publicly, never_set with a credential', async ({ request }) => {
@@ -223,7 +229,8 @@ test.describe('API', () => {
       expect(text, path).not.toContain('pin_hash');
     }
     const health = (await (await request.get('/api/health')).json()) as Record<string, unknown>;
-    expect(health).toEqual({ ok: true, shop: 'Mock TraxNYC', api_version: '2026-10', served_api_version: '2026-10', scopes_ok: true });
+    // throttle = the Shopify cost bucket from the last response (SPEC §8), so a deploy can check the plan it runs on
+    expect(health).toEqual({ ok: true, shop: 'Mock TraxNYC', api_version: '2026-10', served_api_version: '2026-10', scopes_ok: true, throttle: { maximum_available: 2000, restore_rate: 100 } });
     const res = await request.get('/api/health');
     expect(res.headers()['x-content-type-options']).toBe('nosniff');
     expect(res.headers()['x-frame-options']).toBe('DENY');

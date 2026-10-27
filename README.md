@@ -91,9 +91,20 @@ keep working. When `SHOPIFY_ADMIN_TOKEN` is set, the client ID/secret are not us
    Scope the Shopify credentials to the **Production** environment only. **Preview deployments
    (every branch other than the production one) will not start:** without Shopify credentials
    the app refuses to boot and every preview URL answers 500. That is expected — ignore them,
-   or turn previews off under **Settings → Git → Ignored Build Step**.
+   or turn previews off under **Settings → Git → Ignored Build Step** by choosing *Custom* and
+   entering this command (it skips every build that is not a production build):
+
+   ```bash
+   if [ "$VERCEL_ENV" = "production" ]; then exit 1; else exit 0; fi
+   ```
+
+   Use real, freshly generated values: the app refuses to start in production with the
+   published test values from `tests/e2e/.env.test` and names the variable in the error.
 3. **Deploy.** Check `https://<your-vercel-url>/api/health` → `"ok": true`, `"scopes_ok": true`,
-   `"served_api_version": "2026-10"`.
+   `"served_api_version": "2026-10"`, and `"throttle"` — the Shopify cost bucket the store
+   gets (`maximum_available`, `restore_rate`); the home page walks up to 20 list pages of
+   about 300 points each, which a Plus store restores in a few seconds. A much smaller bucket
+   only makes the list slower, it is not an error.
 4. **Custom domain**: Settings → Domains → add `production.traxnyc.com`, then add the CNAME
    Vercel shows at your DNS provider (where traxnyc.com's DNS lives). HTTPS is automatic.
 5. **Firewall rate limit** (the real protection against hammering): Vercel project → **Firewall →
@@ -119,17 +130,26 @@ name is cleared from `/admin` ("Clear lock").
 Prerequisite: **Node.js 22 LTS** on the Mac you run this from — install it from
 <https://nodejs.org> (it includes `npm`); `node --version` in Terminal should print `v22.x`.
 
+0. Get the code onto the Mac. In Terminal:
+
+   ```bash
+   git clone <repository URL> trax-production-status && cd trax-production-status
+   git checkout production-status      # the app lives on this branch (see §2)
+   ```
+
 1. Create the Shopify metafield definitions and the default status list (once):
 
    ```bash
-   cp .env.example .env.local      # fill in the values from above
+   cp .env.example .env.local      # then fill in EVERY value from §1 and §2, not just the Shopify ones
    npm install
    npm run setup:shopify
    ```
 
-   It is safe to run again: it only creates what is missing, refuses to change a definition
-   that exists with another type, and checks the scopes. It never touches the existing
-   `trax_production.job`, `due_date` or `design_image` definitions.
+   The script validates the whole `.env.local` the way the site does at boot (secrets,
+   tokens, time zone — everything) and stops with a message naming what is missing or wrong;
+   fix that line and run it again. It is safe to run again: it only creates what is missing,
+   refuses to change a definition that exists with another type, and checks the scopes. It
+   never touches the existing `trax_production.job`, `due_date` or `design_image` definitions.
 2. Open `https://production.traxnyc.com/admin`, enter the passcode, and add every person with a
    first name (or nickname) and a 4–8 digit PIN. The status list is already there (same order as
    the old dropdown); rename, reorder, add or retire statuses whenever you like — history keeps
@@ -165,10 +185,13 @@ Everything is documented for machines at `/agents` (HTML), `/llms.txt` (plain te
   Maks's AI should check before emailing anyone.
 - `GET /api/orders`, `GET /api/statuses`, `GET /api/health`.
 
-Reads are public by default (no customer data is ever exposed; the public shape has no dates
-other than status timestamps, no tags, notes or custody — it does carry each item's `label`,
-i.e. title plus variant and quantity, so an agent can name the right line). Writes always need
-a token from `API_TOKENS`.
+Reads are public by default (no customer data is ever exposed; the public shape carries no
+tags, notes, custody, ids or admin links — its only dates are status timestamps and
+`stale_since`, which is the order date for an order that never had a status, so an agent can
+tell how long it has been waiting — and it does carry each item's `label`, i.e. title plus
+variant and quantity, so an agent can name the right line). A wrong or rotated token on a read
+is answered 401, never quietly downgraded to the public shape. Writes always need a token from
+`API_TOKENS`.
 
 ## 6. How Claude writes
 
@@ -231,6 +254,10 @@ first. If a pre-installed browser lives elsewhere, set `PLAYWRIGHT_BROWSERS_PATH
 `PW_CHROMIUM_PATH=/path/to/chrome`. `PORT`, `MOCK_SHOPIFY_PORT` and `NO_ADMIN_PORT` (the
 passcode-less copy, default `PORT+1`, or `PORT+2` when that is the mock's port) change the
 ports; keep the three different — `tests/e2e/ports.ts` refuses to start otherwise.
+`next.config.ts` pins `outputFileTracingRoot` to the checkout, so the standalone server is
+always at `.next/standalone/server.js` even when a `package-lock.json` sits in a parent
+directory (a review worktree under `.claude/worktrees/`, a stray `~/package-lock.json`);
+without the pin Next nests it and `npm start` / `npm run e2e` cannot find it.
 
 Dependencies: `npm run audit:prod` runs `npm audit --omit=dev` and fails on any advisory that is
 not on the accepted list in `scripts/audit.mjs`. Accepted today: four `postcss <= 8.5.22`

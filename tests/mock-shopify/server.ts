@@ -6,8 +6,8 @@
  *   and is enforced on metafieldsSet (STALE_OBJECT). Evaluates `tag:`, `status:`, `name:`
  *   and `fulfillment_status:` terms of `$q`; other terms match everything.
  * - POST /admin/oauth/access_token — client-credentials grant.
- * - POST /__reset, POST /__seed (orders, settings, staff, scopes, failures), GET /__state
- *   (metafields, tags, call log).
+ * - POST /__reset, POST /__seed (orders, settings, staff, scopes, failures, clear_failures,
+ *   clear_calls), GET /__state (metafields, tags, call log).
  * - Honors MOCK_SHOPIFY_PORT (default 4001). Run with `npm run mock:shopify`.
  *
  * Dependency-free on purpose: it must run with tsx before the app is built.
@@ -328,6 +328,7 @@ function applySeed(body: Record<string, unknown>): { orders: number } {
       }
     }
   }
+  if (body.clear_failures === true) state.failures = [];
   if (body.clear_calls === true) state.calls = [];
   return { orders: state.orders.size };
 }
@@ -482,9 +483,9 @@ function dispatch(op: string, variables: Record<string, unknown>): Result {
         },
       };
     case 'AccessScopes':
-      return { body: { data: { currentAppInstallation: { accessScopes: state.scopes.map((handle) => ({ handle })) } } } };
+      return { body: { data: { currentAppInstallation: { accessScopes: state.scopes.map((handle) => ({ handle })) } }, extensions: costExtensions(1) } };
     case 'ShopInfo':
-      return { body: { data: { shop: { id: state.shop.id, name: state.shop.name, myshopifyDomain: state.shop.myshopifyDomain } } } };
+      return { body: { data: { shop: { id: state.shop.id, name: state.shop.name, myshopifyDomain: state.shop.myshopifyDomain } }, extensions: costExtensions(1) } };
     case 'MetafieldDefinitions': {
       const ownerType = String(variables.ownerType ?? 'ORDER');
       const nodes = state.definitions

@@ -41,7 +41,9 @@ npm run dev · build · start · lint · typecheck · test · e2e · mock:shopif
 All five checks (`lint`, `typecheck`, `build`, `test`, `e2e`) must be green before a change is
 done. `build` also copies `.next/static` into the standalone output (`postbuild`), and `start`
 / `e2e` run `node .next/standalone/server.js` — the same server the Dockerfile uses (`next
-start` is unsupported with `output: 'standalone'`). `e2e` builds the app and runs against the
+start` is unsupported with `output: 'standalone'`; `next.config.ts` pins
+`outputFileTracingRoot` so that path holds even in a review worktree under
+`.claude/worktrees/`, below the repo's own lockfile). `e2e` builds the app and runs against the
 mock server; it never contacts the real store
 (`SHOPIFY_API_URL` + a `test_` token). Browsers: `npx playwright install chromium` on a laptop,
 or `PLAYWRIGHT_BROWSERS_PATH` / `PW_CHROMIUM_PATH` for a pre-installed one.

@@ -6,8 +6,16 @@ import type { HistoryOut, ItemOut, OrderPayload, PublicItem, PublicOrder } from 
 import type { StaleReason } from '@/lib/status/compute';
 import { viaLabel } from '@/lib/text';
 import { formatAbsolute, formatMonD } from '@/lib/time';
-import { RelativeTime } from './RelativeTime';
+import { RelativeAgo } from './RelativeTime';
 import styles from './StatusCard.module.css';
+
+/** A 401 on a save: the card shows one linked notice at the top, never a second per-item alert. */
+class SessionExpired extends Error {
+  constructor() {
+    super('Session expired — log in again');
+    this.name = 'SessionExpired';
+  }
+}
 
 export interface StatusOption {
   id: string;
@@ -83,7 +91,7 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
     });
     if (res.status === 401) {
       setSessionExpired(true);
-      throw new Error('Session expired — log in again');
+      throw new SessionExpired();
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string } & Partial<OrderPayload>;
     if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
@@ -100,8 +108,14 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
     setOrder(toView(next));
   }
 
-  async function changeStatus(id: string, value: string | null, note = '') {
+  /**
+   * One item: a status picked in the select or a "Still here" confirmation. The note typed
+   * for the item travels with whichever save comes first and the field clears once it is
+   * stored; on failure the text stays so nothing typed is lost.
+   */
+  async function changeStatus(id: string, value: string | null) {
     const previous = order;
+    const note = notes[id] ?? '';
     const def = value ? byId.get(value) : undefined;
     setOrder((o) => ({
       ...o,
@@ -119,7 +133,8 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
     } catch (e) {
       setOrder(previous);
       setPending((p) => ({ ...p, [id]: 'error' }));
-      setErrors((er) => ({ ...er, [id]: e instanceof Error ? e.message : 'Could not save' }));
+      // the session notice at the top already carries the message and the login link
+      if (!(e instanceof SessionExpired)) setErrors((er) => ({ ...er, [id]: e instanceof Error ? e.message : 'Could not save' }));
     }
   }
 
@@ -137,7 +152,8 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
       window.setTimeout(() => setBulkState((s) => (s.pending === 'saved' ? { pending: null, message: null } : s)), 2500);
     } catch (e) {
       setOrder(previous);
-      setBulkState({ pending: 'error', message: e instanceof Error ? e.message : 'Could not save' });
+      if (e instanceof SessionExpired) setBulkState({ pending: null, message: null });
+      else setBulkState({ pending: 'error', message: e instanceof Error ? e.message : 'Could not save' });
     }
   }
 
@@ -149,14 +165,17 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
     void bulk(items, `All ${order.items.length} items set to ${def?.name ?? value}`);
   }
 
+  /** Confirms every item that holds a status; the label says how many had none and were skipped. */
   function allStillHere() {
     const items: Record<string, string | null> = {};
     for (const i of order.items) if (i.status) items[i.line_item_id] = i.status;
-    if (Object.keys(items).length === 0) {
+    const confirmed = Object.keys(items).length;
+    if (confirmed === 0) {
       setBulkState({ pending: 'error', message: 'No item has a status yet' });
       return;
     }
-    void bulk(items, 'Confirmed — all still here');
+    const skipped = order.items.length - confirmed;
+    void bulk(items, skipped > 0 ? `Confirmed ${confirmed} of ${order.items.length} items — ${skipped} without a status skipped` : 'Confirmed — all still here');
   }
 
   const busy = bulkState.pending === 'saving';
@@ -178,8 +197,8 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
       </p>
       {lastUpdated ? (
         <p className={`muted ${styles.orderMeta}`} data-testid="order-last-updated">
-          Last updated {formatAbsolute(lastUpdated.at, tz)} by {lastUpdated.by} (
-          <RelativeTime iso={order.last_updated_at ?? ''} tz={tz} fallback={formatMonD(lastUpdated.at, tz)} />)
+          Last updated {formatAbsolute(lastUpdated.at, tz)} by {lastUpdated.by}
+          <RelativeAgo iso={order.last_updated_at ?? ''} tz={tz} />
         </p>
       ) : null}
 
@@ -294,7 +313,7 @@ export function StatusCard({ number, initial, statuses, canEdit, loginHref, tz, 
                   type="button"
                   className="btn btn--small"
                   disabled={!item.status || state === 'saving' || busy}
-                  onClick={() => void changeStatus(item.line_item_id, item.status, notes[item.line_item_id] ?? '')}
+                  onClick={() => void changeStatus(item.line_item_id, item.status)}
                   title="Confirm the current status without changing it"
                 >
                   Still here

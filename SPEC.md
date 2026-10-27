@@ -49,7 +49,11 @@ This document is the single source of truth for the build. Keep it in sync with 
   or `executablePath: '/opt/pw-browsers/chromium'` if the browser isn't found) against the
   built standalone server (`node .next/standalone/server.js` — what `npm start` and the
   Dockerfile run; `next start` is unsupported with `output: 'standalone'`, so `postbuild`
-  copies `.next/static` next to the standalone server) with a **mock Shopify Admin GraphQL
+  copies `.next/static` next to the standalone server; `next.config.ts` pins
+  `outputFileTracingRoot` to the checkout so the server always lands at
+  `.next/standalone/server.js` whatever `package-lock.json` sits in a parent directory — a
+  review worktree under `.claude/worktrees/` would otherwise get a nested layout — and
+  `postbuild` fails loudly when it is not there) with a **mock Shopify Admin GraphQL
   server** (small Node http server that
   dispatches on operation name and keeps state in memory). The Playwright config sets
   `SHOPIFY_API_URL` (the mock) and `SHOPIFY_ADMIN_TOKEN=test_e2e` explicitly. Never hit the
@@ -312,8 +316,11 @@ read: no metafield write, no tag mutation (§4.2); `tag_synced` is `true` for it
   the future → `id` present in the roster with `active: true` and `sv === staff.session_version`
   (the cached roster is fine here). `POST /logout` clears it (a "Log out" form button in the
   header and on the home page; there is no GET — a link would be prefetched by `<Link>` and
-  could be triggered cross-site). `/admin` "reset PIN" and "deactivate" increment that
-  person's `session_version`, which logs them out everywhere within the 30 s cache window.
+  could be triggered cross-site) and answers 303 with a **relative** `Location: /login`: the
+  standalone server only knows its bind address, so an absolute URL built from the request
+  would send a Docker deploy's staff to `localhost`. `/admin` "reset PIN" and "deactivate"
+  increment that person's `session_version`, which logs them out everywhere within the 30 s
+  cache window.
   - Lockout is **persisted, not in-memory**: each `staff[]` entry carries `failed_attempts` and
     `locked_until`; after 5 consecutive failures the name is locked for 15 minutes, doubling
     for each further streak (max 24 h); a successful login resets the counter; `/admin` can
@@ -344,12 +351,15 @@ read: no metafield write, no tag mutation (§4.2); `tag_synced` is `true` for it
   both cases the server records `via` (`web:Ahmed` / `token:maks-ai`) and sets `source`
   (`web` / `api`) — never from the body. Tokens and the passcode are compared with a
   constant-time compare (SHA-256 both sides, then `timingSafeEqual`).
-- **Reads**: public by default — meaning the *public shape* (§7). If `READ_TOKEN` is set:
+- **Reads**: public by default — meaning the *public shape* (§7). A request that presents an
+  `Authorization: Bearer` token matching neither `API_TOKENS` nor `READ_TOKEN` is answered
+  401 even then: a mistyped or rotated token must surface as failed auth, never as a quiet
+  downgrade to the public shape (which would look like wrong data). If `READ_TOKEN` is set:
   `/api/*` requires `Authorization: Bearer <READ_TOKEN or any API_TOKENS token>` (no `?token=`
   — URLs leak into logs, browser history and forwarded links), and HTML pages other than
-  `/login`, `/agents` and `/llms.txt` require a `trax_staff` cookie (those three hold no
-  order or staff data, and an agent needs the docs before it has a token). `READ_TOKEN`
-  never authorizes writes.
+  `/login`, `/agents` and `/llms.txt` — `/admin`'s passcode form included — require a
+  `trax_staff` cookie (those three hold no order or staff data, and an agent needs the docs
+  before it has a token). `READ_TOKEN` never authorizes writes.
 - **`/admin`** requires `ADMIN_PASSCODE`: ≥ 16 characters, generated (README:
   `openssl rand -base64 24`). When it is unset or shorter than 16 characters the app serves 404
   for `/admin` and logs a warning at boot. Same persisted lockout as PINs, stored in
@@ -365,7 +375,12 @@ read: no metafield write, no tag mutation (§4.2); `tag_synced` is `true` for it
   `admin_locked_until` in the `settings` shop metafield (README §2).
 - Auth is enforced inside every route handler and server component through shared helpers
   (`readCredential()`, `requireStaff()`, `requireWriter()`, `requireAdmin()`); `middleware.ts`,
-  if used at all, is not the auth boundary.
+  if used at all, is not the auth boundary. Resolving a staff cookie reads the roster, so
+  server components use `readCredentialSafe()`: when that read fails (a Shopify outage) the
+  failure is logged and the request is treated as having no session — the page then renders
+  its public view with the usual error notice / error card (with `READ_TOKEN` set it redirects
+  to `/login`, since nothing can be verified) instead of a bare 500. Route handlers keep
+  `readCredential()` and answer the documented 502 `shopify_error`.
 - CSRF (defense in depth on top of SameSite=Lax + JSON bodies): cookie-authenticated mutating
   requests (status POSTs, `/login`, `/logout`, `/admin` forms) are rejected with 403 unless
   `Sec-Fetch-Site` is `same-origin` or `none`, or — when the header is absent — `Origin`
@@ -412,24 +427,33 @@ anywhere; every string from Shopify, settings or request bodies is rendered as R
   - Card titled **Production Status by Product**. It opens with the order-level line: the
     `summary`, the red **stale** / grey **waiting** / green **done** badges, and **Last updated
     … by …** for the order (omitted while nothing is set — the summary already says
-    `No status yet`). The card re-renders this line from every write's response, so the page
-    never shows two different order states. Then: "Set all N items to…"
+    `No status yet`), followed by `(today)` / `(N days ago)` rendered on the client and left
+    out from 14 days on, when it would only repeat the date already on the line. The card
+    re-renders this line from every write's response, so the page never shows two different
+    order states. Then: "Set all N items to…"
     select (→ `POST /api/orders/{number}`, one Shopify write) and an **All still here** button
-    (same endpoint, current statuses → `kind: confirm`). For each visible item: black pill =
+    (same endpoint, current statuses → `kind: confirm`; it confirms the items that hold a
+    status and its label says how many without one it skipped — `Confirmed 1 of 3 items — 2
+    without a status skipped` — rather than claiming the whole order). For each visible item: black pill =
     title, then ` — {variantTitle}` when present and not "Default Title", then
     ` ×{currentQuantity}` when > 1; when two visible items share title and variant, append
     `(1 of 2)` / `(2 of 2)` by line-item position; custom attributes whose key does not start
     with `_` in a 13 px muted line under the pill. Then a full-width `<select>`
     ("Select production status…" + non-retired statuses, plus the item's own status if
-    retired), a small **Still here** button (optional one-line note), and under it a muted line
+    retired), a one-line **Note (optional)** input (16 px text like every other control — a
+    smaller one makes iOS Safari zoom the page on focus) next to a small **Still here** button,
+    and under it a muted line
     **Last updated Oct 27, 3:12 PM by Ahmed** (`by Maks (via maks-ai)` when `via` is not
     `web:…`), or "Not set yet" / "Not set (cleared by Ahmed, Oct 27)". A "History" disclosure
-    lists the entries newest first with kind, by, via and note.
+    lists the entries newest first with kind, by, via and note. The note travels with the
+    item's next save — a status picked in the select or a Still-here confirmation — and the
+    field clears once it is stored; on a failed save the text stays, nothing typed is dropped.
   - Changing the select saves immediately (optimistic, shows "Saving…" in place of the
     last-updated line, then "Saved · …", rolls back and shows the error on failure; a later
-    successful bulk write clears every per-item error). If not logged in, selects are disabled
-    with a "Log in to update" link and the page renders the public shape only (no history,
-    context, tags, hidden or removed items).
+    successful bulk write clears every per-item error; a 401 shows only the one session-expired
+    notice with its login link, §5, never a second alert under the item). If not logged in,
+    selects are disabled with a "Log in to update" link and the page renders the public shape
+    only (no history, context, tags, hidden or removed items).
   - Hidden items are collapsed: "2 non-production items hidden". Removed items are collapsed:
     "1 removed item", stored status shown read-only.
   - Every control staff tap is at least 44 px tall (selects 56 px; buttons, note inputs,
@@ -481,8 +505,10 @@ variant and quantity and nothing else. Everything else (`order.id`,
 `READ_TOKEN` bearer). For an order that has no `item_status`, no `trax-production` tag and
 does not match `watch_query`, an unauthenticated request returns
 `200 { "order": { "number": "…" }, "tracked": false }` and nothing else. Shopify order numbers
-are sequential, so the public shape deliberately carries no ledger data (no dates, tags, notes
-or custody).
+are sequential, so the public shape deliberately carries no ledger data: no tags, notes,
+custody, ids or admin links, and its only dates are status timestamps plus `stale_since` /
+`days_since_update`, which for an order that never had a status count from the order date
+(§7.2) — the one date an agent needs to know how long nobody has touched it.
 
 ### 7.1 Validation
 
@@ -491,7 +517,9 @@ built from the validated digits only. `lineItemId` and every key of `items`: `^\
 `status`: a status id or name (case-insensitive, trimmed) from settings, else 400
 `unknown_status` with `valid_statuses`; a retired status is accepted only when the item
 already holds it (a confirmation), else 400 `status_retired` with the same `valid_statuses`
-(non-retired names only). `by` ≤ 60 chars, `note` ≤ 200 chars, control characters stripped. Request
+(non-retired names only). `by` ≤ 60 chars — an over-long value is refused (400 `invalid_by`),
+never cut, so the recorded name is always the one sent; `note` ≤ 200 chars, trimmed to that;
+control characters stripped from both. Request
 body ≤ 16 KB, `Content-Type: application/json` required (415). `days`: finite, 0–365. `page`:
 1–100. Settings: status names unique and ≤ 60 chars; `hide_items_matching` entries are literal
 substrings, never regex.
@@ -548,7 +576,10 @@ substrings, never regex.
   `removed_items` (rows come from `item_status` + `visible_ids`, not line items:
   `item_count = visible_ids.length`, `untracked_count = item_count − tracked`; a never-set row
   has neither, so `item_count` / `open_items` = `currentSubtotalLineItemsQuantity` and
-  `untracked_count: null`, §4.1). Sorted stalest first (never-set by `created_at` first, then
+  `untracked_count: null`, §4.1 — and when that quantity is 0, every line removed by an order
+  edit, the row has nothing open: `open_items: 0`, `all_done: true`, `stale: false`, exactly
+  what the single-order read derives from an empty visible list, so `/api/stale` never chases
+  an order `/api/orders/{number}` calls done). Sorted stalest first (never-set by `created_at` first, then
   by `stale_since`). `?page=N` (50 per page), `?stale=1` filter, `?fresh=1` bypasses the 60 s
   cache for credentialed callers only (anonymous callers get the cache). Response
   `{ page, per_page, total, truncated, checked_at, orders: [...] }`; `truncated: true` when the
@@ -564,16 +595,22 @@ substrings, never regex.
   and not already the item's status, or the item is hidden / removed.
 - `POST /api/orders/{number}` body `{ "items": { "<lineItemId>": "<status id or name>" | null },
   "by"?, "note"? }` → bulk, one Shopify write, same response.
-- `GET /api/health` → `{ ok, shop, api_version, served_api_version, scopes_ok }` (no secrets).
+- `GET /api/health` → `{ ok, shop, api_version, served_api_version, scopes_ok, throttle }`
+  (no secrets).
   `served_api_version` = the `X-Shopify-API-Version` response header, so a fall-forward from
   a retired version is visible; `scopes_ok` is false unless the token has `write_orders` and
-  `read_all_orders`. Anonymous calls count against the public read limiter like every other
+  `read_all_orders`; `throttle` = `{ maximum_available, restore_rate }` from the last Shopify
+  response's `extensions.cost.throttleStatus` (null before the first request) — the cost
+  bucket the §8 page walk is sized for, so the README's post-deploy check can confirm the
+  store's plan. Anonymous calls count against the public read limiter like every other
   read, and the answer is memoised per instance (30 s; 5 s after a failure), so the endpoint
   cannot be used to drain the Shopify cost bucket.
 
 **Rate limits**: unauthenticated reads — best-effort in-memory limiter, 60 requests/min per IP
 per instance → 429 with `Retry-After`, plus a 15 s in-memory cache of the public shape keyed
-by order number (credentialed reads bypass it). Writes: 60/min per credential (token label or
+by order number (credentialed reads bypass it; expired entries are evicted on access and
+pruned every 500 writes, and the map is capped at 5,000 entries — order numbers are
+sequential, so a scan must not grow a long-running instance's heap). Writes: 60/min per credential (token label or
 staff id). The real backstop is a Vercel Firewall rate-limit rule for `/api/*` and `/orders/*`
 (or the equivalent on the Docker reverse proxy) — README.
 
@@ -660,13 +697,22 @@ for `read_all_orders` before declaring it, or the version fails with an `app_acc
   seconds), so the app walks **every page** of each query (`CREATED_AT` keeps the walk stable;
   stop at 10 pages / 500 orders per query and set `truncated: true`), computes staleness from
   each order's `item_status` in memory, sorts, and caches the result 60 s per instance
-  (`?fresh=1` bypasses). `/api/stale` always returns the complete set.
+  (`?fresh=1` bypasses). A successful write does not drop that cache: the written order is
+  folded into it (its node replaced in place, or added when the write tagged an open order
+  that was not there yet; an order the write untagged stays until the next walk — it may
+  still match the watch query, and being all done it is chased by nothing), so the TTL,
+  `?fresh=1` and a settings change in `/admin` are the only triggers for a full re-walk and
+  an office saving every minute never pays up to 20 pages per home-page view. `/api/stale`
+  always returns the complete set.
 - `ShopSettings` = `{ shop { id name metafield(namespace: "trax_production", key: "settings")
   { value compareDigest } staff: metafield(namespace: "trax_production", key: "staff")
   { value compareDigest } } }`; `shop.id` is the `ownerId` for `SetShopSettings`.
 - **Cost budget**: a single query may not exceed 1,000 points (object 1, scalar/enum 0,
-  connection 2 + first × node, mutation 10; Plus restores 1,000/s — read
-  `extensions.cost.throttleStatus.maximumAvailable` at runtime). `OrdersByQuery` ≈ 2 + 50 ×
+  connection 2 + first × node, mutation 10; Plus restores 1,000/s — the client keeps the
+  `extensions.cost.throttleStatus` of every response, logs `maximumAvailable` / `restoreRate`
+  once at the first one, uses the last `restoreRate` as the fallback for a THROTTLED wait, and
+  `/api/health` reports it as `throttle`, §7.2, so the plan the walk is sized for is checked
+  after deploy rather than assumed). `OrdersByQuery` ≈ 2 + 50 ×
   (1 + 5 metafield objects) = 302; `OrderByName` with `first: 3` and 8 metafield objects per
   order ≈ 2 + 3 × (1 + 8 + (2 + 100 × 1)) = 335 (≤ 635 if `customAttributes` is costed per
   line; verified to execute with `first: 5`). **Never add
@@ -699,7 +745,11 @@ Boot validation (`src/lib/env.ts`, imported by every route and page): `SESSION_S
 `SHOPIFY_ADMIN_TOKEN` or `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET` must be set (or
 `SHOPIFY_API_URL` with a `test_` token); `TRUST_PROXY` must be empty, `1` or `vercel`. Any
 violation throws with a clear message. The code contains no default value for any secret;
-tests supply explicit values via `tests/e2e/.env.test`. In Vercel, mark the secrets as
+tests supply explicit values via `tests/e2e/.env.test` — and a real production boot
+(`NODE_ENV=production` without `SHOPIFY_API_URL`) refuses exactly those published values for
+`SESSION_SECRET`, `PIN_PEPPER`, `ADMIN_PASSCODE`, `READ_TOKEN` and `API_TOKENS`, naming the
+variable: with that `SESSION_SECRET` anyone who can read the repository could mint a staff
+cookie, so a copy-pasted test file must never boot the real site. In Vercel, mark the secrets as
 Sensitive, set `TRUST_PROXY=vercel`, and scope the Shopify credentials to the Production
 environment only — preview deployments then have no Shopify credentials, refuse to boot and
 answer 500 on every URL, which is expected (the README says to ignore or disable them; the
@@ -777,7 +827,9 @@ Dockerfile, .dockerignore, .env.example, .gitignore, package.json, next.config.t
   names with control characters rejected on read and cleaned by `/admin`; Shopify client
   retries (a mutation is never re-sent after a 5xx, a timeout or a reset, only when the
   connection never opened; a 429 `Retry-After` above 10 s becomes 503 with that
-  `Retry-After`).
+  `Retry-After`) and the kept `throttleStatus`; `by` over 60 characters rejected, never cut;
+  list rows (a never-set row counts Shopify lines, a zero-line one has nothing open); the
+  published test values refused in a production boot; `relativeDaysOrNull` empty from 14 days.
 - e2e covers: home search → order page; login with PIN; change a status → "Last updated … by
   …" appears and the mock store received `metafieldsSet` (with `compareDigest`) + `tagsAdd`;
   "Still here" → a `kind: confirm` entry; set every item done → `tagsRemove`; mock answers
@@ -796,14 +848,21 @@ Dockerfile, .dockerignore, .env.example, .gitignore, package.json, next.config.t
   while logged in keeps the session, `GET /logout` → 405, cross-site `POST /logout` → 403, the
   header's Log out button ends it; 8 parallel wrong PINs → five 401 + three 429 `locked`,
   `failed_attempts` 5, the right PIN refused while locked (same for `/admin` passcodes);
-  `/api/health` is memoised; a retired status → 400 `status_retired` by id and by name
+  `/api/health` is memoised and reports `throttle`; a retired status → 400 `status_retired` by id and by name
   (single and bulk) and 200 `confirm` on the item that holds it; an exhausted anonymous
   bucket answers 429 on every `/api/*` read, `/api/statuses` included, while credentialed
-  reads still pass.
+  reads still pass; a wrong bearer token on a read → 401; a note typed before a select change
+  is stored on that `set` entry and the field clears; a same-origin `POST /logout` → 303 with
+  `Location: /login` (relative); at 390 px the Agents link is hidden and the brand is neither
+  truncated nor narrower than 150 px; a logged-in `/` and order page during a Shopify outage
+  (the passcode-less app copy, whose shop cache is still cold, with `ShopSettings` armed to
+  fail) answer 200 with the error notice / card, never a 500.
 - Mock Shopify server: dispatches on operation name, keeps orders / metafields / tags in
   memory, evaluates the `tag:` and `status:` terms of `$q` (other terms match everything),
-  compares `compareDigest` and returns `STALE_OBJECT`, can return `THROTTLED` on demand,
-  implements the client-credentials token endpoint, and sends `X-Shopify-API-Version`.
+  compares `compareDigest` and returns `STALE_OBJECT`, can return `THROTTLED` / HTTP 500 /
+  HTTP 401 on demand (`failures`, cleared with `clear_failures`), sends `extensions.cost`
+  with a 2,000-point bucket on every data response, implements the client-credentials token
+  endpoint, and sends `X-Shopify-API-Version`.
 - Every GraphQL document validated against the Admin schema (use the Shopify MCP
   `validate_graphql_codeblocks` tool when available).
 - README: Vercel deploy (Production Branch = `production-status`, previews do not boot) +

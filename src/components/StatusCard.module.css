@@ -57,7 +57,8 @@
 
 .stillHere input {
   min-height: 44px;
-  font-size: 14px;
+  /* never below 16 px: iOS Safari zooms the page when a smaller text control is focused */
+  font-size: 16px;
 }
 
 .meta {

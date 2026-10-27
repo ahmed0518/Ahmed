@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseDays, parseLineItemId, parseOrderNumber, parsePage, safeNextPath } from '@/lib/validate';
+import { cleanBy, parseDays, parseLineItemId, parseOrderNumber, parsePage, safeNextPath } from '@/lib/validate';
 
 describe('order number parsing', () => {
   it('accepts the three forms', () => {
@@ -40,6 +40,16 @@ describe('other params', () => {
     expect(parseDays('366')).toBeNull();
     expect(parseDays('-1')).toBeNull();
     expect(parseDays('Infinity')).toBeNull();
+  });
+
+  it('`by` is cleaned and refused over 60 characters, never cut', () => {
+    expect(cleanBy('  Maks  ')).toBe('Maks');
+    expect(cleanBy('Ma\u0000ks\n')).toBe('Maks');
+    expect(cleanBy('A'.repeat(60))).toBe('A'.repeat(60));
+    expect(cleanBy('A'.repeat(61))).toBeNull();
+    expect(cleanBy('')).toBeNull();
+    expect(cleanBy('   ')).toBeNull();
+    expect(cleanBy(42)).toBeNull();
   });
 
   it('next paths stay same-origin', () => {

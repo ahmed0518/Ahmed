@@ -24,6 +24,9 @@ import type { HistoryOut, ItemOut, ListItemOut, ListRow, OrderMeta, OrderPayload
 import { publicShape } from './shape';
 
 const PUBLIC_CACHE_TTL_MS = 15_000;
+/** Order numbers are sequential, so a scan must not grow the heap: expired entries are evicted and the map is capped. */
+const PUBLIC_CACHE_MAX = 5000;
+const PUBLIC_CACHE_PRUNE_EVERY = 500;
 const LIST_CACHE_TTL_MS = 60_000;
 const MAX_PAGES_PER_QUERY = 10;
 const WRITE_ATTEMPTS = 4; // 1 + 3 retries on STALE_OBJECT
@@ -366,10 +369,21 @@ async function repair(view: OrderView): Promise<boolean> {
 // Public API of this module
 
 const publicCache = new Map<string, { expires: number; body: PublicOrder | { order: { number: string }; tracked: false } }>();
+let publicCacheWrites = 0;
 
-export function invalidateOrderCaches(number?: string): void {
-  if (number) publicCache.delete(number);
-  else publicCache.clear();
+/** Drop expired entries, then the oldest ones while the map is still over its cap (a Map iterates in insertion order). */
+function prunePublicCache(now: number): void {
+  for (const [key, entry] of publicCache) if (entry.expires <= now) publicCache.delete(key);
+  while (publicCache.size > PUBLIC_CACHE_MAX) {
+    const oldest = publicCache.keys().next().value;
+    if (oldest === undefined) break;
+    publicCache.delete(oldest);
+  }
+}
+
+/** A settings change (statuses, watch query, hide patterns) invalidates every derived cache. */
+export function invalidateOrderCaches(): void {
+  publicCache.clear();
   listCache = null;
 }
 
@@ -390,6 +404,7 @@ export async function readOrder(number: string, opts: { repair?: boolean; staleA
 export async function readOrderPublic(number: string): Promise<PublicOrder | { order: { number: string }; tracked: false }> {
   const hit = publicCache.get(number);
   if (hit && hit.expires > Date.now()) return hit.body;
+  if (hit) publicCache.delete(number); // expired: evict on access, so the re-insert below lands at the end
   const payload = await readOrder(number);
   let body: PublicOrder | { order: { number: string }; tracked: false };
   if (payload.tracking === 'never_set' && !payload.order.tags.includes(PRODUCTION_TAG) && !(await universeHas(payload.order.id))) {
@@ -397,6 +412,7 @@ export async function readOrderPublic(number: string): Promise<PublicOrder | { o
   } else {
     body = publicShape(payload);
   }
+  if (++publicCacheWrites % PUBLIC_CACHE_PRUNE_EVERY === 0 || publicCache.size >= PUBLIC_CACHE_MAX) prunePublicCache(Date.now());
   publicCache.set(number, { expires: Date.now() + PUBLIC_CACHE_TTL_MS, body });
   return body;
 }
@@ -482,8 +498,9 @@ export async function writeOrderStatus(number: string, changes: readonly RawChan
     }
 
     const tagSynced = await syncTag(raw, computed.should_have_tag);
-    invalidateOrderCaches(number);
     const written: RawOrderNode = { ...raw, itemStatus: { value: serializeItemStatus(trimmed), compareDigest: res.digest } };
+    publicCache.delete(number);
+    updateListCache(written);
     const view = buildView(written, { settings, now, itemStatusOverride: trimmed });
     log.info('status written', { order: raw.name, by: actor.by, via: actor.via, items: resolved.length, tag_synced: tagSynced });
     return { ...view.payload, tag_synced: tagSynced };
@@ -503,6 +520,25 @@ interface ListCache {
 
 let listCache: ListCache | null = null;
 let listInflight: Promise<ListCache> | null = null;
+
+/**
+ * Fold a just-written order into the cached list instead of dropping the cache (SPEC §8):
+ * the 60 s TTL and `?fresh=1` stay the only triggers for a full re-walk, so an office saving
+ * every minute never pays for up to 20 list pages per home-page view. The node is replaced
+ * in place when it is there; an open order that now carries the tag is added; an order the
+ * write untagged stays until the next walk (it may still match the watch query, and it is
+ * all done, so nothing chases it).
+ */
+function updateListCache(written: RawOrderNode): void {
+  if (!listCache) return;
+  const idx = listCache.nodes.findIndex((n) => n.id === written.id);
+  if (idx >= 0) {
+    listCache.nodes[idx] = written;
+    return;
+  }
+  const open = !written.closed && !written.cancelledAt && written.displayFulfillmentStatus !== 'FULFILLED';
+  if (open && written.tags.includes(PRODUCTION_TAG)) listCache.nodes.push(written);
+}
 
 async function walk(q: string): Promise<{ nodes: RawOrderNode[]; truncated: boolean }> {
   const nodes: RawOrderNode[] = [];
@@ -578,8 +614,9 @@ function buildListRow(raw: RawOrderNode, settings: Settings, now: Date, staleAft
   } else {
     // Never set: every line is open since the order was created. The list query has no line
     // items, so item_count / open_items come from the Shopify quantity (hidden lines included)
-    // and untracked_count is unknown (null) — SPEC §4.1 / §7.2.
-    visible = Array.from({ length: Math.max(1, fallbackCount) }, () => ({ id: '', title: null }));
+    // and untracked_count is unknown (null) — SPEC §4.1 / §7.2. A quantity of 0 (every line
+    // removed by an order edit) leaves nothing open, exactly like the single-order read.
+    visible = Array.from({ length: fallbackCount }, () => ({ id: '', title: null }));
     itemCountOverride = fallbackCount;
     untrackedUnknown = true;
   }

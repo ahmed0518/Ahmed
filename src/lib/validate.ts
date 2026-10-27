@@ -40,10 +40,11 @@ export function parseDays(input: string | null): number | null | undefined {
 
 export const BY_MAX = 60;
 
+/** A bearer caller's `by`: 1–60 characters after cleaning; an over-long value is rejected, never cut (SPEC §7.1). */
 export function cleanBy(input: unknown): string | null {
   if (typeof input !== 'string') return null;
-  const s = cleanText(input, BY_MAX);
-  return s.length > 0 ? s : null;
+  const s = cleanText(input, BY_MAX + 1); // one extra so an over-long value is rejected, not cut
+  return s.length > 0 && s.length <= BY_MAX ? s : null;
 }
 
 const NEXT_BASE = 'http://trax.invalid';

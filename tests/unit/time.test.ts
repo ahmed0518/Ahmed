@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { businessDaysSince, daysSince, formatAbsolute, formatMonD, formatTimestamp, parseTimestamp, relativeDays } from '@/lib/time';
+import { businessDaysSince, daysSince, formatAbsolute, formatMonD, formatTimestamp, parseTimestamp, relativeDays, relativeDaysOrNull } from '@/lib/time';
 import { TZ, ny } from './helpers';
 
 describe('timestamp format', () => {
@@ -65,6 +65,11 @@ describe('display', () => {
     expect(relativeDays(ny('2026-10-27T01:00:00'), now, TZ)).toBe('today');
     expect(relativeDays(ny('2026-10-26T23:00:00'), now, TZ)).toBe('yesterday');
     expect(relativeDays(ny('2026-10-24T09:00:00'), now, TZ)).toBe('3 days ago');
+    expect(relativeDays(ny('2026-10-14T09:00:00'), now, TZ)).toBe('13 days ago');
+    expect(relativeDays(ny('2026-10-13T09:00:00'), now, TZ)).toBe('Oct 13');
     expect(relativeDays(ny('2026-10-01T09:00:00'), now, TZ)).toBe('Oct 1');
+    // next to an absolute time the label is dropped instead of repeating the date
+    expect(relativeDaysOrNull(ny('2026-10-24T09:00:00'), now, TZ)).toBe('3 days ago');
+    expect(relativeDaysOrNull(ny('2026-10-13T09:00:00'), now, TZ)).toBeNull();
   });
 });

@@ -99,9 +99,10 @@ textarea {
   white-space: nowrap;
 }
 
-/* Phones: the Agents link (for AI setup, not floor use) makes room for the staff name and the brand. */
+/* Phones: the Agents link (for AI setup, not floor use) makes room for the staff name and the brand.
+   Written with the nav ancestor so it outranks `.site-header__nav a { display: inline-block }`. */
 @media (max-width: 479px) {
-  .site-header__agents {
+  .site-header__nav .site-header__agents {
     display: none;
   }
 

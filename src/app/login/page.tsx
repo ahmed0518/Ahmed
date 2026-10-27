@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { LoginForm } from '@/components/LoginForm';
-import { readCredential } from '@/lib/auth/credential';
+import { readCredentialSafe } from '@/lib/auth/credential';
 import { AppError } from '@/lib/errors';
 import { log } from '@/lib/log';
 import { getStaff } from '@/lib/settings/store';
@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const next = safeNextPath(typeof sp.next === 'string' ? sp.next : null);
   const h = await headers();
-  const cred = await readCredential(h);
+  const cred = await readCredentialSafe(h); // a failed roster read is reported by the block below, never a 500
   let staff: { id: string; name: string }[] = [];
   let error: string | null = null;
   try {

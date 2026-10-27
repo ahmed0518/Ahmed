@@ -10,7 +10,7 @@ Reads are public by default: no token is needed and you get the public shape (st
 
 ### GET /api/orders/{number}
 
-One order. `{number}` is the Shopify order number: `251548`, `#251548` and `Order 251548` all work.
+One order. `{number}` is the Shopify order number — use the digits (`251548`). `%23251548` and `Order%20251548` are accepted too; a literal `#` would start a URL fragment and never reach the API.
 
 ```bash
 curl -s https://production.traxnyc.com/api/orders/251548
@@ -80,6 +80,8 @@ With a bearer token the same call also returns:
 }
 ```
 
+`status_data_unreadable: true` is present when the stored status JSON failed validation; the order then reads as `never_set` with no item statuses, and the next write starts from an empty status — tell the office rather than writing over it.
+
 ### GET /api/stale?days=3
 
 Every open production order that counts as stale — the list to chase. `days` overrides the configured threshold (same business-day unit). No paging: this is always the complete set. Check this before emailing anyone.
@@ -119,7 +121,7 @@ The status list in dropdown order, with flags. Use the `id` or the `name` when w
 
 ### GET /api/health
 
-`{ ok, shop, api_version, served_api_version, scopes_ok }`. Nothing secret. `ok` is false when the Shopify connection or scopes are wrong.
+`{ ok, shop, api_version, served_api_version, scopes_ok, throttle }`. Nothing secret. `ok` is false when the Shopify connection or scopes are wrong; `throttle` is the Shopify cost bucket as the last response reported it (`{ maximum_available, restore_rate }`, null before the first request).
 
 ## What the fields mean
 
@@ -167,7 +169,7 @@ curl -s -X POST https://production.traxnyc.com/api/orders/251548 \
 Every error is `{ "error": "<message>", "code": "<short_code>", "ref": "<8 chars>" }`. Quote the `ref` when reporting a problem; it points at the server log line.
 
 - 400 — validation (`invalid_order_number`, `unknown_status` and `status_retired` with `valid_statuses`, `item_hidden`, `item_removed`, `by_not_allowed`, …)
-- 401 — missing or wrong credential · 403 — CSRF check failed (browser sessions only) · 404 — no such order or line item
+- 401 — missing or wrong credential; a wrong token on a read is 401 too, never a quiet downgrade to the public shape · 403 — CSRF check failed (browser sessions only) · 404 — no such order or line item
 - 409 — the order changed while writing, retry once · 413 — history too large · 415 — send `Content-Type: application/json`
 - 429 — rate limited, honour `Retry-After` · 502 / 503 — Shopify failed or throttled, wait and retry
 

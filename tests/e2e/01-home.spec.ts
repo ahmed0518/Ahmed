@@ -71,6 +71,12 @@ test.describe('home', () => {
       // the header nav never wraps "Log in" / "Log out" onto a second line
       const nav = await page.locator('.site-header__nav').boundingBox();
       expect(nav?.height, url).toBeLessThanOrEqual(48);
+      // SPEC §6: below 480 px the Agents link is hidden so the brand and the staff name fit — no "Trax Pro…"
+      await expect(page.locator('.site-header__agents'), url).toBeHidden();
+      const brand = await page.locator('.site-header__brand').evaluate((el) => ({ width: el.getBoundingClientRect().width, truncated: el.scrollWidth > el.clientWidth, font: getComputedStyle(el).fontSize }));
+      expect(brand.font, url).toBe('15px');
+      expect(brand.truncated, url).toBe(false);
+      expect(brand.width, url).toBeGreaterThanOrEqual(150);
     }
     await page.goto(`/orders/${ORDERS.mobile}`);
     const select = page.locator('select.select-status').nth(1);

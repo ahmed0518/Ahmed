@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { ORDERS, STAFF } from './fixtures';
-import { loginAs, mockOrder, mockStaff, mockState, originHeader, seedAll, seedExtra } from './helpers';
+import { NO_ADMIN_URL, loginAs, mockOrder, mockStaff, mockState, originHeader, seedAll, seedExtra } from './helpers';
 
 test.describe('order page updates', () => {
   test.beforeAll(async ({ request }) => {
@@ -67,13 +67,19 @@ test.describe('order page updates', () => {
     expect(entries.map((m) => m.key).sort()).toEqual(['item_status', 'last_updated_at', 'last_updated_by', 'summary']);
     expect(state.calls.some((c) => c.operation === 'AddTags' && (c.variables.tags as string[]).includes('trax-production'))).toBe(true);
 
-    // a second write carries the digest from the read
+    // a second write carries the digest from the read, and a note typed before picking the
+    // status travels with that save (then the field clears — nothing typed is dropped silently)
+    const note = item.getByLabel('Note for 14K Gold 20 Pt Lab Diamond Tennis Bracelet 71679 — Yellow Gold / 8 Inches');
+    await note.fill('ring sized to 7');
     await item.locator('select.select-status').selectOption('mold');
+    await expect(note).toHaveValue('');
     await expect(page.getByTestId('last-updated-50788056399960')).toContainText('by Ahmed');
     const after = await mockState(request);
     const second = after.calls.filter((c) => c.operation === 'SetOrderStatus').at(-1)!;
     const digest = (second.variables.metafields as { key: string; compareDigest?: string | null }[]).find((m) => m.key === 'item_status')!.compareDigest;
     expect(typeof digest).toBe('string');
+    const storedAfter = JSON.parse(mockOrder(after, ORDERS.neverSet).metafields['trax_production.item_status']!.value) as { items: Record<string, { status: string; history: { kind: string; status: string | null; note: string }[] }> };
+    expect(storedAfter.items['50788056399960']!.history.at(-1)).toMatchObject({ kind: 'set', status: 'mold', note: 'ring sized to 7' });
   });
 
   test('"Still here" appends a confirm entry without changing the status', async ({ page, request }) => {
@@ -182,6 +188,14 @@ test.describe('order page updates', () => {
     expect(crossSite.status()).toBe(403);
     expect((await page.context().cookies()).some((c) => c.name === 'trax_staff')).toBe(true);
 
+    // a same-origin POST answers 303 with a RELATIVE Location: the standalone server only knows
+    // its bind address, so an absolute URL would send a Docker deploy's staff to localhost
+    // (sent from the cookie-less context, so the page's own session stays for the step below)
+    const out = await request.post('/logout', { maxRedirects: 0, headers: originHeader() });
+    expect(out.status()).toBe(303);
+    expect(out.headers()['location']).toBe('/login');
+    expect(out.headers()['set-cookie']).toContain('trax_staff=');
+
     // the header shows the session, and its Log out button ends it
     await page.goto('/');
     await expect(page.getByRole('link', { name: 'Log in' })).toHaveCount(0);
@@ -191,7 +205,32 @@ test.describe('order page updates', () => {
     await page.goto('/');
     await expect(page.getByRole('link', { name: 'Log in' }).first()).toBeVisible();
     await expect(page.getByText('Logged in as Ahmed')).toHaveCount(0);
-    void request;
+  });
+
+  test('a logged-in page during a Shopify outage shows the error notice, never a bare 500', async ({ page, request }) => {
+    // The passcode-less app copy shares the mock, the SESSION_SECRET and (same host, ports are
+    // not part of cookie scope) the browser's cookie — and nothing has made it read the shop
+    // metafields yet, so its 30 s cache is cold and the roster lookup behind the cookie really
+    // reaches Shopify. Each render reads them up to three times (header, page, settings), a
+    // prefetched <Link> renders the header again, and every read retries a 5xx three times:
+    // arm far more failures than that and clear the rest. Igor, not Ahmed: the login limiter
+    // allows 10 per name per minute and the earlier tests use most of Ahmed's.
+    await loginAs(page, 'igor');
+    await seedExtra(request, { failures: Array.from({ length: 60 }, () => ({ operation: 'ShopSettings', kind: 'HTTP_500' })) });
+    try {
+      const home = await page.goto(`${NO_ADMIN_URL}/`);
+      expect(home?.status()).toBe(200);
+      await expect(page.locator('.notice--error')).toContainText('Shopify may be slow');
+      await expect(page.getByRole('heading', { name: 'In production' })).toBeVisible();
+
+      const order = await page.goto(`${NO_ADMIN_URL}/orders/${ORDERS.staleInProduction}`);
+      expect(order?.status()).toBe(200);
+      await expect(page.getByRole('heading', { name: `Order #${ORDERS.staleInProduction}` })).toBeVisible();
+      await expect(page.locator('.notice--error')).toContainText('Shopify request failed. Try again in a moment.');
+    } finally {
+      await seedExtra(request, { clear_failures: true });
+    }
+    expect((await mockState(request)).failures).toEqual([]);
   });
 
   test('parallel wrong PINs are all counted: the lock lands on the 5th and the right PIN is refused while locked', async ({ request }) => {

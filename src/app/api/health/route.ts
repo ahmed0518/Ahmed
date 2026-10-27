@@ -5,7 +5,7 @@ import { handle, json } from '@/lib/api/http';
 import { getEnv } from '@/lib/env';
 import { AppError, tooManyRequests } from '@/lib/errors';
 import { log } from '@/lib/log';
-import { servedApiVersion, shopifyGraphQL } from '@/lib/shopify/client';
+import { servedApiVersion, shopifyGraphQL, throttleStatus } from '@/lib/shopify/client';
 import { AccessScopes, ShopInfo } from '@/lib/shopify/queries';
 import type { AccessScopesData, ShopInfoData } from '@/lib/shopify/types';
 
@@ -18,10 +18,16 @@ const FAIL_CACHE_MS = 5_000;
 
 let cached: { expires: number; status: number; body: Record<string, unknown> } | null = null;
 
+/** The Shopify cost bucket (SPEC §8) as the last response reported it — the size the page walk is sized for. */
+function throttle(): { maximum_available: number; restore_rate: number } | null {
+  const ts = throttleStatus();
+  return ts ? { maximum_available: ts.maximumAvailable, restore_rate: ts.restoreRate } : null;
+}
+
 /**
- * `{ ok, shop, api_version, served_api_version, scopes_ok }` — no secrets. Anonymous calls
- * share the public read limiter, and the answer is memoised (30 s, 5 s after a failure) so
- * nobody can drain the Shopify cost bucket through this endpoint.
+ * `{ ok, shop, api_version, served_api_version, scopes_ok, throttle }` — no secrets.
+ * Anonymous calls share the public read limiter, and the answer is memoised (30 s, 5 s
+ * after a failure) so nobody can drain the Shopify cost bucket through this endpoint.
  */
 export const GET = handle(async (req) => {
   const cred = await requireReader(req.headers);
@@ -42,6 +48,7 @@ export const GET = handle(async (req) => {
       api_version: env.SHOPIFY_API_VERSION,
       served_api_version: servedApiVersion(),
       scopes_ok: scopesOk,
+      throttle: throttle(),
     };
     cached = { expires: Date.now() + OK_CACHE_MS, status: 200, body };
     return json(body);
@@ -53,6 +60,7 @@ export const GET = handle(async (req) => {
       api_version: env.SHOPIFY_API_VERSION,
       served_api_version: servedApiVersion(),
       scopes_ok: false,
+      throttle: throttle(),
       error: 'Shopify request failed',
       code: e instanceof AppError ? e.code : 'shopify_error',
     };

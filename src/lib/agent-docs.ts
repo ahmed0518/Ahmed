@@ -34,7 +34,9 @@ export const AGENT_DOCS: DocBlock[] = [
   ),
 
   h3('GET /api/orders/{number}'),
-  p('One order. `{number}` is the Shopify order number: `251548`, `#251548` and `Order 251548` all work.'),
+  p(
+    'One order. `{number}` is the Shopify order number — use the digits (`251548`). `%23251548` and `Order%20251548` are accepted too; a literal `#` would start a URL fragment and never reach the API.',
+  ),
   code('bash', `curl -s ${BASE_URL_PLACEHOLDER}/api/orders/251548`),
   p('Public shape:'),
   code(
@@ -99,6 +101,9 @@ export const AGENT_DOCS: DocBlock[] = [
   "tag_synced": true
 }`,
   ),
+  p(
+    '`status_data_unreadable: true` is present when the stored status JSON failed validation; the order then reads as `never_set` with no item statuses, and the next write starts from an empty status — tell the office rather than writing over it.',
+  ),
 
   h3('GET /api/stale?days=3'),
   p(
@@ -136,7 +141,9 @@ export const AGENT_DOCS: DocBlock[] = [
   ),
 
   h3('GET /api/health'),
-  p('`{ ok, shop, api_version, served_api_version, scopes_ok }`. Nothing secret. `ok` is false when the Shopify connection or scopes are wrong.'),
+  p(
+    '`{ ok, shop, api_version, served_api_version, scopes_ok, throttle }`. Nothing secret. `ok` is false when the Shopify connection or scopes are wrong; `throttle` is the Shopify cost bucket as the last response reported it (`{ maximum_available, restore_rate }`, null before the first request).',
+  ),
 
   h2('What the fields mean'),
   ul(
@@ -183,7 +190,7 @@ export const AGENT_DOCS: DocBlock[] = [
   p('Every error is `{ "error": "<message>", "code": "<short_code>", "ref": "<8 chars>" }`. Quote the `ref` when reporting a problem; it points at the server log line.'),
   ul(
     '400 — validation (`invalid_order_number`, `unknown_status` and `status_retired` with `valid_statuses`, `item_hidden`, `item_removed`, `by_not_allowed`, …)',
-    '401 — missing or wrong credential · 403 — CSRF check failed (browser sessions only) · 404 — no such order or line item',
+    '401 — missing or wrong credential; a wrong token on a read is 401 too, never a quiet downgrade to the public shape · 403 — CSRF check failed (browser sessions only) · 404 — no such order or line item',
     '409 — the order changed while writing, retry once · 413 — history too large · 415 — send `Content-Type: application/json`',
     '429 — rate limited, honour `Retry-After` · 502 / 503 — Shopify failed or throttled, wait and retry',
   ),

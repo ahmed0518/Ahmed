@@ -1,5 +1,6 @@
 import { getEnv } from '@/lib/env';
-import { forbidden, unauthorized } from '@/lib/errors';
+import { AppError, forbidden, unauthorized } from '@/lib/errors';
+import { log } from '@/lib/log';
 import { getStaff } from '@/lib/settings/store';
 import type { StaffRoster } from '@/lib/status/types';
 import { ADMIN_COOKIE, STAFF_COOKIE, parseAdminCookie, parseCookieHeader, parseStaffCookie, passcodeFingerprint, type StaffSession } from './cookies';
@@ -38,6 +39,21 @@ export async function readCredential(headers: HeaderReader): Promise<Credential 
   return resolveStaffSession(session, await getStaff());
 }
 
+/**
+ * `readCredential` for server components: when the roster cannot be read (a Shopify
+ * failure) the request is logged and treated as having no session, so a page renders its
+ * public view with the usual error notice instead of a bare 500. Route handlers keep
+ * `readCredential` and answer the documented 502.
+ */
+export async function readCredentialSafe(headers: HeaderReader): Promise<Credential | null> {
+  try {
+    return await readCredential(headers);
+  } catch (e) {
+    log.warn('session check failed — treating the request as anonymous', { detail: e instanceof AppError ? (e.detail ?? e.message) : String(e) });
+    return null;
+  }
+}
+
 /** Writes: staff cookie or API_TOKENS bearer. READ_TOKEN never authorizes writes. */
 export async function requireWriter(headers: HeaderReader): Promise<Extract<Credential, { kind: 'staff' | 'token' }>> {
   const cred = await readCredential(headers);
@@ -46,10 +62,14 @@ export async function requireWriter(headers: HeaderReader): Promise<Extract<Cred
   return cred;
 }
 
-/** Reads: public unless READ_TOKEN is set, then any credential is required. */
+/**
+ * Reads: public unless READ_TOKEN is set, then any credential is required. A bearer token
+ * that matches nothing is refused either way: a mistyped or rotated token must surface as
+ * 401, never as a quiet downgrade to the public shape.
+ */
 export async function requireReader(headers: HeaderReader): Promise<Credential | null> {
   const cred = await readCredential(headers);
-  if (getEnv().READ_TOKEN && !cred) throw unauthorized();
+  if (!cred && (bearerFromHeader(headers.get('authorization')) || getEnv().READ_TOKEN)) throw unauthorized();
   return cred;
 }
 
@@ -67,9 +87,13 @@ export function requireAdmin(headers: HeaderReader): void {
   if (!csrfOk(headers, getEnv().TRUST_PROXY)) throw forbidden('csrf');
 }
 
-/** True when HTML pages need a staff login (READ_TOKEN set) and this request has none. */
+/**
+ * True when HTML pages need a staff login (READ_TOKEN set) and this request has none — or
+ * the roster could not be read, in which case nothing can be verified and the page sends the
+ * visitor to /login rather than rendering order data.
+ */
 export async function pageNeedsLogin(headers: HeaderReader): Promise<boolean> {
   if (!getEnv().READ_TOKEN) return false;
-  const cred = await readCredential(headers);
+  const cred = await readCredentialSafe(headers);
   return !(cred && cred.kind === 'staff');
 }

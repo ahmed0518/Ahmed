@@ -34,10 +34,27 @@ describe('shopify client', () => {
     expect(operationName('mutation  AddTags($id: ID!) { x }')).toBe('AddTags');
     const { fetchImpl, calls } = fakeFetch([{ body: { data: { ok: true } } }]);
     const client = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl, sleep: noSleep.sleep });
+    expect(client.throttleStatus()).toBeNull();
     expect(await client.graphql('query ShopInfo { shop { id } }')).toEqual({ ok: true });
     expect(calls[0]!.headers['X-Shopify-Access-Token']).toBe('test_token');
     expect(JSON.parse(calls[0]!.body)).toMatchObject({ operationName: 'ShopInfo' });
     expect(client.servedApiVersion()).toBe('2026-10');
+    expect(client.throttleStatus()).toBeNull(); // the reply carried no extensions.cost
+  });
+
+  it('keeps the cost bucket (throttleStatus) of the last response for /api/health', async () => {
+    const withCost = (max: number, available: number) => ({
+      data: { x: 1 },
+      extensions: { cost: { requestedQueryCost: 302, actualQueryCost: 302, throttleStatus: { maximumAvailable: max, currentlyAvailable: available, restoreRate: max / 2 } } },
+    });
+    const { fetchImpl } = fakeFetch([{ body: withCost(2000, 1698) }, { body: withCost(20000, 19698) }, { body: { data: { x: 2 } } }]);
+    const client = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl, sleep: noSleep.sleep });
+    await client.graphql('query A { a }');
+    expect(client.throttleStatus()).toEqual({ maximumAvailable: 2000, currentlyAvailable: 1698, restoreRate: 1000 });
+    await client.graphql('query A { a }');
+    expect(client.throttleStatus()).toEqual({ maximumAvailable: 20000, currentlyAvailable: 19698, restoreRate: 10000 });
+    await client.graphql('query A { a }'); // a response without cost data keeps the last one
+    expect(client.throttleStatus()?.maximumAvailable).toBe(20000);
   });
 
   it('waits out THROTTLED and retries, then gives up with 503', async () => {
