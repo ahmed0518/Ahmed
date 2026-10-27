@@ -1,0 +1,21 @@
+# dependencies
+node_modules
+
+# next.js
+.next
+out
+
+# env files — never commit secrets (.env.example and the explicit test values stay tracked)
+.env*
+!.env.example
+!.env.test
+
+# test output
+test-results
+playwright-report
+coverage
+
+# misc
+.DS_Store
+*.tsbuildinfo
+npm-debug.log*

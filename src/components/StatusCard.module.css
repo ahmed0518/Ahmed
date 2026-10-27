@@ -1,0 +1,61 @@
+.card {
+  padding: 16px;
+}
+
+.bulk {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 560px) {
+  .bulk {
+    grid-template-columns: 1fr auto auto;
+  }
+}
+
+.item {
+  padding: 16px 0 12px;
+  border-top: 1px solid var(--border);
+}
+
+.item:first-of-type {
+  border-top: 0;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.attrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: -4px 0 10px;
+}
+
+.stillHere {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.stillHere input {
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.meta {
+  margin-top: 8px;
+}
+
+.collapsed {
+  margin-top: 12px;
+}
