@@ -6,7 +6,9 @@ export default function NotFound() {
       <h1>Not found</h1>
       <p>That page or order does not exist.</p>
       <p>
-        <Link href="/">Back to orders</Link>
+        <Link href="/" className="action-link">
+          Back to orders
+        </Link>
       </p>
     </div>
   );

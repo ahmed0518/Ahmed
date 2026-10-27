@@ -44,9 +44,32 @@ describe('other params', () => {
 
   it('next paths stay same-origin', () => {
     expect(safeNextPath('/orders/1')).toBe('/orders/1');
+    expect(safeNextPath('/orders/251600')).toBe('/orders/251600');
+    expect(safeNextPath('/orders/1?x=1#h')).toBe('/orders/1?x=1#h');
+    expect(safeNextPath('/')).toBe('/');
     expect(safeNextPath('//evil.test')).toBe('/');
     expect(safeNextPath('/\\evil.test')).toBe('/');
     expect(safeNextPath('https://evil.test')).toBe('/');
+    expect(safeNextPath('http://trax.invalid/orders/1')).toBe('/');
     expect(safeNextPath(null)).toBe('/');
+    expect(safeNextPath('')).toBe('/');
+    expect(safeNextPath('orders/1')).toBe('/');
+    expect(safeNextPath(`/${'a'.repeat(300)}`)).toBe('/');
+  });
+
+  it('next paths cannot smuggle another host past the browser URL parser', () => {
+    // browsers strip tab / newline before parsing, so these become //evil.test
+    expect(safeNextPath('/\t/evil.test')).toBe('/');
+    expect(safeNextPath('/\n/evil.test')).toBe('/');
+    expect(safeNextPath('/\r\\evil.test')).toBe('/');
+    expect(safeNextPath('/\u0000/evil.test')).toBe('/');
+    // dot segments normalise to a protocol-relative URL
+    expect(safeNextPath('/.//evil.test')).toBe('/');
+    expect(safeNextPath('/./\\evil.test')).toBe('/');
+    expect(safeNextPath('/..//evil.test')).toBe('/');
+    expect(safeNextPath('/a/..//evil.test')).toBe('/');
+    expect(safeNextPath('/ /evil.test')).toBe('/');
+    // percent-encoded slashes stay a same-origin path
+    expect(safeNextPath('/%2F%2Fevil.test')).toBe('/%2F%2Fevil.test');
   });
 });

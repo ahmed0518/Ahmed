@@ -123,6 +123,7 @@ test.describe('API', () => {
     const u = (await unknown.json()) as { code: string; valid_statuses: string[] };
     expect(u.code).toBe('unknown_status');
     expect(u.valid_statuses).toContain('Setting Igor');
+    expect(u.valid_statuses).not.toContain('Old Bench');
 
     const ok = await request.post(`/api/orders/${ORDERS.freshInProduction}/items/60000000000011`, { data: { status: 'Setting Jorje', by: 'Maks', note: 'customer called' }, headers: bearer(MAKS_TOKEN) });
     expect(ok.status(), await ok.text()).toBe(200);
@@ -148,6 +149,31 @@ test.describe('API', () => {
     expect(orphanRead.removed_items.map((r) => r.line_item_id)).toEqual(['60000000000139']);
     const badNumber = await request.get('/api/orders/251548%20OR%20email:x');
     expect(badNumber.status()).toBe(400);
+  });
+
+  test('a retired status is refused as a new selection by id or name, but "still here" on the item holding it works', async ({ request }) => {
+    for (const status of ['old_bench', 'Old Bench']) {
+      const res = await request.post(`/api/orders/${ORDERS.freshInProduction}/items/60000000000011`, { data: { status }, headers: bearer(MAKS_TOKEN) });
+      expect(res.status(), status).toBe(400);
+      const body = (await res.json()) as { code: string; valid_statuses: string[] };
+      expect(body.code).toBe('status_retired');
+      expect(body.valid_statuses).not.toContain('Old Bench');
+      expect(body.valid_statuses).toContain('Setting Igor');
+    }
+    const bulk = await request.post(`/api/orders/${ORDERS.freshInProduction}`, { data: { items: { '60000000000011': 'old_bench' } }, headers: bearer(MAKS_TOKEN) });
+    expect(bulk.status()).toBe(400);
+    expect((await bulk.json()).code).toBe('status_retired');
+    const untouched = (await (await request.get(`/api/orders/${ORDERS.freshInProduction}`, { headers: bearer(CLAUDE_TOKEN) })).json()) as { items: { status: string }[] };
+    expect(untouched.items[0]!.status).not.toBe('old_bench');
+
+    const confirm = await request.post(`/api/orders/${ORDERS.retiredStatus}/items/60000000000141`, { data: { status: 'Old Bench', note: 'still at the old bench' }, headers: bearer(MAKS_TOKEN) });
+    expect(confirm.status(), await confirm.text()).toBe(200);
+    const c = (await confirm.json()) as { items: { status: string; status_name: string; history: { kind: string; note: string }[] }[] };
+    expect(c.items[0]).toMatchObject({ status: 'old_bench', status_name: 'Old Bench' });
+    expect(c.items[0]!.history.at(-1)).toMatchObject({ kind: 'confirm', note: 'still at the old bench' });
+
+    const statuses = (await (await request.get('/api/statuses')).json()) as { statuses: Record<string, unknown>[] };
+    expect(statuses.statuses.find((s) => s.id === 'old_bench')).toEqual({ id: 'old_bench', name: 'Old Bench', done: false, waiting: false, retired: true });
   });
 
   test('reading a tagged order with no readable entries never touches its tag', async ({ request }) => {

@@ -43,8 +43,9 @@ export function OrderRows({ rows, tz, now }: { rows: Row[]; tz: string; now: Dat
                     {r.last_updated_by}
                   </>
                 ) : createdAt ? (
+                  // the summary line above already says "No status yet"
                   <>
-                    No status yet · ordered <RelativeTime iso={createdAt} tz={tz} fallback={formatMonD(new Date(createdAt), tz, now)} />
+                    Ordered <RelativeTime iso={createdAt} tz={tz} fallback={formatMonD(new Date(createdAt), tz, now)} />
                   </>
                 ) : (
                   <>No status yet</>

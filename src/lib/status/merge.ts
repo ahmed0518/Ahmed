@@ -21,8 +21,9 @@ export interface ApplyResult {
 
 /**
  * Apply status changes (SPEC §4.1):
- * - same status as the current one → `confirm` ("still here")
- * - `null` → `clear` (entry kept, status null)
+ * - `null` → `clear` (entry kept, status null — also when it already was null: there is no
+ *   status to confirm)
+ * - the same status as the current one → `confirm` ("still here")
  * - anything else → `set`
  * History is append-only, oldest first, capped at 30 entries per item.
  */
@@ -40,8 +41,8 @@ export function applyChanges(
     const existing = next.items[change.lineItemId];
     const title = titles.get(change.lineItemId) ?? existing?.title ?? '';
     let kind: HistoryKind;
-    if (existing && existing.status === change.status) kind = 'confirm';
-    else if (change.status === null) kind = 'clear';
+    if (change.status === null) kind = 'clear';
+    else if (existing && existing.status === change.status) kind = 'confirm';
     else kind = 'set';
     const note = cleanText(change.note ?? '', NOTE_MAX);
     const history = existing ? [...existing.history] : [];

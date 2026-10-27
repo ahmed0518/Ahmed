@@ -30,7 +30,7 @@ export const AGENT_DOCS: DocBlock[] = [
 
   h2('Reading'),
   p(
-    'Reads are public by default: no token is needed and you get the *public shape* (status, counts, staleness, per-item statuses). Send `Authorization: Bearer <token>` (an API token or the read token, if one was configured for you) to get the *credentialed shape*, which adds order ids, dates, tags, fulfillment state, context fields, history, notes, hidden and removed items. If the service was deployed with a read token, every read needs a bearer token.',
+    'Reads are public by default: no token is needed and you get the public shape (status, counts, staleness, per-item statuses). Send `Authorization: Bearer <token>` (an API token or the read token, if one was configured for you) to get the credentialed shape, which adds order ids, dates, tags, fulfillment state, context fields, history, notes, hidden and removed items. If the service was deployed with a read token, every read needs a bearer token.',
   ),
 
   h3('GET /api/orders/{number}'),
@@ -164,7 +164,7 @@ export const AGENT_DOCS: DocBlock[] = [
   -d '{ "status": "Setting Igor", "by": "Maks", "note": "customer called, rush" }'`,
   ),
   ul(
-    '`status`: a status id (`setting_igor`) or name (`Setting Igor`, case-insensitive), or `null` to clear it. Unknown values answer 400 with `valid_statuses`.',
+    '`status`: a status id (`setting_igor`) or name (`Setting Igor`, case-insensitive), or `null` to clear it. Unknown values answer 400 `unknown_status` with `valid_statuses`. A retired status (`retired: true` in `/api/statuses`) is refused for new selections with 400 `status_retired`; it is accepted only for an item that already holds it (a confirmation).',
     '`by` (optional, ≤ 60 chars): the person you are writing for; defaults to the token label. The server records `via: "token:<label>"` on every entry, so a write is always attributable to the token.',
     '`note` (optional, ≤ 200 chars): free text stored in the history entry.',
     'Writing the status an item already has is a confirmation ("still here, checked today"): it refreshes the timestamp and adds a `confirm` history entry instead of a new status.',
@@ -182,7 +182,7 @@ export const AGENT_DOCS: DocBlock[] = [
   h2('Errors'),
   p('Every error is `{ "error": "<message>", "code": "<short_code>", "ref": "<8 chars>" }`. Quote the `ref` when reporting a problem; it points at the server log line.'),
   ul(
-    '400 — validation (`invalid_order_number`, `unknown_status` with `valid_statuses`, `item_hidden`, `item_removed`, `by_not_allowed`, …)',
+    '400 — validation (`invalid_order_number`, `unknown_status` and `status_retired` with `valid_statuses`, `item_hidden`, `item_removed`, `by_not_allowed`, …)',
     '401 — missing or wrong credential · 403 — CSRF check failed (browser sessions only) · 404 — no such order or line item',
     '409 — the order changed while writing, retry once · 413 — history too large · 415 — send `Content-Type: application/json`',
     '429 — rate limited, honour `Retry-After` · 502 / 503 — Shopify failed or throttled, wait and retry',

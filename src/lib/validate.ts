@@ -46,8 +46,29 @@ export function cleanBy(input: unknown): string | null {
   return s.length > 0 ? s : null;
 }
 
-/** `/login?next=` must be a same-origin path: starts with `/` and not `//` or `/\`. */
+const NEXT_BASE = 'http://trax.invalid';
+const NEXT_OTHER_BASE = 'http://other.invalid';
+
+/**
+ * `/login?next=` must resolve to a same-origin path, decided by the URL parser rather than a
+ * regex: browsers strip tab / newline before parsing, so `/\t/evil.test` is really
+ * `//evil.test`, and `/.//evil.test` normalises to the protocol-relative `//evil.test`.
+ * Anything with a control character, another origin or a protocol-relative result is
+ * replaced by `/`.
+ */
 export function safeNextPath(input: string | null | undefined): string {
-  if (!input) return '/';
-  return /^\/[^/\\]/.test(input) && input.length <= 300 ? input : '/';
+  if (!input || input.length > 300 || !input.startsWith('/')) return '/';
+  if (/[\x00-\x20\x7f]/.test(input)) return '/';
+  let path: string;
+  try {
+    const u = new URL(input, NEXT_BASE);
+    if (u.origin !== NEXT_BASE) return '/';
+    path = u.pathname + u.search + u.hash;
+    // The normalised path must still stay on the origin it is resolved against, whatever
+    // that origin is — a `//host` or `/\host` result would leave the site.
+    if (!/^\/(?![/\\])/.test(path) || new URL(path, NEXT_OTHER_BASE).origin !== NEXT_OTHER_BASE) return '/';
+  } catch {
+    return '/';
+  }
+  return path;
 }

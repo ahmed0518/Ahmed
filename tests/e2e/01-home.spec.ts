@@ -91,5 +91,22 @@ test.describe('home', () => {
     await expect(page.locator('.chip').first()).toBeVisible();
     const chip = await page.locator('.chip').first().boundingBox();
     expect(chip?.height).toBeGreaterThanOrEqual(44);
+
+    // SPEC §6 / §11: EVERY tap target — links (header, inline action links), buttons, selects,
+    // inputs, disclosures and chips — is at least 44 px tall, logged in and logged out
+    const pages = ['/', `/orders/${ORDERS.mobile}`, `/orders/${ORDERS.staleInProduction}`, `/orders/${ORDERS.untracked}`, '/login', '/agents', '/no-such-page'];
+    for (const loggedIn of [true, false]) {
+      if (!loggedIn) await page.context().clearCookies();
+      for (const url of pages) {
+        await page.goto(url);
+        const small = await page.locator('a[href], button, select, input, summary, .chip').evaluateAll((els) =>
+          els
+            .filter((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden')
+            .map((el) => ({ tag: el.tagName.toLowerCase(), text: (el.textContent ?? '').trim().slice(0, 30), height: el.getBoundingClientRect().height }))
+            .filter((t) => t.height < 44),
+        );
+        expect(small, `${url} (${loggedIn ? 'logged in' : 'logged out'})`).toEqual([]);
+      }
+    }
   });
 });

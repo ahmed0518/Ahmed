@@ -41,6 +41,16 @@ describe('applyChanges', () => {
     expect(next.items['1']!.history.at(-1)).toMatchObject({ kind: 'clear', status: null });
   });
 
+  it('clearing an already-cleared item is another clear, never a "still here" with no status', () => {
+    const cleared = itemStatus({ '1': entry(null, '2026-10-20T10:00:00Z') });
+    const { next, kinds } = applyChanges(cleared, [{ lineItemId: '1', status: null, note: '' }], maks, titles, now);
+    expect(kinds['1']).toBe('clear');
+    expect(next.items['1']!.history.at(-1)).toMatchObject({ kind: 'clear', status: null, by: 'Maks' });
+    expect(next.items['1']!.history.some((h) => h.kind === 'confirm')).toBe(false);
+    // and clearing an item that never had an entry is a clear too
+    expect(applyChanges(null, [{ lineItemId: '1', status: null, note: '' }], ahmed, titles, now).kinds['1']).toBe('clear');
+  });
+
   it('caps history at 30 entries, dropping the oldest, and trims notes to 200 chars', () => {
     let current = itemStatus({ '1': entry('cad', '2026-10-01T10:00:00Z') });
     for (let i = 0; i < 40; i++) {

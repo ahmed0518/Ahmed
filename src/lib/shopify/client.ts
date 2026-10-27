@@ -5,13 +5,16 @@ import { createTokenProvider, type TokenProvider } from './token';
 
 /**
  * Admin GraphQL via fetch (SPEC §8). Throttling arrives as HTTP 200 with
- * `errors[].extensions.code == "THROTTLED"`: wait for the cost to restore and retry; HTTP
- * 429 and network errors retry with backoff; HTTP 5xx retries with backoff for queries only
- * (a mutation whose response was lost may already have been committed, so it is never
- * re-sent); 3 attempts in total. Every request carries a deadline (`timeoutMs`, default
- * 20 s) so a stalled connection surfaces as a network error instead of hanging the caller.
- * One re-mint on HTTP 401 when the token comes from the client-credentials grant. GraphQL
- * errors become thrown errors whose full text goes to the log only.
+ * `errors[].extensions.code == "THROTTLED"`: wait for the cost to restore (≤ 10 s) and
+ * retry; HTTP 429 retries after `Retry-After` unless that is above 10 s, in which case the
+ * caller gets 503 with that `Retry-After` instead of a parked function; HTTP 5xx and network
+ * errors retry with backoff for queries. A mutation is re-sent only when the connection
+ * never opened (`ECONNREFUSED`, `ENOTFOUND` …): after a 5xx, a timeout or a reset the
+ * request may already have been committed, so it goes straight to 502. 3 attempts in
+ * total. Every request carries a deadline (`timeoutMs`, default 20 s) so a stalled
+ * connection surfaces as a network error instead of hanging the caller. One re-mint on
+ * HTTP 401 when the token comes from the client-credentials grant. GraphQL errors become
+ * thrown errors whose full text goes to the log only.
  */
 
 export interface ShopifyClient {
@@ -32,8 +35,25 @@ export interface ClientOptions {
 
 export const DEFAULT_TIMEOUT_MS = 20_000;
 
+/** A 429 `Retry-After` longer than this is not waited out; the caller gets 503 with it. */
+export const MAX_RETRY_AFTER_SECONDS = 10;
+
 export function isMutation(document: string): boolean {
   return /^\s*mutation\b/.test(document);
+}
+
+/** Error codes that mean the connection never opened, so nothing can have reached Shopify. */
+const CONNECT_PHASE_CODES = new Set(['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'EHOSTUNREACH', 'ENETUNREACH', 'EADDRNOTAVAIL', 'UND_ERR_CONNECT_TIMEOUT']);
+
+/**
+ * True when a fetch failure happened before the request could have been sent. A timeout
+ * (`TimeoutError` / `AbortError`), a reset after the body was written (`ECONNRESET`, `EPIPE`,
+ * `UND_ERR_SOCKET`) or anything unknown counts as "may have reached Shopify".
+ */
+export function failedBeforeSending(e: unknown): boolean {
+  const cause = (e as { cause?: { code?: unknown } } | null)?.cause;
+  const code = typeof cause?.code === 'string' ? cause.code : null;
+  return code !== null && CONNECT_PHASE_CODES.has(code);
 }
 
 interface GraphQLErrorShape {
@@ -91,6 +111,13 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
         });
       } catch (e) {
         lastDetail = `network error: ${e instanceof Error ? e.message : String(e)}`;
+        // A mutation that timed out or was reset after the request was written may already
+        // have been committed (lost response): re-sending it would answer STALE_OBJECT and
+        // record the same change twice. Only a connection that never opened is safe to retry.
+        if (mutation && !failedBeforeSending(e)) {
+          log.warn('shopify network error on a mutation, not re-sent', { operation: op, attempt, detail: lastDetail });
+          throw new ShopifyRequestError(lastDetail, { operation: op });
+        }
         log.warn('shopify network error', { operation: op, attempt, detail: lastDetail });
         if (attempt < maxAttempts) await sleep(300 * attempt);
         continue;
@@ -114,6 +141,12 @@ export function createShopifyClient(opts: ClientOptions): ShopifyClient {
         throttled = res.status === 429;
         const retryAfter = Number(res.headers.get('retry-after')) || 0;
         lastDetail = `HTTP ${res.status}`;
+        if (retryAfter > MAX_RETRY_AFTER_SECONDS) {
+          // Parking a serverless function for that long only trades a 503 for a platform
+          // timeout: hand the real Retry-After to the caller instead (SPEC §7).
+          log.warn('shopify 429 with a long Retry-After, not retried', { operation: op, retryAfter, attempt, requestId: lastRequestId });
+          throw new ShopifyThrottledError(Math.ceil(retryAfter), op);
+        }
         log.warn('shopify http error, retrying', { operation: op, status: res.status, attempt, requestId: lastRequestId });
         if (attempt < maxAttempts) await sleep(retryAfter > 0 ? retryAfter * 1000 : 500 * 2 ** (attempt - 1));
         continue;

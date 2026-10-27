@@ -4,8 +4,10 @@ import path from 'node:path';
 import { APP_PORT, MOCK_PORT, NO_ADMIN_PORT } from './tests/e2e/ports';
 
 /**
- * e2e: mock Shopify server + the built app (`next build` then `next start`) + a second app
- * instance without ADMIN_PASSCODE (to prove /admin answers 404). Honors PORT (default 3000),
+ * e2e: mock Shopify server + the built app (`npm run build`, then the standalone server
+ * `node .next/standalone/server.js` — the same entry point the Dockerfile uses; `next start`
+ * is unsupported with `output: 'standalone'`) + a second app instance without
+ * ADMIN_PASSCODE (to prove /admin answers 404). Honors PORT (default 3000),
  * MOCK_SHOPIFY_PORT (default 4001) and NO_ADMIN_PORT (default PORT+1, skipping the mock's
  * port) — see tests/e2e/ports.ts. Chromium only, headless; PW_CHROMIUM_PATH overrides the
  * browser binary. The app never sees a real token: SHOPIFY_API_URL points at the mock and
@@ -39,6 +41,9 @@ const appEnv: Record<string, string> = {
   SHOPIFY_API_URL: `http://127.0.0.1:${mockPort}/admin/api/${apiVersion}/graphql.json`,
   SHOPIFY_ADMIN_TOKEN: 'test_e2e',
   SHOPIFY_API_VERSION: apiVersion,
+  // The standalone server binds to HOSTNAME, which many machines set to their own name
+  // (the Dockerfile pins it too); keep the test servers on the loopback interface.
+  HOSTNAME: '127.0.0.1',
 };
 
 export default defineConfig({
@@ -72,7 +77,7 @@ export default defineConfig({
       timeout: 300_000,
     },
     {
-      command: `npm run start -- -p ${noAdminPort}`,
+      command: 'npm run start',
       url: `http://localhost:${noAdminPort}/llms.txt`,
       env: { ...appEnv, ADMIN_PASSCODE: '', PORT: String(noAdminPort) },
       reuseExistingServer: false,

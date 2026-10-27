@@ -71,6 +71,17 @@ function optionalBool(v: unknown): boolean | null {
   return typeof v === 'boolean' ? v : null;
 }
 
+/**
+ * A stored status or staff name: trimmed, 1–`max` characters, no control characters — a
+ * line break would be copied into a single-line order metafield and poison every write.
+ */
+function validName(v: unknown, max: number): string | null {
+  if (typeof v !== 'string') return null;
+  const name = v.trim();
+  if (name.length === 0 || name.length > max || /[\x00-\x1f\x7f]/.test(name)) return null;
+  return name;
+}
+
 export function validateStatuses(raw: unknown): StatusDef[] | null {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > 200) return null;
   const ids = new Set<string>();
@@ -79,9 +90,8 @@ export function validateStatuses(raw: unknown): StatusDef[] | null {
   for (const s of raw) {
     if (!isRecord(s)) return null;
     if (typeof s.id !== 'string' || !STATUS_ID_RE.test(s.id)) return null;
-    if (typeof s.name !== 'string') return null;
-    const name = s.name.trim();
-    if (name.length === 0 || name.length > STATUS_NAME_MAX) return null;
+    const name = validName(s.name, STATUS_NAME_MAX);
+    if (name === null) return null;
     const done = optionalBool(s.done);
     const waiting = optionalBool(s.waiting);
     const retired = optionalBool(s.retired);
@@ -161,9 +171,8 @@ export function validateStaff(raw: unknown): StaffRoster | null {
   for (const s of raw.staff) {
     if (!isRecord(s)) return null;
     if (typeof s.id !== 'string' || !STAFF_ID_RE.test(s.id)) return null;
-    if (typeof s.name !== 'string') return null;
-    const name = s.name.trim();
-    if (name.length === 0 || name.length > STAFF_NAME_MAX) return null;
+    const name = validName(s.name, STAFF_NAME_MAX);
+    if (name === null) return null;
     const pinHash = s.pin_hash === undefined ? null : s.pin_hash;
     if (pinHash !== null && (typeof pinHash !== 'string' || !/^[0-9a-f]{64}$/.test(pinHash))) return null;
     if (typeof s.active !== 'boolean') return null;

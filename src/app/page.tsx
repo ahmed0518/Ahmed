@@ -10,7 +10,9 @@ import { getEnv } from '@/lib/env';
 import { AppError } from '@/lib/errors';
 import { log } from '@/lib/log';
 import { listUniverse, type UniverseResult } from '@/lib/orders/service';
+import { getSettings } from '@/lib/settings/store';
 import { PRODUCTION_TAG } from '@/lib/status/types';
+import { formatAbsolute } from '@/lib/time';
 import { parsePage } from '@/lib/validate';
 
 export const dynamic = 'force-dynamic';
@@ -26,8 +28,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const page = parsePage(typeof sp.page === 'string' ? sp.page : null) ?? 1;
 
   let universe: UniverseResult | null = null;
+  let staleAfterDays: number | null = null;
   let error: string | null = null;
   try {
+    // The configured threshold (30 s cache), not the rows' copy of it: the list can be empty.
+    staleAfterDays = (await getSettings()).stale_after_days;
     universe = await listUniverse();
   } catch (e) {
     error = e instanceof AppError ? e.message : 'Could not load orders';
@@ -56,7 +61,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       ) : (
         <p className="muted">
-          <Link href="/login?next=%2F">Log in</Link> to update statuses.
+          <Link href="/login?next=%2F" className="action-link">
+            Log in
+          </Link>{' '}
+          to update statuses.
         </p>
       )}
 
@@ -82,23 +90,36 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <h2 id="in-production-title" className="card__title">
           In production ({inProduction.length})
         </h2>
-        <p className="muted">Stalest first. Red = nobody touched it for {rows[0]?.stale_after_days ?? 3} work days.</p>
+        <p className="muted">Stalest first. Red = nobody touched it for {staleAfterDays ?? 'a few'} work days.</p>
         <OrderRows rows={sliceProd} tz={env.DISPLAY_TZ} now={now} />
       </section>
 
       {totalPages > 1 ? (
+        // The list runs stalest → freshest, so the next page holds fresher orders, not older ones.
         <nav className="pager" aria-label="Pages">
-          {page > 1 ? <Link href={`/?page=${page - 1}`}>← Newer</Link> : <span />}
+          {page > 1 ? (
+            <Link href={`/?page=${page - 1}`} className="action-link">
+              ← Previous
+            </Link>
+          ) : (
+            <span />
+          )}
           <span className="muted">
             Page {page} of {totalPages}
           </span>
-          {page < totalPages ? <Link href={`/?page=${page + 1}`}>Older →</Link> : <span />}
+          {page < totalPages ? (
+            <Link href={`/?page=${page + 1}`} className="action-link">
+              Next →
+            </Link>
+          ) : (
+            <span />
+          )}
         </nav>
       ) : null}
 
       {universe ? (
         <p className="muted">
-          Checked {universe.checked_at.replace('T', ' ').replace('Z', ' UTC')} · a newly tagged order can take a few seconds to appear.
+          Checked {formatAbsolute(new Date(universe.checked_at), env.DISPLAY_TZ, now)} · a newly tagged order can take a few seconds to appear.
         </p>
       ) : null}
     </>

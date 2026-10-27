@@ -9,8 +9,19 @@ import {
   validateWorkDays,
 } from '@/lib/settings/model';
 import type { Settings, StaffEntry, StaffRoster, StatusDef } from '@/lib/status/types';
+import { cleanText } from '@/lib/text';
 
 /** What /admin renders and the admin endpoints accept. Never includes pin_hash or lock internals. */
+
+/**
+ * A status or staff name: control characters stripped and whitespace collapsed (both end up
+ * in single-line Shopify metafields, which refuse line breaks and would fail every later
+ * write), then 1–`max` characters or null.
+ */
+function cleanName(v: string, max: number): string | null {
+  const name = cleanText(v, max + 1); // one extra so an over-long name is rejected, not cut
+  return name.length === 0 || name.length > max ? null : name;
+}
 
 export interface StaffView {
   id: string;
@@ -66,8 +77,8 @@ export function applySettingsForm(current: Settings, body: unknown): Settings {
   const statuses: StatusDef[] = [];
   for (const raw of body.statuses) {
     if (!isRecord(raw) || typeof raw.name !== 'string') throw badRequest('invalid_settings', 'Each status needs a name');
-    const name = raw.name.trim();
-    if (name.length === 0 || name.length > STATUS_NAME_MAX) throw badRequest('invalid_settings', `Status names must be 1–${STATUS_NAME_MAX} characters`);
+    const name = cleanName(raw.name, STATUS_NAME_MAX);
+    if (name === null) throw badRequest('invalid_settings', `Status names must be 1–${STATUS_NAME_MAX} characters`);
     let id: string;
     if (typeof raw.id === 'string' && raw.id.length > 0) {
       if (!existing.has(raw.id)) throw badRequest('invalid_settings', `Unknown status id "${raw.id.slice(0, 60)}"`);
@@ -135,8 +146,8 @@ const PIN_RE = /^\d{4,8}$/;
 
 function nameField(v: unknown): string {
   if (typeof v !== 'string') throw badRequest('invalid_staff', 'Name is required');
-  const name = v.trim();
-  if (name.length === 0 || name.length > STAFF_NAME_MAX) throw badRequest('invalid_staff', `Name must be 1–${STAFF_NAME_MAX} characters`);
+  const name = cleanName(v, STAFF_NAME_MAX);
+  if (name === null) throw badRequest('invalid_staff', `Name must be 1–${STAFF_NAME_MAX} characters`);
   return name;
 }
 

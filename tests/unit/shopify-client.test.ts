@@ -78,16 +78,79 @@ describe('shopify client', () => {
     expect((err as ShopifyRequestError).detail).toContain('HTTP 502');
     expect(lost.calls).toHaveLength(1);
 
-    const rejected = fakeFetch([{ status: 429, body: '', headers: { 'retry-after': '1' } }, { body: { data: { metafieldsSet: { userErrors: [] } } } }]);
+    noSleep.waits.length = 0;
+    const rejected = fakeFetch([{ status: 429, body: '', headers: { 'retry-after': '2' } }, { body: { data: { metafieldsSet: { userErrors: [] } } } }]);
     const client2 = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: rejected.fetchImpl, sleep: noSleep.sleep });
     expect(await client2.graphql(mutation)).toEqual({ metafieldsSet: { userErrors: [] } });
     expect(rejected.calls).toHaveLength(2);
+    expect(noSleep.waits).toEqual([2000]); // Retry-After honoured as is when short
 
     // a query still gets its 5xx retry
     const query = fakeFetch([{ status: 502, body: 'bad gateway' }, { body: { data: { x: 1 } } }]);
     const client3 = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: query.fetchImpl, sleep: noSleep.sleep });
     expect(await client3.graphql('query A { a }')).toEqual({ x: 1 });
     expect(query.calls).toHaveLength(2);
+  });
+
+  it('does not wait out a long 429 Retry-After: the caller gets 503 with the real Retry-After', async () => {
+    noSleep.waits.length = 0;
+    const slow = fakeFetch([{ status: 429, body: '', headers: { 'retry-after': '120' } }, { body: { data: { x: 1 } } }]);
+    const client = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: slow.fetchImpl, sleep: noSleep.sleep });
+    const err = await client.graphql('query A { a }').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ShopifyThrottledError);
+    expect(err).toMatchObject({ status: 503, code: 'shopify_throttled', retryAfter: 120 });
+    expect(slow.calls).toHaveLength(1);
+    expect(noSleep.waits).toEqual([]);
+
+    // at the cap it is still waited out
+    noSleep.waits.length = 0;
+    const atCap = fakeFetch([{ status: 429, body: '', headers: { 'retry-after': '10' } }, { body: { data: { x: 1 } } }]);
+    const client2 = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: atCap.fetchImpl, sleep: noSleep.sleep });
+    expect(await client2.graphql('query A { a }')).toEqual({ x: 1 });
+    expect(noSleep.waits).toEqual([10_000]);
+  });
+
+  it('never re-sends a mutation that timed out or was reset after sending, but does when the connection never opened', async () => {
+    const mutation = 'mutation SetOrderStatus($m: [MetafieldsSetInput!]!) { metafieldsSet(metafields: $m) { userErrors { code } } }';
+    let attempts = 0;
+    const stalled = (async (_url: string | URL | Request, init?: RequestInit) => {
+      attempts++;
+      return new Promise<Response>((_, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(init.signal?.reason ?? new Error('aborted')));
+      });
+    }) as typeof fetch;
+    const client = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: stalled, sleep: noSleep.sleep, timeoutMs: 20 });
+    const err = await client.graphql(mutation).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ShopifyRequestError);
+    expect((err as ShopifyRequestError).status).toBe(502);
+    expect((err as ShopifyRequestError).detail).toContain('network error');
+    expect(attempts).toBe(1);
+
+    const failing = (code: string) => {
+      const calls = { n: 0 };
+      const fetchImpl = (async () => {
+        calls.n++;
+        throw new TypeError('fetch failed', { cause: Object.assign(new Error(code), { code }) });
+      }) as typeof fetch;
+      return { calls, fetchImpl };
+    };
+    // the body may have been written: not re-sent
+    const reset = failing('ECONNRESET');
+    const client2 = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: reset.fetchImpl, sleep: noSleep.sleep });
+    expect(await client2.graphql(mutation).catch((e: unknown) => e)).toBeInstanceOf(ShopifyRequestError);
+    expect(reset.calls.n).toBe(1);
+
+    // nothing reached Shopify: safe to retry
+    const refused = failing('ECONNREFUSED');
+    const client3 = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: refused.fetchImpl, sleep: noSleep.sleep });
+    expect(await client3.graphql(mutation).catch((e: unknown) => e)).toBeInstanceOf(ShopifyRequestError);
+    expect(refused.calls.n).toBe(3);
+
+    // a query is always retried
+    const queryReset = failing('ECONNRESET');
+    const client4 = createShopifyClient({ url: 'http://mock/graphql.json', tokens: staticTokens, fetchImpl: queryReset.fetchImpl, sleep: noSleep.sleep });
+    expect(await client4.graphql('query A { a }').catch((e: unknown) => e)).toBeInstanceOf(ShopifyRequestError);
+    expect(queryReset.calls.n).toBe(3);
   });
 
   it('gives every request a deadline and treats a stalled connection as a retried network error', async () => {

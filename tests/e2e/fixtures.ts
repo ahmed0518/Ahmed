@@ -35,6 +35,8 @@ const STATUSES = [
   { id: 'sent_to_store', name: 'Sent to Store', done: true },
   { id: 'sent_to_shipping_dept', name: 'Sent to Shipping Dept', done: true },
   { id: 'waiting_for_chain', name: 'Waiting for Chain', waiting: true },
+  // hidden from new selections; ORDERS.retiredStatus still holds it
+  { id: 'old_bench', name: 'Old Bench', retired: true },
 ];
 
 export const SETTINGS = {
@@ -80,6 +82,8 @@ export const ORDERS = {
   malformedStatus: 251612,
   /** item_status knows a line item id that is no longer on the order */
   orphanEntry: 251613,
+  /** its one item holds the retired `old_bench` status */
+  retiredStatus: 251614,
 };
 
 /** Needs sha256 hashes; computed by the caller with node:crypto (see seedAll). */
@@ -262,6 +266,19 @@ export function buildSeed(now: Date, pinHash: (id: string, pin: string) => strin
             '60000000000131': entry('Eternity Band', 'casting', daysAgo(now, 1), 'Ahmed'),
             '60000000000139': entry('Vanished Charm', 'mold', daysAgo(now, 2), 'Ahmed'),
           },
+        },
+      },
+    },
+    {
+      number: ORDERS.retiredStatus,
+      created_at: daysAgo(now, 4),
+      tags: ['trax-production'],
+      line_items: [{ id: '60000000000141', title: 'Vintage Locket', quantity: 1 }],
+      metafields: {
+        'trax_production.item_status': {
+          v: 1,
+          visible_ids: ['60000000000141'],
+          items: { '60000000000141': entry('Vintage Locket', 'old_bench', daysAgo(now, 1), 'Ahmed') },
         },
       },
     },

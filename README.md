@@ -84,7 +84,7 @@ keep working. When `SHOPIFY_ADMIN_TOKEN` is set, the client ID/secret are not us
    | `PIN_PEPPER` | 64 hex chars, different | Sensitive. Changing it invalidates every PIN |
    | `ADMIN_PASSCODE` | 16+ chars | Sensitive. `/admin` is a 404 until this is set |
    | `API_TOKENS` | `claude:<token>,maks-ai:<token>` | Sensitive. One label per agent that may write |
-   | `READ_TOKEN` | leave empty | set only if reads must stop being public (then agents need it, and staff must log in to see any page) |
+   | `READ_TOKEN` | leave empty | set only if reads must stop being public (then agents need it, and staff must log in to see any order page; `/agents` and `/llms.txt` stay public — they hold no data) |
    | `TRUST_PROXY` | `vercel` | tells the app that Vercel's `x-real-ip` header is the real client IP (per-IP rate limits). Leave it empty and every anonymous caller shares one 60-requests-per-minute bucket |
    | `DISPLAY_TZ` | `America/New_York` | |
 
@@ -107,7 +107,17 @@ them again in `/admin`. `API_TOKENS` — give the agent its new token. `ADMIN_PA
 open `/admin` session ends immediately (the admin cookie is bound to the passcode it was
 issued for), staff logins are untouched.
 
+Admin lock: five wrong passcodes lock `/admin` for 15 minutes (doubling each time it happens
+again), and anyone who can reach the site can cause that. The lock ends on its own when the
+period is over; rotating the passcode does **not** reset it. To end it early, open the Shopify
+admin → **Settings → Custom data → Shop** (metafield `trax_production.settings`) and set
+`"admin_failed_attempts": 0` and `"admin_locked_until": null` in its JSON value. A locked staff
+name is cleared from `/admin` ("Clear lock").
+
 ## 3. First setup
+
+Prerequisite: **Node.js 22 LTS** on the Mac you run this from — install it from
+<https://nodejs.org> (it includes `npm`); `node --version` in Terminal should print `v22.x`.
 
 1. Create the Shopify metafield definitions and the default status list (once):
 
@@ -170,11 +180,16 @@ shapes and rules are in `CLAUDE.md`. Either way the entry records `via: token:cl
 
 ## 7. Local development
 
+Needs Node.js 22 (see the prerequisite in §3).
+
 ```bash
-npm install                  # Node 22
+npm install
 cp .env.example .env.local   # fill in values; a real store needs Option A or B credentials
 npm run dev                  # http://localhost:3000
 ```
+
+`npm run build && npm start` runs the production build the way Docker does
+(`node .next/standalone/server.js`; the build step copies the static assets next to it).
 
 To develop **without** touching the real store, run the mock Shopify server and point the app
 at it:
@@ -207,8 +222,10 @@ npm test            # unit tests (Vitest): status merge, staleness, PIN/lockout,
 npm run e2e         # Playwright against the mock Shopify server (never the real store)
 ```
 
-`npm run e2e` builds the app, starts the mock server on port 4001 and the app on port 3000 (and a
-second copy on 3001 without an admin passcode to prove `/admin` answers 404), then runs the
+`npm run e2e` builds the app, starts the mock server on port 4001 and the app on port 3000 (the
+standalone server, `node .next/standalone/server.js` — the same entry point the Dockerfile
+uses; `next start` is unsupported with `output: 'standalone'`) plus a second copy on 3001
+without an admin passcode to prove `/admin` answers 404, then runs the
 browser tests in headless Chromium. On a laptop, run `npx playwright install chromium` once
 first. If a pre-installed browser lives elsewhere, set `PLAYWRIGHT_BROWSERS_PATH` or
 `PW_CHROMIUM_PATH=/path/to/chrome`. `PORT`, `MOCK_SHOPIFY_PORT` and `NO_ADMIN_PORT` (the

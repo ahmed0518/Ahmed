@@ -101,7 +101,10 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
           {header}
           <p>This order is not tracked for production yet.</p>
           <p className="muted">
-            <Link href={loginHref}>Log in</Link> to see its items and set the first status.
+            <Link href={loginHref} className="action-link">
+              Log in
+            </Link>{' '}
+            to see its items and set the first status.
           </p>
         </div>
       </>
@@ -131,8 +134,9 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
         {full && (full.context.production_date || full.context.due_date || full.context.custody || full.context.give_to) ? (
           <dl className="small" style={{ margin: '8px 0' }}>
             {full.context.production_date ? (
+              // the metafield's own name: its free-text value usually starts with "Ships by" itself
               <div>
-                <strong>Ships by:</strong> {full.context.production_date}
+                <strong>Production date:</strong> {full.context.production_date}
               </div>
             ) : null}
             {full.context.due_date ? (

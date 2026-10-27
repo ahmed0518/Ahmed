@@ -29,6 +29,7 @@ src/lib/
 src/components/     StatusCard (client, optimistic saves), OrderRows, LoginForm, AdminPanel …
 tests/unit          Vitest · tests/e2e Playwright · tests/mock-shopify/server.ts (in-memory Shopify)
 scripts/setup-shopify.ts     idempotent metafield definitions + defaults
+scripts/standalone-static.mjs postbuild: copies .next/static next to the standalone server
 ```
 
 ## Commands
@@ -38,7 +39,10 @@ npm run dev · build · start · lint · typecheck · test · e2e · mock:shopif
 ```
 
 All five checks (`lint`, `typecheck`, `build`, `test`, `e2e`) must be green before a change is
-done. `e2e` builds the app and runs against the mock server; it never contacts the real store
+done. `build` also copies `.next/static` into the standalone output (`postbuild`), and `start`
+/ `e2e` run `node .next/standalone/server.js` — the same server the Dockerfile uses (`next
+start` is unsupported with `output: 'standalone'`). `e2e` builds the app and runs against the
+mock server; it never contacts the real store
 (`SHOPIFY_API_URL` + a `test_` token). Browsers: `npx playwright install chromium` on a laptop,
 or `PLAYWRIGHT_BROWSERS_PATH` / `PW_CHROMIUM_PATH` for a pre-installed one.
 
@@ -135,7 +139,11 @@ SHOP `staff` (`json`): names, PIN hashes and lockout state — **never read or w
   not name the variant / size / position, **ask — never pick**.
 - Never write to hidden (non-shipping, gift card, warranty / shipping protection) or removed
   (`currentQuantity: 0`) lines.
-- Writing the current status again is a confirmation (`kind: confirm`), not a change.
+- Writing the current status again is a confirmation (`kind: confirm`), not a change. Writing
+  `null` is always a `clear`, even when the status already is `null`.
+- A retired status (`retired: true` in `/api/statuses` / `settings.statuses`) is never a new
+  selection: the API answers 400 `status_retired`; it is only accepted as a confirmation on an
+  item that already holds it. Follow the same rule in direct writes.
 - Never query customer, email, phone, address, payment or financial fields. Never add
   `lineItems` to the list query (`OrdersByQuery`, cost cap).
 - List queries always include `status:open`; `OrdersByQuery` walks every page (max 10 × 50) and

@@ -44,7 +44,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </Link>
             <nav className="site-header__nav" aria-label="Main">
               <Link href="/">Orders</Link>
-              <Link href="/agents">Agents</Link>
+              <Link href="/agents" className="site-header__agents">
+                Agents
+              </Link>
               {staffName ? (
                 <>
                   <span className="site-header__who">{staffName}</span>

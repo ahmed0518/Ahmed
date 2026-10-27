@@ -68,6 +68,9 @@ textarea {
   font-weight: 600;
   color: var(--text);
   font-size: 17px;
+  /* a 44 px tap target like every other header link */
+  min-height: 44px;
+  line-height: 44px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -96,9 +99,14 @@ textarea {
   white-space: nowrap;
 }
 
+/* Phones: the Agents link (for AI setup, not floor use) makes room for the staff name and the brand. */
 @media (max-width: 479px) {
-  .site-header__who {
+  .site-header__agents {
     display: none;
+  }
+
+  .site-header__brand {
+    font-size: 15px;
   }
 }
 
@@ -124,11 +132,14 @@ textarea {
   text-decoration: underline;
 }
 
-/* Inline action links (Switch, Log in to update, log in): padded to a 44 px tap target. */
+/* Inline action links (Switch, Log in to update, pager, Back to orders …): a guaranteed 44 px
+   tap target whatever the surrounding font size (20 px line + 24 px padding). */
 .action-link {
   display: inline-block;
+  min-height: 44px;
   padding: 12px 0;
-  line-height: 1.25;
+  line-height: 20px;
+  vertical-align: middle;
 }
 
 .container {
@@ -443,9 +454,36 @@ details summary {
   white-space: nowrap;
 }
 
+/* Checkboxes in the admin tables sit inside a 44 px label (`.table__check`). */
+.table input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+}
+
+.table__check {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Phones: the tables keep their 560 px minimum and scroll inside the wrapper — say so. */
+@media (max-width: 599px) {
+  .table-wrap::after {
+    content: 'Scroll sideways for more →';
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 6px 0;
+  }
 }
 
 .doc h2 {

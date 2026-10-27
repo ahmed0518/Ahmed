@@ -408,6 +408,22 @@ export interface RawChange {
   note: string;
 }
 
+/**
+ * Resolve the status named in a write to its id (SPEC §7.1). A retired status is hidden
+ * from new selections (SPEC §4.3): it is accepted only when the item already holds it, so
+ * "Still here" keeps working on such an item; otherwise 400 `status_retired`. Unknown
+ * names answer 400 `unknown_status`. Both carry the selectable names as `valid_statuses`.
+ */
+export function resolveChangeStatus(settings: Settings, input: string, currentStatus: string | null | undefined): string {
+  const selectable = () => settings.statuses.filter((s) => !s.retired).map((s) => s.name);
+  const def = resolveStatus(settings, input);
+  if (!def) throw badRequest('unknown_status', `Unknown status "${input.slice(0, 60)}"`, { valid_statuses: selectable() });
+  if (def.retired && currentStatus !== def.id) {
+    throw badRequest('status_retired', `Status "${def.name}" is retired and cannot be selected any more`, { valid_statuses: selectable() });
+  }
+  return def.id;
+}
+
 /** Validate, merge, write with CAS (retry on STALE_OBJECT), then sync the tag. */
 export async function writeOrderStatus(number: string, changes: readonly RawChange[], actor: Actor): Promise<OrderPayload> {
   if (changes.length === 0) throw badRequest('no_changes', 'Nothing to update');
@@ -440,16 +456,7 @@ export async function writeOrderStatus(number: string, changes: readonly RawChan
       if (!visibleById.has(change.lineItemId)) {
         throw notFound('item_not_found', `Line item ${change.lineItemId} is not on order #${number}`);
       }
-      let statusId: string | null = null;
-      if (change.status !== null) {
-        const def = resolveStatus(settings, change.status);
-        if (!def) {
-          throw badRequest('unknown_status', `Unknown status "${change.status.slice(0, 60)}"`, {
-            valid_statuses: settings.statuses.filter((s) => !s.retired).map((s) => s.name),
-          });
-        }
-        statusId = def.id;
-      }
+      const statusId = change.status === null ? null : resolveChangeStatus(settings, change.status, current?.items[change.lineItemId]?.status);
       resolved.push({ lineItemId: change.lineItemId, status: statusId, note: change.note });
     }
 

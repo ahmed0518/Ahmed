@@ -10,3 +10,7 @@ coverage
 docs/reference
 *.md
 !README.md
+# agent scratch (review worktrees carry their own node_modules and .next)
+.claude
+*.tsbuildinfo
+*.log

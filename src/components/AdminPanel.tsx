@@ -124,7 +124,7 @@ export function AdminPanel(props: Props) {
                   <td>
                     <input
                       className="input"
-                      style={{ minHeight: 40, minWidth: 160 }}
+                      style={{ minHeight: 44, minWidth: 160 }}
                       value={s.name}
                       maxLength={60}
                       onChange={(e) => updateStatus(i, { name: e.target.value })}
@@ -133,19 +133,25 @@ export function AdminPanel(props: Props) {
                     {s.id ? <div className="muted">id: {s.id}</div> : <div className="muted">new</div>}
                   </td>
                   <td>
-                    <input type="checkbox" checked={s.done} onChange={(e) => updateStatus(i, { done: e.target.checked })} aria-label={`${s.name} is a finishing status`} />
+                    <label className="table__check">
+                      <input type="checkbox" checked={s.done} onChange={(e) => updateStatus(i, { done: e.target.checked })} aria-label={`${s.name} is a finishing status`} />
+                    </label>
                   </td>
                   <td>
-                    <input type="checkbox" checked={s.waiting} onChange={(e) => updateStatus(i, { waiting: e.target.checked })} aria-label={`${s.name} means waiting on parts`} />
+                    <label className="table__check">
+                      <input type="checkbox" checked={s.waiting} onChange={(e) => updateStatus(i, { waiting: e.target.checked })} aria-label={`${s.name} means waiting on parts`} />
+                    </label>
                   </td>
                   <td>
-                    <input type="checkbox" checked={s.retired} onChange={(e) => updateStatus(i, { retired: e.target.checked })} aria-label={`${s.name} is retired`} />
+                    <label className="table__check">
+                      <input type="checkbox" checked={s.retired} onChange={(e) => updateStatus(i, { retired: e.target.checked })} aria-label={`${s.name} is retired`} />
+                    </label>
                   </td>
                   <td>
-                    <button type="button" className="btn btn--small" onClick={() => moveStatus(i, -1)} disabled={i === 0} aria-label={`Move ${s.name} up`}>
+                    <button type="button" className="btn btn--small" style={{ minWidth: 44 }} onClick={() => moveStatus(i, -1)} disabled={i === 0} aria-label={`Move ${s.name} up`}>
                       ↑
                     </button>{' '}
-                    <button type="button" className="btn btn--small" onClick={() => moveStatus(i, 1)} disabled={i === form.statuses.length - 1} aria-label={`Move ${s.name} down`}>
+                    <button type="button" className="btn btn--small" style={{ minWidth: 44 }} onClick={() => moveStatus(i, 1)} disabled={i === form.statuses.length - 1} aria-label={`Move ${s.name} down`}>
                       ↓
                     </button>
                   </td>
@@ -238,7 +244,7 @@ export function AdminPanel(props: Props) {
                   <td>
                     {renameEdit?.id === s.id ? (
                       <span className="row">
-                        <input className="input input--inline" style={{ minHeight: 36 }} value={renameEdit.name} maxLength={30} onChange={(e) => setRenameEdit({ id: s.id, name: e.target.value })} aria-label={`New name for ${s.name}`} />
+                        <input className="input input--inline" style={{ minHeight: 44 }} value={renameEdit.name} maxLength={30} onChange={(e) => setRenameEdit({ id: s.id, name: e.target.value })} aria-label={`New name for ${s.name}`} />
                         <button
                           type="button"
                           className="btn btn--small"
@@ -266,7 +272,7 @@ export function AdminPanel(props: Props) {
                       <span className="row">
                         <input
                           className="input input--inline"
-                          style={{ minHeight: 36, width: 120 }}
+                          style={{ minHeight: 44, width: 120 }}
                           type="password"
                           inputMode="numeric"
                           autoComplete="off"

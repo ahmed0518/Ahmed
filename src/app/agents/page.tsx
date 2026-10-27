@@ -37,7 +37,10 @@ export default function AgentsPage() {
     <article className="card doc">
       <h1 style={{ marginTop: 0 }}>{AGENT_DOCS_TITLE}</h1>
       <p className="muted">
-        Plain-text version: <a href="/llms.txt">/llms.txt</a>
+        Plain-text version:{' '}
+        <a href="/llms.txt" className="action-link">
+          /llms.txt
+        </a>
       </p>
       {AGENT_DOCS.map((b, i) => (
         <Block key={i} block={b} />
