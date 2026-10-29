@@ -58,11 +58,8 @@ keep working. When `SHOPIFY_ADMIN_TOKEN` is set, the client ID/secret are not us
 
 1. Push this repository to GitHub, then in Vercel **Add New → Project → Import** it. Framework
    preset: Next.js. No build settings to change.
-   **The app lives on the `production-status` branch; `main` currently contains only a
-   README.** Vercel builds the repository's default branch as Production, so either merge
-   `production-status` into `main` before importing, or right after importing set
-   **Settings → Git → Production Branch** to `production-status`. Otherwise the first
-   production build has no `package.json` and fails.
+   The app is on `main` (the repository's default branch, which Vercel builds as
+   Production), so no branch settings are needed.
 2. **Environment variables** (Settings → Environment Variables). Generate the secrets on your
    Mac in Terminal:
 
@@ -133,8 +130,7 @@ Prerequisite: **Node.js 22 LTS** on the Mac you run this from — install it fro
 0. Get the code onto the Mac. In Terminal:
 
    ```bash
-   git clone <repository URL> trax-production-status && cd trax-production-status
-   git checkout production-status      # the app lives on this branch (see §2)
+   git clone https://github.com/ahmed0518/ahmed trax-production-status && cd trax-production-status
    ```
 
 1. Create the Shopify metafield definitions and the default status list (once):
