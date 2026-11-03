@@ -241,8 +241,8 @@ Two layers check the inventory every work day (SPEC §14.11–14.12):
 
 1. **The app's own check** — `GET /api/inventory/daily` runs fixed rules (who did not hand in
    a slip, metal that did not come back, scrap out > in, stale diamond or casting counts, a
-   failed or stale monday.com sync …). To have it posted to Slack at 5:30 pm New York on
-   weekdays: in Slack, open the app that should post (or create one at
+   failed or stale monday.com sync …). To have it posted to Slack on weekdays at 22:30 UTC
+   (5:30 pm New York in winter, 6:30 pm in summer — Vercel crons run in UTC): in Slack, open the app that should post (or create one at
    <https://api.slack.com/apps>) → **Incoming Webhooks** → **Add New Webhook to Workspace** →
    pick the channel (`#inventory-management`) → copy the URL into `SLACK_WEBHOOK_URL`. Set
    `INVENTORY_PUBLIC_URL=https://inventory.traxnyc.com` for the link in the message. The
@@ -250,15 +250,17 @@ Two layers check the inventory every work day (SPEC §14.11–14.12):
    UTC and only on the production deployment). On Docker, curl the endpoint from cron with
    `Authorization: Bearer $CRON_SECRET`.
 2. **The daily agents** — a scheduled Claude Code task ("Inventory daily check", weekdays
-   5:39 pm New York) runs `.claude/workflows/inventory-daily-check.js`: five agents read the
-   four monday.com boards and the app's report, one reviewer per section re-checks the
-   arithmetic, three skeptics try to refute every alert, and a writer posts the result to
+   5:39 pm New York; create it once as described in `docs/DAILY-AGENTS.md`) runs
+   `.claude/workflows/inventory-daily-check.js`: five agents read the four monday.com boards
+   and the app's report, one reviewer per section re-checks the arithmetic, three skeptics try
+   to refute every alert, a writer drafts the message and the task posts it once to
    `#inventory-management`. It reads the boards through the monday.com connector, so it works
    before the app is deployed; once it is, add two **environment variables** to the Claude Code
    cloud environment the task runs in (the environment's settings, *Edit* → environment
    variables; never paste them into a chat): `TRAX_INVENTORY_URL=https://inventory.traxnyc.com`
-   and `TRAX_INVENTORY_TOKEN=<the claude token from API_TOKENS>`. The agents never write to a
-   board or to the store.
+   and `TRAX_INVENTORY_TOKEN=<the claude token from API_TOKENS>` — the task's prompt hands the
+   URL to the workflow and the app agent reads the token. The agents never write to a board or
+   to the store.
 
 ### 6c. The address: inventory.traxnyc.com
 
@@ -307,8 +309,10 @@ SHOPIFY_ADMIN_TOKEN=test_local npm run dev
 Seed it with `curl -X POST http://127.0.0.1:4001/__seed -H 'Content-Type: application/json' -d @seed.json`
 (see `tests/e2e/fixtures.ts` for the shape) and inspect it at `http://127.0.0.1:4001/__state`.
 
-Docker: `docker build -t trax-production-status .` then run it with the same environment
-variables (`-e …` or `--env-file`). Run it behind **exactly one** reverse proxy that terminates
+Docker: `docker build -t trax-production-status .` (add
+`--build-arg INVENTORY_HOST=inventory.traxnyc.com` for the inventory hostname's root redirect —
+it is read at build time) then run it with the same environment variables (`-e …` or
+`--env-file`). Run it behind **exactly one** reverse proxy that terminates
 TLS and sets `x-forwarded-for` (nginx, Caddy and Traefik all do), set `TRUST_PROXY=1` so client
 IPs come from the entry that proxy appended, and add a rate-limit rule for `/api/*` and
 `/orders/*` there. Never expose the container directly: with `TRUST_PROXY` empty every

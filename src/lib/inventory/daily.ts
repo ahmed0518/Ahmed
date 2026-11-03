@@ -174,9 +174,9 @@ export function dailyCheck(slips: readonly Slip[], settings: InventorySettings, 
     const now = opts.now ? new Date(opts.now).getTime() : Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, Number(today.slice(8, 10)), 23, 59, 59);
     for (const board of SYNC_BOARDS) {
       const stamp = settings.last_sync[board];
-      if (!stamp) add({ id: 'sync.never', section: 'sync', severity: 'warn', title: `${BOARD_LABEL[board]}: never synced`, detail: 'The hourly pull has not run yet, or the board is not shared with the token.' });
+      if (!stamp) add({ id: 'sync.never', section: 'sync', severity: 'warn', title: `${BOARD_LABEL[board]}: never synced`, detail: 'The scheduled pull has not run yet, or the board is not shared with the token.' });
       else if (!stamp.ok) add({ id: 'sync.failed', section: 'sync', severity: 'alert', title: `${BOARD_LABEL[board]}: last sync failed`, detail: `${stamp.at}${stamp.error ? ` — ${stamp.error}` : ''}` });
-      else if (now - new Date(stamp.at).getTime() > DAILY_THRESHOLDS.sync_stale_hours * 3_600_000) add({ id: 'sync.stale', section: 'sync', severity: 'warn', title: `${BOARD_LABEL[board]}: not synced since ${stamp.at}`, detail: 'The hourly cron did not run. Check the Vercel cron / the Docker cron job.' });
+      else if (now - new Date(stamp.at).getTime() > DAILY_THRESHOLDS.sync_stale_hours * 3_600_000) add({ id: 'sync.stale', section: 'sync', severity: 'warn', title: `${BOARD_LABEL[board]}: not synced since ${stamp.at}`, detail: 'The scheduled pull did not run. Check the Vercel cron / the Docker cron job.' });
     }
   }
 

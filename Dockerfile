@@ -6,7 +6,10 @@ RUN npm ci
 
 FROM node:22-alpine AS build
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+# Build-time only: the hostname whose root lands on /inventory (docker build --build-arg INVENTORY_HOST=inventory.traxnyc.com).
+ARG INVENTORY_HOST=
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    INVENTORY_HOST=$INVENTORY_HOST
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

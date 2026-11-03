@@ -770,7 +770,7 @@ src/components/…  tests/unit/…  tests/e2e/…  tests/mock-shopify/… script
 scripts/standalone-static.mjs (postbuild: copies .next/static next to the standalone server)
 src/lib/inventory/…, src/components/inventory/…, src/app/inventory/, src/app/api/inventory/… (§14)
 data/trax-inventory-2026-11-03.json (the artifact's export: unit-test fixture, e2e seed, import source)
-scripts/import-inventory.ts, scripts/sync-monday.ts, scripts/dotenv.ts, vercel.json (the hourly sync cron)
+scripts/import-inventory.ts, scripts/sync-monday.ts, scripts/dotenv.ts, vercel.json (the sync and daily-report crons)
 Dockerfile, .dockerignore, .env.example, .gitignore, package.json, next.config.ts, tsconfig.json
 ```
 
@@ -1205,11 +1205,15 @@ rule uses the clock). `notify=1` also posts it to Slack through an Incoming Webh
 per finding — titles and details clipped to 400 characters so no section block passes 3,000 —
 a link to `INVENTORY_PUBLIC_URL/inventory`). On GET, `notify=1` needs a bearer; an owner's
 browser session may post only with `POST` (CSRF-checked), so a link an owner is tricked into
-opening can never post (403 `post_required`). It is accepted from the Vercel cron
+opening can never post (403 `post_required`). The cron's own path is
+`GET /api/inventory/daily/notify` (`notify` implied: Vercel cron paths carry no query string),
+same rules. It is accepted from the Vercel cron
 (`Authorization: Bearer $CRON_SECRET`, `vercel.json`: 22:30 UTC Mon–Fri = 5:30 pm EST /
 6:30 pm EDT; Vercel evaluates cron expressions in UTC, never on preview deployments, and on
 Hobby fires within the hour), an API token or an owner's session; the answer carries `posted`
-and `slack_enabled`. Without the webhook nothing is posted and the report is still returned.
+and `slack_enabled`. Without the webhook nothing is posted (logged) and the report is still
+returned. The production settings lend only their `work_days`; when Shopify cannot be read
+the check assumes Mon–Fri and logs it rather than failing.
 Names, notes and item numbers from the boards are escaped (`&`, `<`, `>`) before they go into
 mrkdwn, so a row cannot smuggle a mention or a link into the message.
 
@@ -1222,9 +1226,12 @@ monday.com boards through the monday connector and, when `TRAX_INVENTORY_URL` /
 `TRAX_INVENTORY_TOKEN` are set in the environment, the app's `/api/inventory/daily`;
 **Judge** — one reviewer per section re-checks the arithmetic against the board and merges
 with the app's findings; **Refute** — three skeptics per alert, an alert survives only when at
-most one refutes it; **Report** — one writer produces the Slack mrkdwn, which the session posts
-to `#inventory-management` (configurable through `args.channel`). The scripts take the date
-from `args` (they cannot read the clock). The app's deterministic check is the backbone; the
+most one refutes it; **Report** — one writer produces the Slack mrkdwn (board text escaped, sources that could not
+be read named as "not checked today"), and the scheduled session — not the script — posts it
+once to `#inventory-management` (configurable through `args.channel`). The scripts take the
+date and the app's URL from `args` (they cannot read the clock or the environment; the task's
+prompt passes `TRAX_INVENTORY_URL` through, and the app gatherer reads `TRAX_INVENTORY_TOKEN`
+itself). The scheduled task is created once by hand (`docs/DAILY-AGENTS.md`). The app's deterministic check is the backbone; the
 agents add the cross-check against the boards themselves and plain-language judgement, and
 they never write to a board or to the store.
 

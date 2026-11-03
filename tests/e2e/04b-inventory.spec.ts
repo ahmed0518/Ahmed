@@ -148,6 +148,10 @@ test.describe('inventory', () => {
     expect(notify.status()).toBe(200);
     expect(((await notify.json()) as { posted: boolean }).posted).toBe(false);
     expect((await request.get('/api/inventory/daily?date=2026-02-30', { headers: bearer(CLAUDE_TOKEN) })).status()).toBe(400);
+    const cronPath = await request.get('/api/inventory/daily/notify', { headers: bearer(CLAUDE_TOKEN) });
+    expect(cronPath.status()).toBe(200);
+    expect(((await cronPath.json()) as { posted: boolean; slack_enabled: boolean }).slack_enabled).toBe(false);
+    expect((await request.get('/api/inventory/daily/notify')).status()).toBe(401);
 
     const scan = await request.post('/api/inventory/scan', { headers: { Authorization: `Bearer ${CLAUDE_TOKEN}` }, multipart: { kind: 'metal', image: { name: 'slip.png', mimeType: 'image/png', buffer: Buffer.from('not really a png') } } });
     expect(scan.status()).toBe(503);
