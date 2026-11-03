@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { LogoutButton } from '@/components/LogoutButton';
 import { readCredentialSafe } from '@/lib/auth/credential';
+import { inventoryEnabled } from '@/lib/inventory/store';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -32,6 +33,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </Link>
             <nav className="site-header__nav" aria-label="Main">
               <Link href="/">Orders</Link>
+              {inventoryEnabled() ? (
+                <Link href="/inventory" className="site-header__inventory">
+                  Inventory
+                </Link>
+              ) : null}
               <Link href="/agents" className="site-header__agents">
                 Agents
               </Link>

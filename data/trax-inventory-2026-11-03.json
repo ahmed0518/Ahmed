@@ -1,0 +1,2566 @@
+{
+ "collection": "slips",
+ "exported": "2026-11-03",
+ "count": 93,
+ "docs": {
+  "casting-rina-2026-10-21": {
+   "createdAt": "2026-10-21T18:30:00Z",
+   "date": "2026-10-21",
+   "kind": "casting",
+   "lines": [
+    {
+     "item": "66101",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Frame",
+     "weight": 8.35,
+     "white": null,
+     "yellow": 4
+    },
+    {
+     "item": "65600",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Frame",
+     "weight": 3.14,
+     "white": null,
+     "yellow": 4
+    },
+    {
+     "item": "68171",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Frame",
+     "weight": 2.5,
+     "white": null,
+     "yellow": 2
+    },
+    {
+     "item": "66894",
+     "karat": "14K",
+     "price": 89,
+     "rose": 8,
+     "type": "Earring",
+     "weight": 2.41,
+     "white": 1,
+     "yellow": 6
+    },
+    {
+     "item": "21121",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Earring",
+     "weight": 4.09,
+     "white": null,
+     "yellow": 1
+    },
+    {
+     "item": "66998",
+     "karat": "14K",
+     "price": 89,
+     "rose": 11,
+     "type": "Earring",
+     "weight": 1.61,
+     "white": 9,
+     "yellow": 14
+    },
+    {
+     "item": "56909",
+     "karat": "14K",
+     "price": 89,
+     "rose": 2,
+     "type": "Earring",
+     "weight": 1.32,
+     "white": 13,
+     "yellow": 15
+    },
+    {
+     "item": "12510",
+     "karat": "14K",
+     "price": 89,
+     "rose": 2,
+     "type": "Earring",
+     "weight": 0.83,
+     "white": 4,
+     "yellow": 6
+    },
+    {
+     "item": "39850",
+     "karat": "14K",
+     "price": 89,
+     "rose": 1,
+     "type": "Earring",
+     "weight": 1.18,
+     "white": 6,
+     "yellow": 6
+    },
+    {
+     "item": "17124",
+     "karat": "14K",
+     "price": 89,
+     "rose": 2,
+     "type": "Earring",
+     "weight": 1.31,
+     "white": 1,
+     "yellow": null
+    },
+    {
+     "item": "66734",
+     "karat": "14K",
+     "price": 89,
+     "rose": 9,
+     "type": "Earring",
+     "weight": 1.03,
+     "white": 22,
+     "yellow": 8
+    },
+    {
+     "item": "41754",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Earring",
+     "weight": 2.28,
+     "white": 2,
+     "yellow": null
+    },
+    {
+     "item": "21123",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Earring",
+     "weight": 2.31,
+     "white": 2,
+     "yellow": 1
+    },
+    {
+     "item": "65339",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Earring",
+     "weight": 1.53,
+     "white": 1,
+     "yellow": 1
+    },
+    {
+     "item": "36003",
+     "karat": "14K",
+     "price": 89,
+     "rose": 2,
+     "type": "Earring",
+     "weight": 1.32,
+     "white": 3,
+     "yellow": 2
+    },
+    {
+     "item": "66745",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Necklace",
+     "weight": 2.8,
+     "white": 2,
+     "yellow": 2
+    },
+    {
+     "item": "67219",
+     "karat": "14K",
+     "price": 89,
+     "rose": 8,
+     "type": "Necklace",
+     "weight": 3.89,
+     "white": 5,
+     "yellow": 10
+    },
+    {
+     "item": "67072",
+     "karat": "14K",
+     "price": 89,
+     "rose": 1,
+     "type": "Necklace",
+     "weight": 3.76,
+     "white": 1,
+     "yellow": null
+    },
+    {
+     "item": "66212",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Necklace",
+     "weight": 1.75,
+     "white": 5,
+     "yellow": 12
+    },
+    {
+     "item": "68837",
+     "karat": "18K",
+     "price": 115,
+     "rose": null,
+     "type": "Ring",
+     "weight": 2.84,
+     "white": 2,
+     "yellow": 2
+    },
+    {
+     "item": "71303",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 2.67,
+     "white": 1,
+     "yellow": 3
+    },
+    {
+     "item": "66424",
+     "karat": "14K",
+     "price": 89,
+     "rose": 3,
+     "type": "Ring",
+     "weight": 2,
+     "white": 5,
+     "yellow": 0
+    },
+    {
+     "item": "68633",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 6.81,
+     "white": 1,
+     "yellow": 2
+    },
+    {
+     "item": "71312",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 2.85,
+     "white": 2,
+     "yellow": null
+    },
+    {
+     "item": "71731",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 2.4,
+     "white": 2,
+     "yellow": 4
+    },
+    {
+     "item": "69649",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 3.29,
+     "white": 6,
+     "yellow": 7
+    },
+    {
+     "item": "68640",
+     "karat": "18K",
+     "price": 115,
+     "rose": null,
+     "type": "Ring",
+     "weight": 3.71,
+     "white": 6,
+     "yellow": 4
+    },
+    {
+     "item": "70855",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 3.4,
+     "white": 1,
+     "yellow": 10
+    },
+    {
+     "item": "68285",
+     "karat": "18K",
+     "price": 115,
+     "rose": null,
+     "type": "Ring",
+     "weight": 2.52,
+     "white": 4,
+     "yellow": 7
+    },
+    {
+     "item": "70833",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 7.43,
+     "white": 2,
+     "yellow": 1
+    },
+    {
+     "item": "70819",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Ring",
+     "weight": 1.25,
+     "white": 2,
+     "yellow": 3
+    },
+    {
+     "item": "67086",
+     "karat": "14K",
+     "price": 89,
+     "rose": 20,
+     "type": "Cross",
+     "weight": 1.29,
+     "white": 6,
+     "yellow": 7
+    },
+    {
+     "item": "67147",
+     "karat": "14K",
+     "price": 89,
+     "rose": 23,
+     "type": "Cross",
+     "weight": 2.43,
+     "white": 2,
+     "yellow": 5
+    },
+    {
+     "item": "67461",
+     "karat": "14K",
+     "price": 89,
+     "rose": 9,
+     "type": "Cross",
+     "weight": 2.17,
+     "white": 3,
+     "yellow": 2
+    },
+    {
+     "item": "68294",
+     "karat": "14K",
+     "price": 89,
+     "rose": 4,
+     "type": "Cross",
+     "weight": 1.27,
+     "white": 3,
+     "yellow": 6
+    },
+    {
+     "item": "65305",
+     "karat": "14K",
+     "price": 89,
+     "rose": null,
+     "type": "Cross",
+     "weight": 2,
+     "white": 2,
+     "yellow": null
+    }
+   ],
+   "note": "Pulled from the monday.com CASTING INVENTORY board. Value = pieces x g/pc x $/g from the board ($89 for 14K, $115 for 18K).",
+   "source": "monday",
+   "who": "Rina"
+  },
+  "diamond-si-monday": {
+   "createdAt": "2026-10-29T17:15:00Z",
+   "date": "2026-10-29",
+   "kind": "diamond",
+   "lines": [
+    {
+     "carats": 7.39,
+     "price": 280,
+     "quality": "SI",
+     "size": 0.7
+    },
+    {
+     "carats": 6.01,
+     "price": 280,
+     "quality": "SI",
+     "size": 0.8
+    },
+    {
+     "carats": 5.06,
+     "price": 280,
+     "quality": "SI",
+     "size": 0.9
+    },
+    {
+     "carats": 1.75,
+     "price": 280,
+     "quality": "SI",
+     "size": 1
+    },
+    {
+     "carats": 14.47,
+     "price": 280,
+     "quality": "SI",
+     "size": 1.1
+    },
+    {
+     "carats": 8.25,
+     "price": 280,
+     "quality": "SI",
+     "size": 1.2
+    },
+    {
+     "carats": 8.64,
+     "price": 200,
+     "quality": "SI",
+     "size": 1.3
+    },
+    {
+     "carats": 8.06,
+     "price": 200,
+     "quality": "SI",
+     "size": 1.4
+    },
+    {
+     "carats": 9.31,
+     "price": 200,
+     "quality": "SI",
+     "size": 1.5
+    },
+    {
+     "carats": 11.63,
+     "price": 200,
+     "quality": "SI",
+     "size": 1.6
+    },
+    {
+     "carats": 12.47,
+     "price": 200,
+     "quality": "SI",
+     "size": 1.7
+    },
+    {
+     "carats": 6.67,
+     "price": 275,
+     "quality": "SI",
+     "size": 1.8
+    },
+    {
+     "carats": 5.06,
+     "price": 275,
+     "quality": "SI",
+     "size": 1.9
+    },
+    {
+     "carats": 9.2,
+     "price": 275,
+     "quality": "SI",
+     "size": 2
+    },
+    {
+     "carats": 6.89,
+     "price": 275,
+     "quality": "SI",
+     "size": 2.1
+    },
+    {
+     "carats": 9.09,
+     "price": 275,
+     "quality": "SI",
+     "size": 2.2
+    },
+    {
+     "carats": 5.38,
+     "price": 330,
+     "quality": "SI",
+     "size": 2.3
+    },
+    {
+     "carats": 6.45,
+     "price": 330,
+     "quality": "SI",
+     "size": 2.4
+    },
+    {
+     "carats": 4.01,
+     "price": 330,
+     "quality": "SI",
+     "size": 2.5
+    },
+    {
+     "carats": 0.49,
+     "price": 330,
+     "quality": "SI",
+     "size": 2.6
+    },
+    {
+     "carats": 4.68,
+     "price": 450,
+     "quality": "SI",
+     "size": 2.9
+    },
+    {
+     "carats": 6.55,
+     "price": 450,
+     "quality": "SI",
+     "size": 3
+    },
+    {
+     "carats": 6.41,
+     "price": 450,
+     "quality": "SI",
+     "size": 3.1
+    },
+    {
+     "carats": 10.15,
+     "price": 450,
+     "quality": "SI",
+     "size": 3.2
+    },
+    {
+     "carats": 1.05,
+     "price": 500,
+     "quality": "SI",
+     "size": 3.3
+    },
+    {
+     "carats": 3.51,
+     "price": 500,
+     "quality": "SI",
+     "size": 3.4
+    },
+    {
+     "carats": 3.57,
+     "price": 525,
+     "quality": "SI",
+     "size": 3.6
+    },
+    {
+     "carats": 2.8,
+     "price": 525,
+     "quality": "SI",
+     "size": 3.75
+    },
+    {
+     "carats": 1.29,
+     "price": 575,
+     "quality": "SI",
+     "size": 3.9
+    },
+    {
+     "carats": 2.73,
+     "price": 575,
+     "quality": "SI",
+     "size": 4
+    },
+    {
+     "carats": 0.41,
+     "price": 750,
+     "quality": "SI",
+     "size": 4.7
+    },
+    {
+     "carats": 0.52,
+     "price": 850,
+     "quality": "SI",
+     "size": 4.9
+    }
+   ],
+   "note": "Pulled from the monday.com board [JIN] - DIAMOND INVENTORY (Mr. Jin updates it there). Date = latest \"Last counted\" on the board for this grade.",
+   "source": "monday",
+   "who": "Mr. Jin"
+  },
+  "diamond-vs-si-monday": {
+   "createdAt": "2026-10-29T17:15:00Z",
+   "date": "2026-10-29",
+   "kind": "diamond",
+   "lines": [
+    {
+     "carats": 0.01,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 0.6
+    },
+    {
+     "carats": 2.02,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 0.7
+    },
+    {
+     "carats": 4.11,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 0.8
+    },
+    {
+     "carats": 5.12,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 0.9
+    },
+    {
+     "carats": 3.3,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 1
+    },
+    {
+     "carats": 4.38,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 1.1
+    },
+    {
+     "carats": 8.39,
+     "price": 330,
+     "quality": "VS-SI",
+     "size": 1.2
+    },
+    {
+     "carats": 11.79,
+     "price": 220,
+     "quality": "VS-SI",
+     "size": 1.3
+    },
+    {
+     "carats": 7.88,
+     "price": 220,
+     "quality": "VS-SI",
+     "size": 1.4
+    },
+    {
+     "carats": 10.4,
+     "price": 220,
+     "quality": "VS-SI",
+     "size": 1.5
+    },
+    {
+     "carats": 12.41,
+     "price": 220,
+     "quality": "VS-SI",
+     "size": 1.6
+    },
+    {
+     "carats": 16.42,
+     "price": 220,
+     "quality": "VS-SI",
+     "size": 1.7
+    },
+    {
+     "carats": 6.66,
+     "price": 320,
+     "quality": "VS-SI",
+     "size": 1.8
+    },
+    {
+     "carats": 9.55,
+     "price": 320,
+     "quality": "VS-SI",
+     "size": 1.9
+    },
+    {
+     "carats": 8.3,
+     "price": 320,
+     "quality": "VS-SI",
+     "size": 2
+    },
+    {
+     "carats": 9.68,
+     "price": 320,
+     "quality": "VS-SI",
+     "size": 2.1
+    },
+    {
+     "carats": 3.38,
+     "price": 320,
+     "quality": "VS-SI",
+     "size": 2.2
+    },
+    {
+     "carats": 4.54,
+     "price": 375,
+     "quality": "VS-SI",
+     "size": 2.3
+    },
+    {
+     "carats": 9.42,
+     "price": 375,
+     "quality": "VS-SI",
+     "size": 2.4
+    },
+    {
+     "carats": 9.95,
+     "price": 375,
+     "quality": "VS-SI",
+     "size": 2.5
+    },
+    {
+     "carats": 3.56,
+     "price": 375,
+     "quality": "VS-SI",
+     "size": 2.6
+    },
+    {
+     "carats": 2.44,
+     "price": 375,
+     "quality": "VS-SI",
+     "size": 2.7
+    },
+    {
+     "carats": 2.99,
+     "price": 375,
+     "quality": "VS-SI",
+     "size": 2.8
+    },
+    {
+     "carats": 10.03,
+     "price": 500,
+     "quality": "VS-SI",
+     "size": 2.9
+    },
+    {
+     "carats": 8.19,
+     "price": 500,
+     "quality": "VS-SI",
+     "size": 3
+    },
+    {
+     "carats": 3.77,
+     "price": 500,
+     "quality": "VS-SI",
+     "size": 3.1
+    },
+    {
+     "carats": 0.81,
+     "price": 550,
+     "quality": "VS-SI",
+     "size": 3.5
+    },
+    {
+     "carats": 0.26,
+     "price": 650,
+     "quality": "VS-SI",
+     "size": 4.1
+    }
+   ],
+   "note": "Pulled from the monday.com board [JIN] - DIAMOND INVENTORY (Mr. Jin updates it there). Date = latest \"Last counted\" on the board for this grade.",
+   "source": "monday",
+   "who": "Mr. Jin"
+  },
+  "diamond-vs2-si1-monday": {
+   "createdAt": "2026-10-29T17:15:00Z",
+   "date": "2026-10-29",
+   "kind": "diamond",
+   "lines": [
+    {
+     "carats": 0.01,
+     "price": 400,
+     "quality": "VS2-SI1",
+     "size": 0.7
+    },
+    {
+     "carats": 0.02,
+     "price": 400,
+     "quality": "VS2-SI1",
+     "size": 0.8
+    },
+    {
+     "carats": 0.18,
+     "price": 255,
+     "quality": "VS2-SI1",
+     "size": 1.5
+    },
+    {
+     "carats": 0.03,
+     "price": 255,
+     "quality": "VS2-SI1",
+     "size": 1.6
+    },
+    {
+     "carats": 0.08,
+     "price": 425,
+     "quality": "VS2-SI1",
+     "size": 2.7
+    },
+    {
+     "carats": 1.71,
+     "price": 425,
+     "quality": "VS2-SI1",
+     "size": 2.8
+    },
+    {
+     "carats": 4.48,
+     "price": 550,
+     "quality": "VS2-SI1",
+     "size": 2.9
+    },
+    {
+     "carats": 3.26,
+     "price": 550,
+     "quality": "VS2-SI1",
+     "size": 3
+    },
+    {
+     "carats": 0.12,
+     "price": 550,
+     "quality": "VS2-SI1",
+     "size": 3.1
+    },
+    {
+     "carats": 0.12,
+     "price": 550,
+     "quality": "VS2-SI1",
+     "size": 3.2
+    },
+    {
+     "carats": 1.88,
+     "price": 600,
+     "quality": "VS2-SI1",
+     "size": 3.3
+    },
+    {
+     "carats": 1.76,
+     "price": 600,
+     "quality": "VS2-SI1",
+     "size": 3.4
+    },
+    {
+     "carats": 2.86,
+     "price": 600,
+     "quality": "VS2-SI1",
+     "size": 3.5
+    },
+    {
+     "carats": 0.23,
+     "price": 700,
+     "quality": "VS2-SI1",
+     "size": 3.9
+    }
+   ],
+   "note": "Pulled from the monday.com board [JIN] - DIAMOND INVENTORY (Mr. Jin updates it there). Date = latest \"Last counted\" on the board for this grade.",
+   "source": "monday",
+   "who": "Mr. Jin"
+  },
+  "dust-avezedo-2026-09-25": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-25",
+   "dust": 7,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Avezedo"
+  },
+  "dust-avezedo-2026-10-02": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-02",
+   "dust": 5.25,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Avezedo"
+  },
+  "dust-avezedo-2026-10-09": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-09",
+   "dust": 3.39,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Avezedo"
+  },
+  "dust-avezedo-2026-10-16": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-16",
+   "dust": 6.34,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Avezedo"
+  },
+  "dust-chaerin-2026-09-24": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-24",
+   "dust": 6.44,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-09-25": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-25",
+   "dust": 5.98,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-09-29": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-29",
+   "dust": 6.48,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-09-30": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-30",
+   "dust": 7.44,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-01": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-01",
+   "dust": 6.86,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-02": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-02",
+   "dust": 7.11,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-05": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-05",
+   "dust": 2.64,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-06": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-06",
+   "dust": 7.99,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-07": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-07",
+   "dust": 4.01,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-08": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-08",
+   "dust": 8.41,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-09": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-09",
+   "dust": 3.35,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-12": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-12",
+   "dust": 4.47,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-13": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-13",
+   "dust": 6.89,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-14": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-14",
+   "dust": 5.94,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-15": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-15",
+   "dust": 4.41,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-16": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-16",
+   "dust": 2.59,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-chaerin-2026-10-21": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-21",
+   "dust": 7.71,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Chaerin"
+  },
+  "dust-danny-2026-10-02": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-02",
+   "dust": 30.99,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Danny"
+  },
+  "dust-danny-2026-10-09": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-09",
+   "dust": 6.86,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Danny"
+  },
+  "dust-danny-2026-10-14": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-14",
+   "dust": 262.8,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Danny"
+  },
+  "dust-eric-2026-09-17": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-17",
+   "dust": 1163.3,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board. Eric\u2019s dust is what goes to the refinery every 2\u20133 months.",
+   "source": "monday",
+   "who": "Eric"
+  },
+  "dust-eric-2026-09-24": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-24",
+   "dust": 1092.8,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board. Eric\u2019s dust is what goes to the refinery every 2\u20133 months.",
+   "source": "monday",
+   "who": "Eric"
+  },
+  "dust-eric-2026-10-14": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-14",
+   "dust": 954.6,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board. Eric\u2019s dust is what goes to the refinery every 2\u20133 months.",
+   "source": "monday",
+   "who": "Eric"
+  },
+  "dust-jorge-2026-09-25": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-25",
+   "dust": 8.05,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Jorge"
+  },
+  "dust-jorge-2026-10-02": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-02",
+   "dust": 6.33,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Jorge"
+  },
+  "dust-jorge-2026-10-09": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-09",
+   "dust": 7.76,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Jorge"
+  },
+  "dust-jorge-2026-10-16": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-16",
+   "dust": 8.01,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Jorge"
+  },
+  "dust-mr-kim-2026-09-24": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-24",
+   "dust": 2.65,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-09-25": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-25",
+   "dust": 4.22,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-09-28": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-28",
+   "dust": 4.38,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-09-29": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-29",
+   "dust": 3.56,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-02": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-02",
+   "dust": 5.96,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-05": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-05",
+   "dust": 11.67,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-07": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-07",
+   "dust": 5.68,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-08": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-08",
+   "dust": 4.15,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-09": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-09",
+   "dust": 3.99,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-12": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-12",
+   "dust": 3.6,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-13": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-13",
+   "dust": 3.09,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-14": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-14",
+   "dust": 3.13,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-15": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-15",
+   "dust": 3.21,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-16": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-16",
+   "dust": 3.1,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-19": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-19",
+   "dust": 5.63,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-21": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-21",
+   "dust": 4.92,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-22": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-22",
+   "dust": 5.57,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-kim-2026-10-23": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-23",
+   "dust": 7.71,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Kim"
+  },
+  "dust-mr-sim-2026-09-23": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-23",
+   "dust": 11.09,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-09-25": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-25",
+   "dust": 7.3,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-09-29": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-29",
+   "dust": 6.15,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-09-30": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-09-30",
+   "dust": 6.17,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-01": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-01",
+   "dust": 5.01,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-05": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-05",
+   "dust": 4.54,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-06": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-06",
+   "dust": 4.82,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-07": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-07",
+   "dust": 3.9,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-08": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-08",
+   "dust": 7.68,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-09": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-09",
+   "dust": 6.22,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-12": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-12",
+   "dust": 2.81,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-13": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-13",
+   "dust": 5.27,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-16": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-16",
+   "dust": 6.41,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-22": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-22",
+   "dust": 6.99,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "dust-mr-sim-2026-10-23": {
+   "createdAt": "2026-10-23T16:00:00Z",
+   "date": "2026-10-23",
+   "dust": 5.85,
+   "kind": "metal",
+   "lines": [],
+   "note": "Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).",
+   "source": "monday",
+   "who": "Mr. Sim"
+  },
+  "metal-chaerin-2026-10-16": {
+   "createdAt": "2026-10-20T15:00:00Z",
+   "date": "2026-10-16",
+   "dust": 8.2,
+   "kind": "metal",
+   "lines": [
+    {
+     "after": 7.8,
+     "before": 8.7,
+     "item": "71900 (Rina)",
+     "qty": 2
+    },
+    {
+     "after": 7.9,
+     "before": 8.8,
+     "item": "71900 (Rina)",
+     "qty": 2
+    },
+    {
+     "after": 14,
+     "before": 16.2,
+     "item": "5723 (Rina)",
+     "qty": 9
+    },
+    {
+     "after": 18.3,
+     "before": 20,
+     "item": "42600 (Rina)",
+     "qty": 3
+    },
+    {
+     "after": 10.6,
+     "before": 11.9,
+     "item": "251253 Cuban Link Dia (R)",
+     "qty": 2
+    }
+   ],
+   "note": "Read from the photo of the 10/16 slip Jalgas got from Chaerin. Jeweler wrote losses 0.9, 1.1, 2.2, 1.7, 1.3 = 7.2 g total. Line 2: 8.8 to 7.9 is 0.9, not the 1.1 written \u2014 check whether the after weight is 7.7.",
+   "source": "scan",
+   "who": "Chaerin"
+  },
+  "metal-chaerin-2026-10-19": {
+   "createdAt": "2026-10-20T16:00:00Z",
+   "date": "2026-10-19",
+   "dust": 2.37,
+   "kind": "metal",
+   "lines": [
+    {
+     "after": 0.3,
+     "before": 0.4,
+     "item": "249394 (Tristan)",
+     "qty": 1
+    },
+    {
+     "after": 9.8,
+     "before": 10.3,
+     "item": "249394 (Tristan)",
+     "qty": 2
+    },
+    {
+     "after": 2,
+     "before": 2.4,
+     "item": "TRX9046 (Ariana)",
+     "qty": 1
+    },
+    {
+     "after": 5.2,
+     "before": 5.6,
+     "item": "250641 (Himanshu G)",
+     "qty": 1
+    },
+    {
+     "after": 4.1,
+     "before": 4.6,
+     "item": "TRX8924 (Ariana)",
+     "qty": 1
+    },
+    {
+     "after": 2.7,
+     "before": 3,
+     "item": "250779 (Jacob)",
+     "qty": 1
+    },
+    {
+     "after": 3.6,
+     "before": 3.9,
+     "item": "251515 (Emma)",
+     "qty": 1
+    }
+   ],
+   "note": "Read from the photo of the 10/19 slip. Jeweler's total loss 2.5 g matches the lines.",
+   "source": "scan",
+   "who": "Chaerin"
+  },
+  "metal-mr-sim-2026-10-19": {
+   "createdAt": "2026-10-20T16:00:00Z",
+   "date": "2026-10-19",
+   "dust": 6.28,
+   "kind": "metal",
+   "lines": [
+    {
+     "after": 15.8,
+     "before": 17.1,
+     "item": "71900 (Rina)",
+     "qty": 4
+    },
+    {
+     "after": 35.2,
+     "before": 37.6,
+     "item": "251072 (Danny)",
+     "qty": 4
+    }
+   ],
+   "note": "Read from the photo of the 10/19 slip. Jeweler's total loss 3.7 g matches the lines.",
+   "source": "scan",
+   "who": "Mr. Sim"
+  },
+  "pi94ftsheenlpblb5c70": {
+   "createdAt": "2026-10-20T18:14:18.809Z",
+   "date": "2026-10-19",
+   "dust": 3.99,
+   "kind": "metal",
+   "lines": [
+    {
+     "after": 10.5,
+     "before": 11.1,
+     "item": "71850 (Danny)",
+     "qty": 1
+    },
+    {
+     "after": 5,
+     "before": 5.6,
+     "item": "250998 (Danny)",
+     "qty": 2
+    },
+    {
+     "after": 3.7,
+     "before": 4,
+     "item": "71116 (Emma)",
+     "qty": 2
+    },
+    {
+     "after": 2.2,
+     "before": 2.8,
+     "item": "71344 (Anna)",
+     "qty": 2
+    },
+    {
+     "after": 2.8,
+     "before": 3,
+     "item": "8638 (Anna)",
+     "qty": 1
+    }
+   ],
+   "note": "Mr. Kim's 10/19 slip (name confirmed by Ahmed; the stamp wasn't legible in the scan). From names beside rows: Danny rows 1-2, Emma row 3, Anna rows 4-5. Losses written 0.6, 0.6, 0.7, 0.6, 0.2 = 2.7 g, matches the lines. Dust 'final' 3.99 g.",
+   "source": "scan",
+   "who": "Mr. Kim"
+  },
+  "scrap-in-2026-09-23": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-09-23",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 1.45,
+     "karat": "10KY",
+     "value": 80.4,
+     "what": "249752-Chain"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-09-24": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-09-24",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 1.15,
+     "karat": "14KY",
+     "value": 80,
+     "what": "233408-Lock"
+    },
+    {
+     "grams": 8.86,
+     "karat": "14KW",
+     "value": 692.71,
+     "what": "68792-Scrap chain"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-09-25": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-09-25",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 0.91,
+     "karat": "14KY",
+     "value": 71.11,
+     "what": "249821-Chain"
+    },
+    {
+     "grams": 2.62,
+     "karat": "14KY",
+     "value": 205.42,
+     "what": "245554-Bail"
+    },
+    {
+     "grams": 11.04,
+     "karat": "14KY",
+     "value": 867.35,
+     "what": "Tennis links - Umid"
+    },
+    {
+     "grams": 2.29,
+     "karat": "14KW",
+     "value": 179.91,
+     "what": "245962-Ring"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-09-28": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-09-28",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 0.34,
+     "karat": "10KY",
+     "value": 18.2,
+     "what": "249975-Chain"
+    },
+    {
+     "grams": 2.74,
+     "karat": "14KY",
+     "value": 207.37,
+     "what": "249627-Bracelet"
+    },
+    {
+     "grams": 12.05,
+     "karat": "14KW",
+     "value": 911.44,
+     "what": "TRX8229-Ahmed"
+    },
+    {
+     "grams": 0.2,
+     "karat": "14KY",
+     "value": 15.13,
+     "what": "Lock tongue"
+    },
+    {
+     "grams": 2.66,
+     "karat": "14KY",
+     "value": 201.68,
+     "what": "249953-Chain"
+    },
+    {
+     "grams": 2.96,
+     "karat": "14KW",
+     "value": 224.42,
+     "what": "250062-Tennis link"
+    },
+    {
+     "grams": 1.72,
+     "karat": "14KY",
+     "value": 130.41,
+     "what": "244977-Grillz"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-09-29": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-09-29",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 3.02,
+     "karat": "10KY",
+     "value": 162.53,
+     "what": "248413-Broken chain"
+    },
+    {
+     "grams": 0.13,
+     "karat": "10KY",
+     "value": 6.96,
+     "what": "249033-Chain broken part"
+    },
+    {
+     "grams": 2.24,
+     "karat": "14KY",
+     "value": 171.77,
+     "what": "249605-Chain"
+    },
+    {
+     "grams": 0.86,
+     "karat": "14KY",
+     "value": 65.94,
+     "what": "250195-Chain"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-09-30": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-09-30",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 3.64,
+     "karat": "10KY",
+     "value": 196.82,
+     "what": "248429-Broken chain"
+    },
+    {
+     "grams": 2.31,
+     "karat": "14KW",
+     "value": 176.66,
+     "what": "246622-Ring"
+    },
+    {
+     "grams": 0.97,
+     "karat": "10KY",
+     "value": 52.38,
+     "what": "250294-Chain"
+    },
+    {
+     "grams": 3.6,
+     "karat": "14KY",
+     "value": 274.14,
+     "what": "250079-Chain"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-01": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-01",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 1.79,
+     "karat": "10KY",
+     "value": 96.06,
+     "what": "250393-Chain"
+    },
+    {
+     "grams": 0.9,
+     "karat": "10KY",
+     "value": 48.3,
+     "what": "250474-Chain"
+    },
+    {
+     "grams": 6.69,
+     "karat": "14KY",
+     "value": 509.11,
+     "what": "250267-Chain"
+    },
+    {
+     "grams": 0.17,
+     "karat": "21KY",
+     "value": 19.64,
+     "what": "250250-Chain"
+    },
+    {
+     "grams": 4.55,
+     "karat": "14KW",
+     "value": 348.65,
+     "what": "250508-Chain"
+    },
+    {
+     "grams": 3.93,
+     "karat": "14KW",
+     "value": 300.77,
+     "what": "249813-Chain"
+    },
+    {
+     "grams": 1.01,
+     "karat": "14KY",
+     "value": 77.29,
+     "what": "250408-Chain"
+    },
+    {
+     "grams": 0.5,
+     "karat": "14KY",
+     "value": 38.26,
+     "what": "250007-Chain"
+    },
+    {
+     "grams": 0.39,
+     "karat": "14KW",
+     "value": 29.84,
+     "what": "250366-Tennis link"
+    },
+    {
+     "grams": 52.06,
+     "karat": "14KY",
+     "value": 3982.59,
+     "what": "TRX 196 - Ahmed"
+    },
+    {
+     "grams": 2.11,
+     "karat": "14KY",
+     "value": 161.47,
+     "what": "70845-Anna"
+    },
+    {
+     "grams": 1.14,
+     "karat": "14KY",
+     "value": 87.24,
+     "what": "TRX 8848 - Ariana"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-02": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-02",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 1.16,
+     "karat": "14KY",
+     "value": 87.98,
+     "what": "250494-Chain"
+    },
+    {
+     "grams": 8.89,
+     "karat": "10KW",
+     "value": 474.75,
+     "what": "70854-Ring"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-05": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-05",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 7.46,
+     "karat": "14KY",
+     "value": 566.81,
+     "what": "41216-Rina"
+    },
+    {
+     "grams": 1.8,
+     "karat": "14KY",
+     "value": 136.18,
+     "what": "244977-Grillz"
+    },
+    {
+     "grams": 1.03,
+     "karat": "10KTT",
+     "value": 55.13,
+     "what": "250780-Bracelets"
+    },
+    {
+     "grams": 0.35,
+     "karat": "10KTT",
+     "value": 18.73,
+     "what": "250741-Chain"
+    },
+    {
+     "grams": 0.71,
+     "karat": "14KY",
+     "value": 53.89,
+     "what": "250755-Chain"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-06": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-06",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 2.36,
+     "karat": "14KR",
+     "value": 180.05,
+     "what": "249036-Ring"
+    },
+    {
+     "grams": 0.46,
+     "karat": "14KY",
+     "value": 37.38,
+     "what": "250813-Tennis link"
+    },
+    {
+     "grams": 4.2,
+     "karat": "10KY",
+     "value": 226.6,
+     "what": "247497-Broken chain"
+    },
+    {
+     "grams": 1,
+     "karat": "14KY",
+     "value": 76.33,
+     "what": "250810-Chain"
+    },
+    {
+     "grams": 0.74,
+     "karat": "14KY",
+     "value": 56.48,
+     "what": "250698-Tennis link"
+    },
+    {
+     "grams": 2.53,
+     "karat": "14KY/W",
+     "value": 197.6,
+     "what": "Ring-Rina"
+    },
+    {
+     "grams": 4.28,
+     "karat": "14KY",
+     "value": 326.52,
+     "what": "TRXNC-295 - Umid (trade in)"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-07": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-07",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 5.84,
+     "karat": "14KW",
+     "value": 438.66,
+     "what": "250412-Tennis link"
+    },
+    {
+     "grams": 1.34,
+     "karat": "14KW",
+     "value": 100.64,
+     "what": "Swaroop"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-09": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-09",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 1.92,
+     "karat": "18KY",
+     "value": 190.16,
+     "what": "250122-Bracelet"
+    },
+    {
+     "grams": 1.35,
+     "karat": "14KY",
+     "value": 103.69,
+     "what": "251060-Bracelet"
+    },
+    {
+     "grams": 1.32,
+     "karat": "14KY",
+     "value": 101.39,
+     "what": "251035-Chain"
+    },
+    {
+     "grams": 1.65,
+     "karat": "10KY",
+     "value": 89.39,
+     "what": "250990-Chain"
+    },
+    {
+     "grams": 1.16,
+     "karat": "14KY",
+     "value": 89.09,
+     "what": "250944-Chain"
+    },
+    {
+     "grams": 0.14,
+     "karat": "14KY",
+     "value": 10.75,
+     "what": "233408-stamp tag"
+    },
+    {
+     "grams": 0.54,
+     "karat": "14KW",
+     "value": 41.47,
+     "what": "250916-Tennis link"
+    },
+    {
+     "grams": 2.18,
+     "karat": "14KY",
+     "value": 167.44,
+     "what": "249085-Frame"
+    },
+    {
+     "grams": 0.12,
+     "karat": "10KW",
+     "value": 6.5,
+     "what": "251137-chain"
+    },
+    {
+     "grams": 0.05,
+     "karat": "14KY",
+     "value": 2.7,
+     "what": "Scrap- Emma"
+    },
+    {
+     "grams": 0.66,
+     "karat": "14KY",
+     "value": 50.69,
+     "what": "TRXNC-288 (trade in)"
+    },
+    {
+     "grams": 0.12,
+     "karat": "14KY",
+     "value": 9.21,
+     "what": "Anna Scrap"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-14": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-14",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 1.75,
+     "karat": "10KY",
+     "value": 92.33,
+     "what": "251487-Chain"
+    },
+    {
+     "grams": 1.28,
+     "karat": "14KY",
+     "value": 95.77,
+     "what": "251013-Chain"
+    },
+    {
+     "grams": 1.49,
+     "karat": "14KW",
+     "value": 111.48,
+     "what": "251253-Chain"
+    },
+    {
+     "grams": 0.27,
+     "karat": "14KY",
+     "value": 20.2,
+     "what": "251419-Bracelet"
+    },
+    {
+     "grams": 4.3,
+     "karat": "14KY",
+     "value": 321.72,
+     "what": "249884-Tennis link"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-15": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-15",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 3.76,
+     "karat": "14KW",
+     "value": 286.15,
+     "what": "251181-Chain"
+    },
+    {
+     "grams": 3.59,
+     "karat": "14KW",
+     "value": 273.21,
+     "what": "251166-Bracelet"
+    },
+    {
+     "grams": 0.96,
+     "karat": "14KY",
+     "value": 73.05,
+     "what": "250776-Chain"
+    },
+    {
+     "grams": 2.88,
+     "karat": "18KY",
+     "value": 285.23,
+     "what": "250122-Bracelet"
+    },
+    {
+     "grams": 0.5,
+     "karat": "14KY",
+     "value": 38.23,
+     "what": "248285-End caps"
+    },
+    {
+     "grams": 0.11,
+     "karat": "14KR",
+     "value": 8.41,
+     "what": "Jump ring-Scrap"
+    },
+    {
+     "grams": 0.6,
+     "karat": "14KY",
+     "value": 45.88,
+     "what": "Scrap, No name"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-16": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-16",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 2.67,
+     "karat": "10KY",
+     "value": 144.63,
+     "what": "251508-Scrap"
+    },
+    {
+     "grams": 0.65,
+     "karat": "14KY",
+     "value": 49.92,
+     "what": "251451-Bracelet"
+    },
+    {
+     "grams": 1.28,
+     "karat": "14KY",
+     "value": 98.3,
+     "what": "67792 (Skyline) - Scrap"
+    },
+    {
+     "grams": 0.93,
+     "karat": "10KY",
+     "value": 50.38,
+     "what": "251683-Chain"
+    },
+    {
+     "grams": 1.64,
+     "karat": "14KY",
+     "value": 125.95,
+     "what": "251684-Chain"
+    },
+    {
+     "grams": 0.83,
+     "karat": "14KY",
+     "value": 63.74,
+     "what": "250351-Bracelet"
+    },
+    {
+     "grams": 5.16,
+     "karat": "10KY",
+     "value": 279.51,
+     "what": "251192-Bracelet"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-19": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-19",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 0.35,
+     "karat": "14KR",
+     "value": 26.62,
+     "what": "251548-Tennis link"
+    },
+    {
+     "grams": 10.34,
+     "karat": "14KY",
+     "value": 786.56,
+     "what": "251171-Tennis bracelet"
+    },
+    {
+     "grams": 2.39,
+     "karat": "14KW",
+     "value": 181.8,
+     "what": "250419-Ring"
+    },
+    {
+     "grams": 4.94,
+     "karat": "14KY",
+     "value": 375.78,
+     "what": "247748-Wedding rings"
+    },
+    {
+     "grams": 2.16,
+     "karat": "14KY",
+     "value": 164.31,
+     "what": "Wedding ring- Pia / Ahmed"
+    },
+    {
+     "grams": 0.54,
+     "karat": "14KW",
+     "value": 41.07,
+     "what": "248963-Stud earrings"
+    },
+    {
+     "grams": 87.82,
+     "karat": "14KY/R",
+     "value": 6680.46,
+     "what": "Tennis links- Rina"
+    },
+    {
+     "grams": 2.01,
+     "karat": "14KY",
+     "value": 153.56,
+     "what": "236791-Ring"
+    },
+    {
+     "grams": 0.12,
+     "karat": "14KY",
+     "value": 9.12,
+     "what": "Scrap Umid- Push back"
+    },
+    {
+     "grams": 18.05,
+     "karat": "14KY",
+     "value": 1371.98,
+     "what": "251757-Tennis link"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-20": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-20",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 0.61,
+     "karat": "14KW",
+     "value": 46.1,
+     "what": "251870-Chain"
+    },
+    {
+     "grams": 0.46,
+     "karat": "14KY",
+     "value": 34.76,
+     "what": "251714-Bracelet"
+    },
+    {
+     "grams": 4.63,
+     "karat": "10KY",
+     "value": 246.87,
+     "what": "252043-Chain"
+    },
+    {
+     "grams": 2.73,
+     "karat": "10KY",
+     "value": 145.56,
+     "what": "251962-Chain"
+    },
+    {
+     "grams": 0.55,
+     "karat": "14KY",
+     "value": 41.59,
+     "what": "252026-Chain"
+    },
+    {
+     "grams": 5.26,
+     "karat": "18KY",
+     "value": 512.92,
+     "what": "251140-Franco chain (no clasp)"
+    },
+    {
+     "grams": 4.96,
+     "karat": "21KY",
+     "value": 565.93,
+     "what": "244405-Wheat chain broken"
+    },
+    {
+     "grams": 1.6,
+     "karat": "14KY",
+     "value": 114,
+     "what": "Samuel Bayeff - Scrap"
+    },
+    {
+     "grams": 12.86,
+     "karat": "14KW",
+     "value": 972.48,
+     "what": "Cross pendant - Umid"
+    },
+    {
+     "grams": 2.44,
+     "karat": "14KW",
+     "value": 184.51,
+     "what": "250839-Scrap"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-2026-10-21": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-21",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 57.89,
+     "karat": "14KY/W",
+     "value": 4388.56,
+     "what": "Scrap Bails - Rina"
+    },
+    {
+     "grams": 0.31,
+     "karat": "10KY",
+     "value": 17.12,
+     "what": "33012-Scrap"
+    },
+    {
+     "grams": 1.77,
+     "karat": "14KY",
+     "value": 134.25,
+     "what": "252139-Chain"
+    },
+    {
+     "grams": 0.49,
+     "karat": "10KY",
+     "value": 26,
+     "what": "252058-Chain"
+    },
+    {
+     "grams": 1.13,
+     "karat": "14KW",
+     "value": 85.02,
+     "what": "TRX-8496-Scrap small pendant"
+    }
+   ],
+   "note": "Scrapped pieces from the monday.com scrap board.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-in-lockbox-2025": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2025-09-17",
+   "dir": "in",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 0.48,
+     "karat": "14K",
+     "value": 29.76,
+     "what": "Chain"
+    },
+    {
+     "grams": 2.86,
+     "karat": "14K",
+     "value": 174.46,
+     "what": "Chain"
+    },
+    {
+     "grams": 7.52,
+     "karat": "14K",
+     "value": 458.7,
+     "what": "1171600-Cuban lock"
+    },
+    {
+     "grams": 2.4,
+     "karat": "14K",
+     "value": 158,
+     "what": "1230758-Lock"
+    }
+   ],
+   "note": "Locks and chain pieces held in the lock box (On Hold on the monday.com board) since 2025.",
+   "source": "monday",
+   "who": "Jalgas"
+  },
+  "scrap-out-2026-10-14-mr-kim": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-14",
+   "dir": "out",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 11.59,
+     "karat": "10KY",
+     "value": 611.48,
+     "what": "Scrap for Mr Kim"
+    },
+    {
+     "grams": 30.02,
+     "karat": "14KY",
+     "value": 2246.13,
+     "what": "Scrap for Mr Kim"
+    },
+    {
+     "grams": 32.84,
+     "karat": "14KW",
+     "value": 2457.12,
+     "what": "Scrap for Mr Kim"
+    }
+   ],
+   "note": "Given out, from the monday.com scrap board (Outgoing Scrap).",
+   "source": "monday",
+   "to": "Mr. Kim",
+   "who": "Jalgas"
+  },
+  "scrap-out-2026-10-19-order-251434": {
+   "createdAt": "2026-10-21T19:30:00Z",
+   "date": "2026-10-19",
+   "dir": "out",
+   "kind": "scrap",
+   "lines": [
+    {
+     "grams": 2.65,
+     "karat": "14KY",
+     "value": 201.42,
+     "what": "251434"
+    }
+   ],
+   "note": "Given out, from the monday.com scrap board (Outgoing Scrap).",
+   "source": "monday",
+   "to": "Order 251434",
+   "who": "Jalgas"
+  }
+ }
+}

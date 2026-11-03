@@ -34,6 +34,20 @@ export interface Env {
   READ_TOKEN: string | null;
   TRUST_PROXY: ProxyTrust;
   DISPLAY_TZ: string;
+  /** Inventory (SPEC §14): slips in Postgres … */
+  INVENTORY_DATABASE_URL: string | null;
+  /** … or in a JSON file under this directory. Both null = the inventory section is off (404). */
+  INVENTORY_DATA_DIR: string | null;
+  /** staff ids who manage people and jewelers on /inventory (the admin cookie always can) */
+  INVENTORY_OWNERS: string[];
+  /** null = photo reading is off (slips are typed by hand) */
+  ANTHROPIC_API_KEY: string | null;
+  ANTHROPIC_MODEL: string;
+  /** null = the monday.com sync is off */
+  MONDAY_API_TOKEN: string | null;
+  MONDAY_API_URL: string;
+  /** bearer accepted by POST /api/inventory/sync (Vercel cron sends CRON_SECRET) */
+  CRON_SECRET: string | null;
   isProduction: boolean;
   /** Full GraphQL endpoint URL. */
   graphqlUrl: string;
@@ -211,6 +225,30 @@ export function buildEnv(source: EnvSource = process.env): Env {
   const trustProxy = parseProxyTrust(read('TRUST_PROXY', source));
   if (trustProxy === null) problems.push('TRUST_PROXY must be empty, "vercel" (Vercel platform headers) or "1" (one reverse proxy setting x-forwarded-for)');
 
+  const inventoryDb = read('INVENTORY_DATABASE_URL', source);
+  const inventoryDir = read('INVENTORY_DATA_DIR', source);
+  if (inventoryDb && inventoryDir) problems.push('Set INVENTORY_DATABASE_URL or INVENTORY_DATA_DIR, not both');
+  if (inventoryDb && !/^postgres(ql)?:\/\//i.test(inventoryDb)) problems.push('INVENTORY_DATABASE_URL must be a postgres:// URL');
+  const owners: string[] = [];
+  for (const part of (read('INVENTORY_OWNERS', source) ?? '').split(',')) {
+    const id = part.trim().toLowerCase();
+    if (!id) continue;
+    if (!/^[a-z0-9_]{1,30}$/.test(id)) problems.push(`INVENTORY_OWNERS entry "${id}" is not a staff id`);
+    else if (!owners.includes(id)) owners.push(id);
+  }
+  const anthropicKey = read('ANTHROPIC_API_KEY', source);
+  const anthropicModel = read('ANTHROPIC_MODEL', source) ?? 'claude-sonnet-4-6';
+  if (!/^[a-z0-9.-]{3,60}$/i.test(anthropicModel)) problems.push('ANTHROPIC_MODEL must be a model id such as claude-sonnet-4-6');
+  const mondayToken = read('MONDAY_API_TOKEN', source);
+  const mondayUrl = read('MONDAY_API_URL', source) ?? 'https://api.monday.com/v2';
+  try {
+    new URL(mondayUrl);
+  } catch {
+    problems.push('MONDAY_API_URL must be a full URL');
+  }
+  const cronSecret = read('CRON_SECRET', source);
+  if (cronSecret && cronSecret.length < 16) problems.push('CRON_SECRET must be at least 16 characters');
+
   if (problems.length > 0) throw new EnvError(problems);
 
   return {
@@ -228,6 +266,14 @@ export function buildEnv(source: EnvSource = process.env): Env {
     READ_TOKEN: readToken,
     TRUST_PROXY: trustProxy ?? 'none',
     DISPLAY_TZ: displayTz,
+    INVENTORY_DATABASE_URL: inventoryDb,
+    INVENTORY_DATA_DIR: inventoryDir,
+    INVENTORY_OWNERS: owners,
+    ANTHROPIC_API_KEY: anthropicKey,
+    ANTHROPIC_MODEL: anthropicModel,
+    MONDAY_API_TOKEN: mondayToken,
+    MONDAY_API_URL: mondayUrl,
+    CRON_SECRET: cronSecret,
     isProduction: source.NODE_ENV === 'production',
     graphqlUrl,
     tokenUrl,

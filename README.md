@@ -197,6 +197,40 @@ sessions with a direct Shopify connection can also write the metafields themselv
 shapes and rules are in `CLAUDE.md`. Either way the entry records `via: token:claude` or
 `claude`, and the app repairs the derived fields and the `trax-production` tag on the next read.
 
+## 6a. Inventory (gold dust, diamonds, scrap, castings)
+
+`/inventory` is the TRAX inventory page that used to be a claude.ai artifact: four tiles,
+the same tables and rules, the paper slips read from a photo, and an hourly pull from the
+four monday.com boards. Full rules in `SPEC.md` §14. To turn it on:
+
+1. **Storage.** On Vercel create a Postgres database (Neon / Supabase / Vercel Postgres) and
+   set `INVENTORY_DATABASE_URL` to its `postgres://…` URL — the two tables are created on the
+   first request. On Docker set `INVENTORY_DATA_DIR=/data` and mount a volume there (one JSON
+   file). Set one of the two, never both; with neither the page answers 404.
+2. **Who manages it.** `INVENTORY_OWNERS=ahmed` (staff ids, comma-separated) see the People,
+   Jewelers and monday.com cards; the `/admin` passcode session always does. Everyone else on
+   the staff list sees everything and may save until an owner narrows them on the page.
+3. **Import the records** that were in the artifact (93 slips, once):
+
+   ```bash
+   npm run import:inventory -- data/trax-inventory-2026-11-03.json
+   ```
+
+   (reads `.env.local`; on Vercel run it from your Mac with `INVENTORY_DATABASE_URL` set to the
+   production database — it only upserts by id, so running it twice changes nothing).
+4. **Photo reading.** Set `ANTHROPIC_API_KEY` (an Anthropic Console key, Sensitive) and
+   optionally `ANTHROPIC_MODEL` (default `claude-sonnet-4-6`). Without a key the page offers
+   "Add by hand" only.
+5. **monday.com sync.** Set `MONDAY_API_TOKEN` (monday.com → profile → Developers → My access
+   tokens; the token's user must see the four boards) and `CRON_SECRET` (`openssl rand -hex 24`).
+   `vercel.json` schedules `GET /api/inventory/sync` every hour and Vercel sends `CRON_SECRET`
+   as the bearer. On Docker, cron `npm run sync:monday` instead. "Sync now" on the page and the
+   per-board "last synced" stamps show whether it works. Mr. Jin keeps updating the diamond
+   board; the app pulls it.
+
+Agents: `GET /api/inventory` with an `API_TOKENS` bearer returns the four headline numbers and
+every slip; `POST /api/inventory/slips` saves one. Details in `/agents`.
+
 ## 7. Local development
 
 Needs Node.js 22 (see the prerequisite in §3).
@@ -237,15 +271,18 @@ needs no extra header for that.
 npm run lint        # ESLint
 npm run typecheck   # TypeScript
 npm run build       # Next.js production build
-npm test            # unit tests (Vitest): status merge, staleness, PIN/lockout, cookies, validation …
+npm test            # unit tests (Vitest): status merge, staleness, PIN/lockout, cookies, validation, inventory maths / stores / monday mappers …
 npm run e2e         # Playwright against the mock Shopify server (never the real store)
 ```
 
 `npm run e2e` builds the app, starts the mock server on port 4001 and the app on port 3000 (the
 standalone server, `node .next/standalone/server.js` — the same entry point the Dockerfile
 uses; `next start` is unsupported with `output: 'standalone'`) plus a second copy on 3001
-without an admin passcode to prove `/admin` answers 404, then runs the
-browser tests in headless Chromium. On a laptop, run `npx playwright install chromium` once
+without an admin passcode (and without an inventory store) to prove `/admin` and `/inventory`
+answer 404, then runs the browser tests in headless Chromium. The inventory tests use a file
+store under `.e2e-inventory/`, seeded from `data/trax-inventory-2026-11-03.json` by
+`tests/e2e/global-setup.ts`; the monday.com sync and the photo reading are unit-tested with a
+fake API and never called for real. On a laptop, run `npx playwright install chromium` once
 first. If a pre-installed browser lives elsewhere, set `PLAYWRIGHT_BROWSERS_PATH` or
 `PW_CHROMIUM_PATH=/path/to/chrome`. `PORT`, `MOCK_SHOPIFY_PORT` and `NO_ADMIN_PORT` (the
 passcode-less copy, default `PORT+1`, or `PORT+2` when that is the mock's port) change the

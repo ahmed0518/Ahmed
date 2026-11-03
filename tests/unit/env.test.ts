@@ -69,3 +69,27 @@ describe('environment validation', () => {
     expect(() => buildEnv({ ...mock, SHOPIFY_API_URL: 'http://127.0.0.1:4001/' })).toThrow(/graphql\.json/);
   });
 });
+
+describe('inventory environment', () => {
+  const good = {
+    SHOPIFY_STORE_DOMAIN: '05nbj6-yr.myshopify.com',
+    SHOPIFY_CLIENT_ID: 'id',
+    SHOPIFY_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: 'a'.repeat(64),
+    PIN_PEPPER: 'b'.repeat(64),
+  };
+  it('is off by default and accepts one store at a time', () => {
+    const env = buildEnv(good);
+    expect(env.INVENTORY_DATABASE_URL).toBeNull();
+    expect(env.INVENTORY_DATA_DIR).toBeNull();
+    expect(env.ANTHROPIC_MODEL).toBe('claude-sonnet-4-6');
+    expect(env.MONDAY_API_URL).toBe('https://api.monday.com/v2');
+    expect(buildEnv({ ...good, INVENTORY_DATABASE_URL: 'postgres://u:p@h/db' }).INVENTORY_DATABASE_URL).toBe('postgres://u:p@h/db');
+    expect(() => buildEnv({ ...good, INVENTORY_DATABASE_URL: 'mysql://x' })).toThrow(/postgres/);
+    expect(() => buildEnv({ ...good, INVENTORY_DATABASE_URL: 'postgres://x', INVENTORY_DATA_DIR: '/data' })).toThrow(/not both/);
+    expect(buildEnv({ ...good, INVENTORY_OWNERS: 'Ahmed, maks' }).INVENTORY_OWNERS).toEqual(['ahmed', 'maks']);
+    expect(() => buildEnv({ ...good, INVENTORY_OWNERS: 'not a slug' })).toThrow(/INVENTORY_OWNERS/);
+    expect(() => buildEnv({ ...good, CRON_SECRET: 'short' })).toThrow(/CRON_SECRET/);
+    expect(() => buildEnv({ ...good, ANTHROPIC_MODEL: 'x y' })).toThrow(/ANTHROPIC_MODEL/);
+  });
+});

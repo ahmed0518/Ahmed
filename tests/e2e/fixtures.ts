@@ -7,6 +7,7 @@ export const ADMIN_PASSCODE = 'e2e-admin-passcode-not-secret';
 export const CLAUDE_TOKEN = 'e2e_claude_token_0123456789abcdef0123456789';
 export const MAKS_TOKEN = 'e2e_maks_token_0123456789abcdef0123456789abc';
 export const PIN_PEPPER = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
+export const SESSION_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 export const STAFF = [
   { id: 'ahmed', name: 'Ahmed', pin: '1234' },

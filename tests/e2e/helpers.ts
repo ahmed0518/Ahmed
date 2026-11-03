@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
-import { PIN_PEPPER, STAFF, buildSeed } from './fixtures';
+import { STAFF_COOKIE, signCookie } from '../../src/lib/auth/cookies';
+import { PIN_PEPPER, SESSION_SECRET, STAFF, buildSeed } from './fixtures';
 import { APP_PORT, MOCK_PORT, NO_ADMIN_PORT } from './ports';
 
 export { APP_PORT };
@@ -73,6 +74,19 @@ export async function loginAs(page: Page, id: string = 'ahmed'): Promise<void> {
   if (!member) throw new Error(`unknown staff ${id}`);
   const res = await page.request.post('/api/login', { data: { id, pin: member.pin }, headers: originHeader() });
   expect(res.status(), await res.text()).toBe(200);
+}
+
+/**
+ * A staff session without the login endpoint: the cookie is signed with the published test
+ * SESSION_SECRET, exactly as `/api/login` would. Spares the 10-per-minute login limiter when a
+ * spec needs several sessions in a row (the seeded roster has `session_version: 1`).
+ */
+export async function sessionAs(page: Page, id: string = 'ahmed'): Promise<void> {
+  const member = STAFF.find((s) => s.id === id);
+  if (!member) throw new Error(`unknown staff ${id}`);
+  const exp = Math.floor(Date.now() / 1000) + 3600;
+  const value = signCookie({ t: 'staff', id, name: member.name, sv: 1, exp }, SESSION_SECRET);
+  await page.context().addCookies([{ name: STAFF_COOKIE, value, domain: 'localhost', path: '/', httpOnly: true, sameSite: 'Lax' }]);
 }
 
 /** Refresh the app's list cache (credentialed `?fresh=1`). */

@@ -15,6 +15,8 @@ src/app/                     pages + route handlers (App Router, all dynamic, No
   api/orders/[number]/route.ts            GET (public or credentialed shape) · POST bulk
   api/orders/[number]/items/[lineItemId]  POST one item
   api/orders · api/stale · api/statuses · api/health · api/login · api/admin/*
+  inventory/page.tsx          the inventory page (gold dust, diamonds, scrap, castings) — SPEC §14
+  api/inventory/*             GET payload · slips POST/DELETE · scan · settings · sync
 src/lib/
   env.ts            boot validation (throws on bad config; no secret defaults)
   shopify/          queries.ts (every GraphQL document, named) · client.ts (fetch, THROTTLED/5xx retry) · token.ts (client credentials)
@@ -25,8 +27,14 @@ src/lib/
   settings/         model.ts (defaults, validation) · store.ts (shop metafields, 30 s cache, CAS updates)
   auth/             cookies.ts · pin.ts (hash + lockout math) · lockout.ts (persisted, claim-before-verify) · tokens.ts · csrf.ts · ratelimit.ts · credential.ts
   admin/model.ts    settings form + staff actions (never exposes pin_hash)
+  inventory/        model.ts (slip shapes, validation, normalisers) · compute.ts (THE inventory maths) ·
+                    store.ts + store-file.ts + store-pg.ts (slips in a JSON file or Postgres) · access.ts ·
+                    scan.ts (Anthropic Messages API, the tuned prompts) · monday.ts (board mappers + sync) · service.ts
   agent-docs.ts     source of /agents, /llms.txt and docs/AGENTS.md (`npm run agents:md`)
 src/components/     StatusCard (client, optimistic saves), OrderRows, LoginForm, AdminPanel …
+src/components/inventory/  InventoryApp (tiles, review form, scanning queue), Summary, SlipLog, OwnerCards, inventory.css
+data/trax-inventory-2026-11-03.json  the 93 records exported from the artifact (unit-test fixture; `npm run import:inventory`)
+scripts/import-inventory.ts · scripts/sync-monday.ts   load records / pull the monday.com boards from the CLI
 tests/unit          Vitest · tests/e2e Playwright · tests/mock-shopify/server.ts (in-memory Shopify)
 scripts/setup-shopify.ts     idempotent metafield definitions + defaults
 scripts/standalone-static.mjs postbuild: copies .next/static next to the standalone server
@@ -36,6 +44,7 @@ scripts/standalone-static.mjs postbuild: copies .next/static next to the standal
 
 ```
 npm run dev · build · start · lint · typecheck · test · e2e · mock:shopify · setup:shopify · agents:md · audit:prod
+npm run import:inventory -- <file> · sync:monday [dust diamond scrap casting]
 ```
 
 All five checks (`lint`, `typecheck`, `build`, `test`, `e2e`) must be green before a change is
@@ -47,6 +56,16 @@ start` is unsupported with `output: 'standalone'`; `next.config.ts` pins
 mock server; it never contacts the real store
 (`SHOPIFY_API_URL` + a `test_` token). Browsers: `npx playwright install chromium` on a laptop,
 or `PLAYWRIGHT_BROWSERS_PATH` / `PW_CHROMIUM_PATH` for a pre-installed one.
+
+## Inventory (SPEC §14)
+
+`/inventory` is off until `INVENTORY_DATABASE_URL` (Postgres) or `INVENTORY_DATA_DIR` (a JSON
+file) is set; the e2e run uses the file store seeded from `data/`. Slips are validated on every
+read and write (`src/lib/inventory/model.ts`); the maths in `compute.ts` is the artifact's and
+is tested against the real export — change a number there only with the SPEC. As Claude, read
+and write slips through the API with the `claude` token (`GET /api/inventory`,
+`POST /api/inventory/slips`, `DELETE /api/inventory/slips/{id}`); `POST /api/inventory/sync`
+pulls the monday.com boards. Never write `source: "monday"` by hand — only the sync does.
 
 ## Writing statuses as Claude
 

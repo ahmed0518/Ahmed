@@ -18,5 +18,8 @@ export async function register(): Promise<void> {
     read_token: env.READ_TOKEN !== null,
     api_token_labels: env.API_TOKENS.map((t) => t.label),
     display_tz: env.DISPLAY_TZ,
+    inventory: env.INVENTORY_DATABASE_URL ? 'postgres' : env.INVENTORY_DATA_DIR ? 'file' : 'off',
+    inventory_scan: env.ANTHROPIC_API_KEY !== null,
+    monday_sync: env.MONDAY_API_TOKEN !== null,
   });
 }

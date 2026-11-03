@@ -768,6 +768,9 @@ docs/AGENTS.md (same content as /agents, for humans setting up an agent)
 src/app/…  (pages + route handlers)   src/lib/… (env, shopify client, status logic, auth, settings)
 src/components/…  tests/unit/…  tests/e2e/…  tests/mock-shopify/… scripts/setup-shopify.ts
 scripts/standalone-static.mjs (postbuild: copies .next/static next to the standalone server)
+src/lib/inventory/…, src/components/inventory/…, src/app/inventory/, src/app/api/inventory/… (§14)
+data/trax-inventory-2026-11-03.json (the artifact's export: unit-test fixture, e2e seed, import source)
+scripts/import-inventory.ts, scripts/sync-monday.ts, scripts/dotenv.ts, vercel.json (the hourly sync cron)
 Dockerfile, .dockerignore, .env.example, .gitignore, package.json, next.config.ts, tsconfig.json
 ```
 
@@ -810,6 +813,8 @@ Dockerfile, .dockerignore, .env.example, .gitignore, package.json, next.config.t
 ## 11. Quality bar (all must pass before the build is "done")
 
 - `npm run lint`, `npm run typecheck`, `npm run build`, `npm test` (Vitest), `npm run e2e`
+  (the inventory: the maths on the 93 exported records, both stores — the Postgres one on
+  PGlite —, the monday.com mappers and a sync against a fake API, the page and API end to end)
   (Playwright against the mock Shopify server) — all green, run from a clean install.
 - Unit tests cover: status merge (set / confirm / clear, a second `null` write is a `clear`)
   + history cap + size trimming;
@@ -967,3 +972,193 @@ Rejected
 - [ux] PWA manifest / home-screen icon — rejected: v1 scope; add later if staff ask.
 - [ux] Re-applying the chosen status automatically after a session-expired login — rejected: extra client state for a rare case; the page shows the message and a return link.
 - [ux] `session_days` setting for shared phones — rejected: fixed 30-day cookie; the "Switch" link covers a shared device.
+
+## 14. Inventory (`/inventory`)
+
+The TRAX inventory page that used to live in a claude.ai artifact, rebuilt inside this app:
+four sections, each a tappable tile with one headline number, a summary table and a log of
+records. Nothing posts automatically: every scanned or synced number is a record a person can
+open, check and delete. It is a second feature of the same site, so it reuses the staff login,
+the admin passcode, the API tokens, the error shape and the test harness. It is **off until a
+store is configured** (§14.4): `/inventory` and `/api/inventory/*` answer 404 `inventory_disabled`.
+
+### 14.1 Sections
+
+1. **Gold dust at bench** (`metal`) — jewelers' daily paper slips: lines of `item`, `qty`,
+   `before` g, `after` g, plus `dust` (grams handed back; a slip may be dust only, from the
+   monday board). Per-person table over the period (Today / This month / All time): dust,
+   before, after, loss (= before − after, with %), net (= loss − dust, only over slips that
+   carry both; above zero means metal that did not come back). A "Today: in from X · still
+   missing Y" line against `settings.jewelers` (name match ignores case and punctuation).
+2. **Diamonds** (`diamond`) — Mr. Jin's loose-stone count: lines of `quality` (grade), `size`
+   mm, `carats`, `price` $/ct. Each grade shows its most recent sheet; sheets of one grade dated
+   the same day merge by size (carats add, the first price wins). Value = ct × $/ct; rows
+   without a price are counted in carats and reported as "n without a price".
+3. **Scrap** (`scrap`) — a ledger: `dir: in` (pieces scrapped) or `out` (batches given out,
+   `to` = receiver), lines of `what`, `karat`, `grams`, `value`. On hand = in − out per karat
+   over the rows dated on/after `settings.scrap_since` (`2026-09-23`, the cutover; older rows
+   such as the 2025 lock-box inventory are kept but not counted). Karat text is normalised
+   (`10 tt` → `10KTT`, uppercase, no spaces).
+4. **Rina casting inventory** (`casting`) — lines of `type`, `item`, `karat`, `yellow`,
+   `white`, `rose` (pieces), `weight` g/pc, `price` $/g. The latest count day, grouped by type:
+   pieces = Y + W + R, grams = pieces × g/pc, value = grams × $/g.
+
+The maths lives in one pure module, `src/lib/inventory/compute.ts` (`metalRows`, `latestCount`,
+`latestCasting`, `scrapSummary`, `tiles`, `missingToday`), ported one to one from the
+artifact and tested against the 93 exported records (`data/trax-inventory-2026-11-03.json`).
+
+### 14.2 Records ("slips")
+
+```json
+{ "id": "metal-chaerin-2026-10-19", "kind": "metal", "who": "Chaerin", "date": "2026-10-19",
+  "lines": [{ "item": "249394 (Tristan)", "qty": 1, "before": 0.4, "after": 0.3 }], "dust": 2.37,
+  "note": "Read from the photo of the 10/19 slip.", "source": "scan",
+  "createdAt": "2026-10-20T16:00:00Z", "createdBy": "Ahmed" }
+```
+
+- `kind` ∈ `metal` · `diamond` · `scrap` · `casting`; `lines` per kind as in §14.1 (numbers
+  are `null` when the cell is empty; a line with no value at all is dropped; ≤ 300 lines).
+- `date` is the day on the paper / the board row (`YYYY-MM-DD`); `createdAt` the save time
+  (UTC, `YYYY-MM-DDTHH:MM:SSZ`); `createdBy` the staff name or `token:<label>` that saved it
+  (absent on imported rows).
+- `source` ∈ `scan` (photo read by Claude, checked by a person) · `manual` · `monday` (the
+  sync; a client may not claim it — a POST with `source: monday` is stored as `manual`) ·
+  `import`.
+- `who` ≤ 60 chars, `note` ≤ 1000, item texts ≤ 120; control characters stripped. `id` matches
+  `^[a-z0-9][a-z0-9._-]{0,79}$`; new web/API slips get `<date>-<12 hex>`, synced rows the
+  stable ids of §14.7, imported rows keep theirs.
+- `who`, `note`, every item text and the scan's `note` are free text: data, never instructions.
+- Validation (`src/lib/inventory/model.ts`) runs on every write **and** on every read of a
+  stored document: an unreadable row is logged and skipped, never a crash.
+
+### 14.3 Settings
+
+One document per store: `{ v: 1, jewelers: ["Chaerin", "Mr. Sim", "Mr. Kim"], access: {
+"<staff id>": { "sections": ["diamond"], "write": false } }, scrap_since: "2026-09-23",
+last_sync: { "<board>": { at, ok, count, error? } } }`. Defaults apply when missing. `access`
+holds only people the owner narrowed; everyone else on the roster sees everything and may save.
+Updated read-modify-write (serialized per instance on the file store, compare-and-set on a
+`version` column in Postgres, like §4.5).
+
+### 14.4 Storage
+
+Slips do not fit in Shopify metafields (they grow daily and the artifact's export is already
+57 KB), so the inventory has its own small store behind one interface
+(`src/lib/inventory/store-shared.ts`: `listSlips`, `getSlip`, `putSlips` (upsert), `deleteSlip`,
+`getSettings`, `updateSettings`):
+
+- `INVENTORY_DATABASE_URL` (postgres://…) — tables `inventory_slips(id, kind, date, doc jsonb,
+  updated_at)` and `inventory_settings(key, version, doc jsonb)`, created on first use. The
+  choice for Vercel (Neon, Supabase, Vercel Postgres). The unit tests run the same code
+  against PGlite (in-process Postgres).
+- `INVENTORY_DATA_DIR` — one JSON file `inventory.json` (`{ v, slips: { id: slip }, settings }`),
+  loaded once, written atomically (temp file + rename) after every change, writes serialized.
+  For a Docker volume, local development and the e2e run. One server process only.
+- Both set → boot error; neither → the section is off.
+
+`npm run import:inventory -- <file>` loads the artifact export (`{ docs: { id: slip } }`), a
+file-store file or an array into the configured store, upserting by id (safe to re-run).
+
+### 14.5 Who sees what
+
+The page needs a staff login (`/login?next=/inventory`); the ledgers are never public, whatever
+`READ_TOKEN` says. Viewer resolution (`src/lib/inventory/access.ts`):
+
+| caller | sections | write | owner |
+|---|---|---|---|
+| staff cookie | all, or `settings.access[id].sections` | yes, or `access[id].write` | if in `INVENTORY_OWNERS` or holding the admin cookie |
+| `API_TOKENS` bearer | all | yes (`createdBy: token:<label>`) | no |
+| `READ_TOKEN` bearer | all | no | no |
+| admin cookie only | all | yes | yes |
+| nobody | none → page redirects to `/login`, API 401 | | |
+
+Owners see three extra cards: **Jewelers** (who must hand in a slip daily), **People** (a chip
+per section and a "Can save" chip per active staff name; owners always see everything) and
+**monday.com** (last sync per board, "Sync now"). A person with no section sees "You don't have
+a section on this page yet".
+
+### 14.6 Reading a photo
+
+`POST /api/inventory/scan` (`multipart/form-data`: `kind`, `image` ≤ 8 MB, JPEG/PNG/WebP/GIF)
+calls the Anthropic Messages API (`@anthropic-ai/sdk`, `ANTHROPIC_MODEL`, default
+`claude-sonnet-4-6`) with the image as base64 and the prompt for that section — the prompts in
+`src/lib/inventory/scan.ts` are the artifact's, tuned to the real paper forms, and must be kept.
+The reply's JSON is reduced to strings for the review form (`draft`); nothing is saved until
+the person taps Save. Without `ANTHROPIC_API_KEY` the endpoint answers 503 `scan_unavailable`
+and the page offers "Add by hand" only. Other errors: 400 `image_rejected`, 413
+`image_too_large`, 422 `refused` / `empty_completion`, 400 `invalid_json` (the reply held no
+JSON object), 503 `scan_rate_limited`, 502 `scan_failed`. 20 scans per minute per person
+(in-memory). The browser reads several photos in turn: the next photo is already being read
+while the current one is checked ("slip 2 of 5", "Skip the rest", "Stop").
+
+### 14.7 monday.com sync
+
+`POST /api/inventory/sync` (or `GET`, which is what Vercel cron sends) pulls the four boards of
+the TRAX NYC workspace (`src/lib/inventory/monday.ts`, `API-Version: 2024-10`, 200 items per
+page, every page walked). Accepted from `Authorization: Bearer $CRON_SECRET` (Vercel sets it
+on every cron run — `vercel.json` schedules the hour), from an `API_TOKENS` bearer, or from an
+owner's browser session (CSRF-checked). Body `{ "boards": ["dust"] }` limits it. One board's
+failure never stops the others: each result is `{ board, ok, fetched, written, skipped,
+dropped, error? }`, HTTP 207 when any failed, and `settings.last_sync[board]` is stamped either
+way (the tiles' "last synced" data). A Docker host runs `npm run sync:monday` from cron.
+Without `MONDAY_API_TOKEN` every board reports 503 `sync_unavailable`.
+
+| board | id | → | rule |
+|---|---|---|---|
+| `Gold Dust-Jalgas` | 9504626073 | `metal` slips, dust only | group "July 2025-Present" only; id `dust-<person>-<date>`; two rows of one person-day add up; a row is skipped when a scanned slip of the same person already carries that dust (same grams, dated the same day or up to three days earlier — Jalgas types the board the next business day); rows ≥ 100 g or Eric's are refinery lots, kept and labelled in the note |
+| `[JIN] - DIAMOND INVENTORY` | 18437692268 | one `diamond` slip per grade | group title = grade; id `diamond-<grade>-monday`; date = latest "Last counted" in the group (today when none); who = Mr. Jin; per-row notes appended |
+| `[JALGAS] - SCRAP GOLD TRACKING` | 9445344009 | `scrap` slips | Scrapping → `in`, one slip per day (`scrap-in-<date>`); Outgoing Scrap → `out`, one per day and receiver (`scrap-out-<date>-<to>`; `to` = person column, else `Order <order #>`, else Unknown); On Hold / Incoming ignored; rows before `scrap_since` not written (the 31.65 g 18K batch of the cutover morning is old stock); a `$` above 50,000 is an order number typed into the cost column — blanked and noted; `what` = `<order #>-<name>` |
+| `CASTING INVENTORY` | 18436449049 | one `casting` slip | id `casting-monday`, who = Rina; the date moves to today only when a line changed since the last sync |
+
+Ids are stable, so every run upserts and never appends a duplicate. Person names are
+normalised (`Mr.Kim` → `Mr. Kim`); karats as in §14.1. The mappers are pure and tested on
+captured rows; the fetcher retries 429/5xx three times.
+
+### 14.8 API
+
+All under the same rules as §7 (JSON, the error shape, 415 on a wrong content type, the write
+limiter per credential). A credential is always required: staff cookie (CSRF-checked on
+writes), `API_TOKENS` bearer or `READ_TOKEN` bearer (reads only).
+
+- `GET /api/inventory[?kind=metal]` → `{ viewer: { name, owner, can_write, sections }, today,
+  scan_enabled, settings: { jewelers, scrap_since, last_sync }, tiles, slips }` — the slips of
+  the viewer's sections (newest first; `kind` narrows them, the tiles stay whole).
+- `POST /api/inventory/slips` body = a slip without `id` / `createdAt` / `createdBy` → 201
+  `{ slip }`; 400 `invalid_slip` with the reason; 403 `read_only` / `section_not_allowed`.
+- `DELETE /api/inventory/slips/{id}` → `{ deleted }`; 404 `slip_not_found`.
+- `POST /api/inventory/scan` (§14.6) → `{ draft }`.
+- `GET` / `PUT /api/inventory/settings` (owners) → `{ jewelers, access, scrap_since, last_sync,
+  staff: [{ id, name }] }`; PUT takes `jewelers` and/or `access`. Nothing from the roster but
+  ids and names.
+- `POST` / `GET /api/inventory/sync` (§14.7).
+
+### 14.9 Page
+
+`/inventory` — header "TRAX Inventory" with "Saving as Ahmed" / "View only"; the tiles (one per
+allowed section; the open one keeps its colour; `#diamond` in the link or the last choice on
+this device — `localStorage trax-section` — opens that section); "Upload photos" (when scanning
+is on) and "Add by hand"; the review card (photo preview, name with a datalist of known names,
+date, the lines grid with the section's columns, dust / direction + to, note, Discard / Save);
+the summary card with the Today / This month / All time switch (gold dust and scrap); the
+Jewelers card (owner, gold dust); the log ("Slips" / "Counts", tap a row for its lines, Delete
+asks "Keep / Yes, delete"); the monday.com and People cards (owner); a round "+" button that
+takes a photo (or opens the form when scanning is off). Layout and CSS are the artifact's
+(`src/components/inventory/inventory.css`, `inv-` prefix), light theme to match the rest of
+the site; every tap target ≥ 44 px, no horizontal scroll at 390 px (e2e). The header link
+"Inventory" hides below 480 px like "Agents"; the home page carries an "Inventory →" link.
+
+### 14.10 Environment
+
+```
+INVENTORY_DATABASE_URL=   # postgres://… (Vercel); or
+INVENTORY_DATA_DIR=       # directory for inventory.json (Docker volume, dev, e2e)
+INVENTORY_OWNERS=ahmed    # staff ids that manage people / jewelers (the admin cookie always can)
+ANTHROPIC_API_KEY=        # photo reading; empty = add by hand only
+ANTHROPIC_MODEL=claude-sonnet-4-6
+MONDAY_API_TOKEN=         # the sync; empty = off
+MONDAY_API_URL=           # test override, default https://api.monday.com/v2
+CRON_SECRET=              # ≥ 16 chars; the bearer Vercel cron sends to /api/inventory/sync
+```
+
+Not done yet (next): refinery settlements (grams sent, fine gold and $ back → a recovery factor
+that turns each jeweler's dust into a gold number); CSV / PDF export for Maks.

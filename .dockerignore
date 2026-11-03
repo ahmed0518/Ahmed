@@ -14,3 +14,4 @@ docs/reference
 .claude
 *.tsbuildinfo
 *.log
+.e2e-inventory

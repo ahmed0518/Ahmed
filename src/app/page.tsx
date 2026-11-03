@@ -10,6 +10,7 @@ import { getEnv } from '@/lib/env';
 import { AppError } from '@/lib/errors';
 import { log } from '@/lib/log';
 import { listUniverse, type UniverseResult } from '@/lib/orders/service';
+import { inventoryEnabled } from '@/lib/inventory/store';
 import { getSettings } from '@/lib/settings/store';
 import { PRODUCTION_TAG } from '@/lib/status/types';
 import { formatAbsolute } from '@/lib/time';
@@ -68,6 +69,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           to update statuses.
         </p>
       )}
+
+      {inventoryEnabled() ? (
+        <p className="muted">
+          <Link href="/inventory" className="action-link">
+            Inventory →
+          </Link>{' '}
+          gold dust, diamonds, scrap, castings.
+        </p>
+      ) : null}
 
       {error ? (
         <div className="notice notice--error" role="alert">

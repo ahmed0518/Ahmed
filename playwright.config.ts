@@ -36,6 +36,8 @@ const noAdminPort = NO_ADMIN_PORT;
 const apiVersion = '2026-10';
 
 const testEnv = loadEnvFile(path.join(__dirname, 'tests', 'e2e', '.env.test'));
+/** The inventory file store for the e2e run; `tests/e2e/global-setup.ts` seeds it from the exported records. */
+export const INVENTORY_DIR = path.join(__dirname, '.e2e-inventory');
 const appEnv: Record<string, string> = {
   ...testEnv,
   SHOPIFY_API_URL: `http://127.0.0.1:${mockPort}/admin/api/${apiVersion}/graphql.json`,
@@ -48,6 +50,7 @@ const appEnv: Record<string, string> = {
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: false,
   workers: 1,
   retries: 0,
@@ -72,11 +75,12 @@ export default defineConfig({
     {
       command: 'npm run build && npm run start',
       url: `http://localhost:${port}/llms.txt`,
-      env: { ...appEnv, PORT: String(port) },
+      env: { ...appEnv, PORT: String(port), INVENTORY_DATA_DIR: INVENTORY_DIR, INVENTORY_OWNERS: 'ahmed' },
       reuseExistingServer: false,
       timeout: 300_000,
     },
     {
+      // no passcode and no inventory store: /admin and /inventory both answer 404 here
       command: 'npm run start',
       url: `http://localhost:${noAdminPort}/llms.txt`,
       env: { ...appEnv, ADMIN_PASSCODE: '', PORT: String(noAdminPort) },
