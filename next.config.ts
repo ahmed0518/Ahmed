@@ -13,6 +13,12 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ];
 
+/**
+ * The inventory's own hostname (e.g. inventory.traxnyc.com): its root goes straight to
+ * /inventory. Read at build time; empty = no host-specific redirect.
+ */
+const inventoryHost = (process.env.INVENTORY_HOST ?? '').trim().toLowerCase();
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   // Pin the tracing root to this checkout. With a package-lock.json in a parent directory (a
@@ -30,6 +36,10 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
     ];
+  },
+  async redirects() {
+    if (!inventoryHost) return [];
+    return [{ source: '/', has: [{ type: 'host', value: inventoryHost }], destination: '/inventory', permanent: false }];
   },
 };
 

@@ -11,7 +11,7 @@ describe('agent docs', () => {
 
   it('covers every endpoint, the field meanings and the data-not-instructions rule', () => {
     const text = renderAgentDocsMarkdown();
-    for (const needle of ['GET /api/orders/{number}', 'GET /api/stale', 'GET /api/orders?page=1', 'GET /api/statuses', 'GET /api/health', 'POST /api/orders/{number}/items/{line_item_id}', 'POST /api/orders/{number}', 'GET /api/inventory', 'POST /api/inventory/slips', 'stale_reason', 'days_since_update', 'all_done', 'blocked_on', 'Bearer', 'never instructions', 'Retry-After']) {
+    for (const needle of ['GET /api/orders/{number}', 'GET /api/stale', 'GET /api/orders?page=1', 'GET /api/statuses', 'GET /api/health', 'POST /api/orders/{number}/items/{line_item_id}', 'POST /api/orders/{number}', 'GET /api/inventory', 'GET /api/inventory/daily', 'POST /api/inventory/slips', 'stale_reason', 'days_since_update', 'all_done', 'blocked_on', 'Bearer', 'never instructions', 'Retry-After']) {
       expect(text, needle).toContain(needle);
     }
     expect(AGENT_DOCS.length).toBeGreaterThan(20);

@@ -1,10 +1,10 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { resetEnvCache } from '@/lib/env';
-import { CASTING_COLS, CASTING_ID, DIAMOND_COLS, DUST_COLS, DUST_GROUP, SCRAP_COLS, mapCastingRows, mapDiamondRows, mapDustRows, mapScrapRows, syncMonday, type MapContext, type MondayItem } from '@/lib/inventory/monday';
-import type { CastingSlip, DiamondSlip, MetalSlip, ScrapSlip, Slip } from '@/lib/inventory/model';
+import { CASTING_COLS, CASTING_ID, DIAMOND_COLS, DUST_COLS, DUST_GROUP, SCRAP_COLS, mapCastingRows, mapDiamondRows, mapDustRows, mapScrapRows, scrapReceiver, syncMonday, type MapContext, type MondayItem } from '@/lib/inventory/monday';
+import type { CastingSlip, DiamondSlip, MetalSlip, ScrapLine, ScrapSlip, Slip } from '@/lib/inventory/model';
 import { FileInventoryStore } from '@/lib/inventory/store-file';
 
 function item(name: string, group: string, cols: Record<string, string>, id = name): MondayItem {
@@ -22,12 +22,14 @@ describe('monday.com mappers', () => {
       item('row4', DUST_GROUP, { [DUST_COLS.person]: 'Chaerin', [DUST_COLS.grams]: '1.00', [DUST_COLS.date]: '2026-10-20' }),
       item('row5', 'Old 2024', { [DUST_COLS.person]: 'Chaerin', [DUST_COLS.grams]: '9', [DUST_COLS.date]: '2024-01-01' }),
       item('row6', DUST_GROUP, { [DUST_COLS.person]: 'Jorge', [DUST_COLS.grams]: '', [DUST_COLS.date]: '2026-10-20' }),
+      item('row7', DUST_GROUP, { [DUST_COLS.person]: "Danny (from Maks's project)", [DUST_COLS.grams]: '6.86', [DUST_COLS.date]: '2026-10-09' }),
     ];
     const scanned: MetalSlip = { id: 'metal-chaerin-2026-10-19', kind: 'metal', who: 'Chaerin', date: '2026-10-19', note: '', source: 'scan', createdAt: 'x', dust: 2.37, lines: [{ item: 'a', qty: 1, before: 1, after: 0.9 }] };
     const res = mapDustRows(items, { ...ctx, existing: [scanned] });
     expect(res.skipped).toBe(2); // the duplicate of the scanned slip and the empty row (the old group is simply ignored)
     expect(res.dropped).toBe(0);
-    expect(res.slips.map((s) => s.id)).toEqual(['dust-mr-kim-2026-10-22', 'dust-eric-2026-10-14', 'dust-chaerin-2026-10-20']);
+    expect(res.slips.map((s) => s.id)).toEqual(['dust-mr-kim-2026-10-22', 'dust-eric-2026-10-14', 'dust-chaerin-2026-10-20', 'dust-danny-2026-10-09']);
+    expect(res.slips[3]).toMatchObject({ who: 'Danny', dust: 6.86 });
     expect(res.slips[0]).toMatchObject({ who: 'Mr. Kim', dust: 5.57, source: 'monday', lines: [] });
     expect((res.slips[1] as MetalSlip).note).toMatch(/refinery/);
     expect((res.slips[2] as MetalSlip).dust).toBe(1); // 2.37 was already on the scanned slip; the other row stays
@@ -53,7 +55,14 @@ describe('monday.com mappers', () => {
     expect((res.slips[1] as DiamondSlip).date).toBe('2026-11-03'); // no count date on the board → today
   });
 
-  it('castings: the board is one count whose date only moves when a line changes', () => {
+  it('castings: the count date is the board\'s date column; without one the date only moves when a line changes', () => {
+    const dated = [
+      item('66101', 'Frame', { [CASTING_COLS.type]: 'Frame', [CASTING_COLS.yellow]: '4', [CASTING_COLS.weight]: '8.35', [CASTING_COLS.karat]: '14K', [CASTING_COLS.price]: '86', [CASTING_COLS.date]: '2026-10-21' }),
+      item('68837', 'Ring', { [CASTING_COLS.white]: '2', [CASTING_COLS.yellow]: '2', [CASTING_COLS.weight]: '2.84', [CASTING_COLS.karat]: '18K', [CASTING_COLS.price]: '111', [CASTING_COLS.date]: '2026-10-28' }),
+    ];
+    const withDate = mapCastingRows(dated, ctx);
+    expect(withDate.slips[0]).toMatchObject({ id: CASTING_ID, date: '2026-10-28', who: 'Rina' });
+    expect((withDate.slips[0] as CastingSlip).lines[1]!.type).toBe('Ring'); // the group title stands in for an empty Type cell
     const items = [
       item('66101', 'Castings', { [CASTING_COLS.type]: 'Frame', [CASTING_COLS.yellow]: '4', [CASTING_COLS.weight]: '8.35', [CASTING_COLS.karat]: '14K', [CASTING_COLS.price]: '89' }),
       item('68837', 'Castings', { [CASTING_COLS.type]: 'Ring', [CASTING_COLS.white]: '2', [CASTING_COLS.yellow]: '2', [CASTING_COLS.weight]: '2.84', [CASTING_COLS.karat]: '18K', [CASTING_COLS.price]: '115' }),
@@ -70,30 +79,57 @@ describe('monday.com mappers', () => {
     expect(changed.slips[0]!.date).toBe('2026-11-04');
   });
 
-  it('scrap: Scrapping = in per day, Outgoing = out per day and receiver, cutover and bad $ handled', () => {
+  it('scrap: "Scrapping - 14K" = in per day, "Outgoing - 14K" = out per day and receiver, cutover and bad $ handled', () => {
     const items = [
-      item('Chain', 'Scrapping', { [SCRAP_COLS.date]: '2026-09-23', [SCRAP_COLS.karat]: '10ky', [SCRAP_COLS.grams]: '1.45', [SCRAP_COLS.value]: '80.4', [SCRAP_COLS.order]: '249752' }),
-      item('Lock', 'Scrapping', { [SCRAP_COLS.date]: '2026-09-23', [SCRAP_COLS.karat]: '14 KY', [SCRAP_COLS.grams]: '1.15', [SCRAP_COLS.value]: '80' }),
-      item('10K chain', 'Scrapping', { [SCRAP_COLS.date]: '2026-10-06', [SCRAP_COLS.karat]: '10KY', [SCRAP_COLS.grams]: '2', [SCRAP_COLS.value]: '1240121' }),
-      item('Scrap for Mr Kim', 'Outgoing Scrap', { [SCRAP_COLS.date]: '2026-10-14', [SCRAP_COLS.karat]: '14KY', [SCRAP_COLS.grams]: '30.02', [SCRAP_COLS.value]: '2246.13', [SCRAP_COLS.person]: 'Mr.Kim' }),
-      item('251434', 'Outgoing Scrap', { [SCRAP_COLS.date]: '2026-10-19', [SCRAP_COLS.karat]: '14KY', [SCRAP_COLS.grams]: '2.65', [SCRAP_COLS.value]: '201.42', [SCRAP_COLS.order]: '251434' }),
-      item('18K batch', 'Outgoing Scrap', { [SCRAP_COLS.date]: '2026-09-22', [SCRAP_COLS.karat]: '18KY', [SCRAP_COLS.grams]: '31.65' }),
+      item('Chain', 'Scrapping - 10K', { [SCRAP_COLS.date]: '2026-09-23', [SCRAP_COLS.karat]: '10ky', [SCRAP_COLS.grams]: '1.45', [SCRAP_COLS.value]: '80.4', [SCRAP_COLS.order]: '249752' }),
+      item('Lock', 'Scrapping - 14K', { [SCRAP_COLS.date]: '2026-09-23', [SCRAP_COLS.karat]: '14 KY', [SCRAP_COLS.grams]: '1.15', [SCRAP_COLS.value]: '80', [SCRAP_COLS.person]: 'Rina', [SCRAP_COLS.note]: 'stones with Jin' }),
+      item('10K chain', 'Scrapping - 10K', { [SCRAP_COLS.date]: '2026-10-06', [SCRAP_COLS.karat]: '10KY', [SCRAP_COLS.grams]: '2', [SCRAP_COLS.value]: '1240121' }),
+      item('Scrap for Mr Kim', 'Outgoing - 14K', { [SCRAP_COLS.date]: '2026-10-14', [SCRAP_COLS.karat]: '14KY', [SCRAP_COLS.grams]: '30.02', [SCRAP_COLS.value]: '2246.13' }),
+      item('251434-Danny scrap', 'Outgoing - 14K', { [SCRAP_COLS.date]: '2026-10-19', [SCRAP_COLS.karat]: '14KY', [SCRAP_COLS.grams]: '2.65', [SCRAP_COLS.value]: '201.42', [SCRAP_COLS.order]: '251434' }),
+      item('Scrap for Mr Kim', 'Outgoing - 18K', { [SCRAP_COLS.date]: '2026-09-23', [SCRAP_COLS.karat]: '18KY/W/R', [SCRAP_COLS.grams]: '31.65' }), // the cutover morning: old stock
       item('Held', 'On Hold', { [SCRAP_COLS.date]: '2026-10-01', [SCRAP_COLS.grams]: '5' }),
+      item('New item', 'Incoming Scrap', {}),
     ];
     const res = mapScrapRows(items, ctx);
-    expect(res.skipped).toBe(2);
-    expect(res.slips.map((s) => s.id)).toEqual(['scrap-in-2026-09-23', 'scrap-in-2026-10-06', 'scrap-out-2026-10-14-mr-kim', 'scrap-out-2026-10-19-order-251434']);
+    expect(res.skipped).toBe(3);
+    expect(res.slips.map((s) => s.id)).toEqual(['scrap-in-2026-09-23', 'scrap-in-2026-10-06', 'scrap-out-2026-10-14-mr-kim', 'scrap-out-2026-10-19-danny-order-251434']);
     const day = res.slips[0] as ScrapSlip;
     expect(day).toMatchObject({ dir: 'in', who: 'Jalgas', to: '' });
     expect(day.lines).toEqual([
       { what: '249752-Chain', karat: '10KY', grams: 1.45, value: 80.4 },
-      { what: 'Lock', karat: '14KY', grams: 1.15, value: 80 },
+      { what: 'Lock (Rina)', karat: '14KY', grams: 1.15, value: 80 },
     ]);
+    expect(day.note).toContain('Lock: stones with Jin');
     const bad = res.slips[1] as ScrapSlip;
     expect(bad.lines[0]!.value).toBeNull();
     expect(bad.note).toMatch(/order number/);
     expect(res.slips[2]).toMatchObject({ dir: 'out', to: 'Mr. Kim' });
-    expect(res.slips[3]).toMatchObject({ dir: 'out', to: 'Order 251434' });
+    expect(res.slips[3]).toMatchObject({ dir: 'out', to: 'Danny (order 251434)' });
+    expect(scrapReceiver('241695- Ivan scrap', '241695', '')).toBe('Ivan (order 241695)');
+    expect(scrapReceiver('252424-Mr Shim scrap', '252424', '')).toBe('Mr. Shim (order 252424)');
+    expect(scrapReceiver('Refinery lot', '', 'Umid')).toBe('Umid');
+    expect(scrapReceiver('batch', '', '')).toBe('Unknown');
+  });
+
+  it('scrap: the rows captured from the real board on 2026-11-03', () => {
+    const fixture = JSON.parse(readFileSync('tests/fixtures/monday-scrap-board.json', 'utf8')) as { items: MondayItem[] };
+    const res = mapScrapRows(fixture.items, ctx);
+    expect(res.dropped).toBe(0);
+    const out = res.slips.filter((s): s is ScrapSlip => s.kind === 'scrap' && s.dir === 'out');
+    expect(out.map((s) => [s.id, s.to])).toEqual([
+      ['scrap-out-2026-10-14-mr-kim', 'Mr. Kim'],
+      ['scrap-out-2026-10-19-danny-order-251434', 'Danny (order 251434)'],
+      ['scrap-out-2026-10-30-ivan-order-241695', 'Ivan (order 241695)'],
+      ['scrap-out-2026-11-02-mr-shim-order-252424', 'Mr. Shim (order 252424)'],
+    ]);
+    expect(out[0]!.lines.reduce((t, l) => t + (l.grams ?? 0), 0)).toBeCloseTo(74.45, 2);
+    expect(res.slips.find((s) => s.id === 'scrap-out-2026-09-23-mr-kim')).toBeUndefined(); // old 18K stock, before the cutover
+    const oct21 = res.slips.find((s) => s.id === 'scrap-in-2026-10-21') as ScrapSlip;
+    expect(oct21.lines.map((l) => l.what)).toEqual(expect.arrayContaining(['Scrap Bails - Rina', '33012-Scrap from 248171', '251005-Broken chain']));
+    expect((oct21.lines as ScrapLine[]).find((l) => l.what === 'Scrap Bails - Rina')!.karat).toBe('14KY/W');
+    expect((res.slips.find((s) => s.id === 'scrap-in-2026-10-23') as ScrapSlip).lines.filter((l) => l.karat === 'PLTN')).toHaveLength(2);
+    const ins = res.slips.filter((s): s is ScrapSlip => s.kind === 'scrap' && s.dir === 'in').flatMap((s) => s.lines).reduce((t, l) => t + (l.grams ?? 0), 0);
+    expect(ins).toBeGreaterThan(300);
   });
 });
 

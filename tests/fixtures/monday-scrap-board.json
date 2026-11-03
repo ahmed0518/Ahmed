@@ -1,0 +1,4515 @@
+{
+ "board": "9445344009",
+ "captured": "2026-11-03",
+ "items": [
+  {
+   "id": "9855104704",
+   "name": "New item",
+   "group": {
+    "id": "topics",
+    "title": "Incoming Scrap"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Waiting for melt"
+    },
+    {
+     "id": "date4",
+     "text": null
+    },
+    {
+     "id": "text_mks74ast",
+     "text": null
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": null
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": null
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": null
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13292197069",
+   "name": "251487-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251487"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.75"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "92.33"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13311036925",
+   "name": "251508-Scrap",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251508"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.67"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "144.63"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13314891932",
+   "name": "251683-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251683"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.93"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "50.38"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13315695846",
+   "name": "251192-Bracelet",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251192"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": "Box lock into lock box"
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "5.16"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "279.51"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341295885",
+   "name": "252043-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252043"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "4.63"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "246.87"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341336355",
+   "name": "251962-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251962"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.73"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "145.56"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13349789150",
+   "name": "33012-Scrap from 248171",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ciara Vazquez"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "33012-Scrap"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.31"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "17.12"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13350332088",
+   "name": "252058-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252058"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.49"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "26"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13352068533",
+   "name": "251005-Broken chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ciara Vazquez"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251005"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "6.36"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "340.52"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13361473252",
+   "name": "251826-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-22"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251826"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY/W"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "14.59"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "761.05"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13361535310",
+   "name": "245572-Grillz",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Eamon Moogan"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-22"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "245572"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KR"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "10.33"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "538.31"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13401770046",
+   "name": "252630-Bracelet",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-27"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252630"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.33"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "17.32"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13401789197",
+   "name": "252638-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-27"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252638"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.25"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "65.62"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13430772210",
+   "name": "252850-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252850"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.05"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "52.62"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13431024615",
+   "name": "252885-Bracelet",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252885"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.36"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "18.03"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13448363859",
+   "name": "253060-Chain",
+   "group": {
+    "id": "group_mm8rtb3h",
+    "title": "Scrapping - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-11-02"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "253060"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "3.64"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "185.39"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13293420587",
+   "name": "251013-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251013"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.28"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "95.77"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13294136137",
+   "name": "251253-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251253"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.49"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "111.48"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13294136628",
+   "name": "251419-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251419"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.27"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "20.2"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13294194292",
+   "name": "249884-Tennis link",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "249884"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "4.3"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "321.72"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13300970718",
+   "name": "251181-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251181"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "3.76"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "286.15"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13301027643",
+   "name": "251166-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251166"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "3.59"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "273.21"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13301048744",
+   "name": "250776-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250776"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.96"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "73.05"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13305678485",
+   "name": "248285-End caps",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "248285"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.5"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "38.23"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13305717923",
+   "name": "Jump ring-Scrap",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Jump ring-Scrap"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KR"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.11"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "8.41"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13305705895",
+   "name": "Scrap, No name",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap, No name"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.6"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "45.88"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13311493963",
+   "name": "251451-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251451"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.65"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "49.92"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13311545964",
+   "name": "67792 (Skyline) - Scrap",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "67792 (Skyline) - Scrap"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.28"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "98.3"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13315122858",
+   "name": "251684-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251684"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.64"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "125.95"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13315202507",
+   "name": "250351-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-16"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250351"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.83"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "63.74"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13325581718",
+   "name": "251548-Tennis link",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251548"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KR"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.35"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "26.62"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13325606276",
+   "name": "251171-Tennis bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251171"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "10.34"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "786.56"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13325697367",
+   "name": "250419-Ring",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Pia Diaz"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250419"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.39"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "181.8"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": "Rina"
+    }
+   ]
+  },
+  {
+   "id": "13325727444",
+   "name": "247748-Wedding rings",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "247748"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "4.94"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "375.78"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13325742769",
+   "name": "Wedding ring- Pia / Ahmed",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Wedding ring- Pia / Ahmed"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.16"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "164.31"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13325789826",
+   "name": "248963-Stud earrings",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ariana Anton"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "248963"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.54"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "41.07"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13325794650",
+   "name": "Tennis links- Rina",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Tennis links- Rina"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY/R"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "87.82"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "6680.46"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": "Rina"
+    }
+   ]
+  },
+  {
+   "id": "13329632707",
+   "name": "236791-Ring",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "236791"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.01"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "153.56"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": "Rina"
+    }
+   ]
+  },
+  {
+   "id": "13330721947",
+   "name": "Scrap Umid- Push back",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Umid"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap Umid- Push back"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.12"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "9.12"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13331063682",
+   "name": "251757-Tennis link",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251757"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "18.05"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "1371.98"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13337220974",
+   "name": "251870-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251870"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.61"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "46.1"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13337241126",
+   "name": "251714-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251714"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.46"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "34.76"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341337034",
+   "name": "252026-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252026"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.55"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "41.59"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341755342",
+   "name": "Samuel Bayeff - Scrap",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov, Umid"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Samuel Bayeff - Scrap"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.6"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "114"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341744446",
+   "name": "Cross pendant - Umid",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Umid"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Cross pendant - Umid"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "12.86"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "972.48"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": "Umid"
+    }
+   ]
+  },
+  {
+   "id": "13341773949",
+   "name": "250839-Scrap",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250839"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.44"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "184.51"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13347892280",
+   "name": "Scrap Bails - Rina",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap Bails - Rina"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY/W"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "57.89"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "4388.56"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": "Rina"
+    }
+   ]
+  },
+  {
+   "id": "13349897151",
+   "name": "252139-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252139"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.77"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "134.25"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13350326650",
+   "name": "TRX-8496-Scrap small pendant",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ariana Anton"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "TRX-8496"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.13"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "85.02"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13350485720",
+   "name": "Scrap Bails - Rina",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-21"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap Bails - Rina"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY/W/R"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "45.38"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "3440.19"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": "Rina"
+    }
+   ]
+  },
+  {
+   "id": "13363387065",
+   "name": "252160-Bracelets",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-22"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252160"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.48"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "35.38"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13363427780",
+   "name": "252188-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-22"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252188"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.06"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "151.85"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13363412577",
+   "name": "250129-Ring crown",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Emma Kubek"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-22"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250129"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.76"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "56.02"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13363458798",
+   "name": "1239688-Ring",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-22"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "1239688"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.66"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "122.35"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13370843991",
+   "name": "252162-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252162"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "5.57"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "412.14"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373052074",
+   "name": "252324-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252324"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "6.89"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "509.8"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373581800",
+   "name": "Scrap Lock",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap Lock"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.68"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "49.8"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373637349",
+   "name": "249054-Ring",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Emma Kubek"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "249054"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.36"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "99.59"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373682951",
+   "name": "252244-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252244"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "9.9"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "724.95"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373670227",
+   "name": "251964-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251964"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.5"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "183.05"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13401609603",
+   "name": "250897-Scrap",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-27"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250897"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "3.33"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "247.86"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13401831053",
+   "name": "250595-Grilz",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Eamon Moogan"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-27"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250595"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "8.75"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "651.55"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13418414962",
+   "name": "249880-Bail scrap",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-29"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "249880"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.19"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "87.74"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13418470120",
+   "name": "252611-Bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-29"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252611"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.05"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "3.68"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13418504112",
+   "name": "252169-Tennis link",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-29"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252169"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.56"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "41.28"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13418502215",
+   "name": "252637-Tennis bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-29"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252637"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "7.34"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "541.17"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13419660170",
+   "name": "250130-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-29"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250130"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.37"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "174.74"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13427747914",
+   "name": "901518-Scrap earring screw",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "901518"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.16"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "11.44"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13422353529",
+   "name": "252141-Necklace",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "ahmed@traxnyc.com"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-29"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252141"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "12.04"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "888.44"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13427769504",
+   "name": "901518-Scrap screw",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "901518"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.16"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "11.44"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13427949231",
+   "name": "252403-Tennis bracelet",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252403"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": "stones with Jin"
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "1.36"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "97.29"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13430853830",
+   "name": "252841-Bracelets",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252841"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.95"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "67.45"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13448351363",
+   "name": "253108-Chain",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-11-02"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "253108"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.89"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "64.3"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13449079575",
+   "name": "252740-Tennis link",
+   "group": {
+    "id": "group_mm8rreh8",
+    "title": "Scrapping - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-11-02"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252740"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.47"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "34"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13305706863",
+   "name": "250122-Bracelet",
+   "group": {
+    "id": "group_mm8rep0w",
+    "title": "Scrapping - 18K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-15"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250122"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "18KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.88"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "285.23"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341371426",
+   "name": "251140-Franco chain (no clasp)",
+   "group": {
+    "id": "group_mm8rep0w",
+    "title": "Scrapping - 18K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Umid"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251140"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "18KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": "locks into lock box"
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "5.26"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "512.92"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373604431",
+   "name": "247116-Ring",
+   "group": {
+    "id": "group_mm8rep0w",
+    "title": "Scrapping - 18K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Emma Kubek"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "247116"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "18KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "3.31"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "312.42"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373635695",
+   "name": "251096-Ring",
+   "group": {
+    "id": "group_mm8rep0w",
+    "title": "Scrapping - 18K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Emma Kubek"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251096"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "18KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "4.39"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "414.36"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373670528",
+   "name": "2502236-Scrap",
+   "group": {
+    "id": "group_mm8rep0w",
+    "title": "Scrapping - 18K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "2502236"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "18KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "6.83"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "644.6"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13341679284",
+   "name": "244405-Wheat chain broken",
+   "group": {
+    "id": "group_mm8r8ctx",
+    "title": "Scrapping - 21K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ciara Vazquez, Rodrigo Iraheta"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-20"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "244405"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "21KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "4.96"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "565.93"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13369020239",
+   "name": "250370-Broken chain",
+   "group": {
+    "id": "group_mm8r8ctx",
+    "title": "Scrapping - 21K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "250370"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "21KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.2"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "242.9"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13369005527",
+   "name": "TRX-8963-Scrap",
+   "group": {
+    "id": "group_mm8rc5h7",
+    "title": "Scrapping - Platinum"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ahmadjon Karimov"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "TRX-8963"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "PLTN"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "4.64"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "211.26"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13373652531",
+   "name": "249054-Ring",
+   "group": {
+    "id": "group_mm8rc5h7",
+    "title": "Scrapping - Platinum"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Emma Kubek"
+    },
+    {
+     "id": "status",
+     "text": "Scrapping"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "249054"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "PLTN"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "6.18"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "281.75"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "9871477558",
+   "name": "Bracelet",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Waiting for melt"
+    },
+    {
+     "id": "date4",
+     "text": null
+    },
+    {
+     "id": "text_mks74ast",
+     "text": null
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": null
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": null
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": null
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "18123191626",
+   "name": "Chain",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Jalgas Shynybek"
+    },
+    {
+     "id": "status",
+     "text": "Waiting for melt"
+    },
+    {
+     "id": "date4",
+     "text": null
+    },
+    {
+     "id": "text_mks74ast",
+     "text": null
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": null
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": null
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": null
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "18213444362",
+   "name": "Casting",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Pia Diaz"
+    },
+    {
+     "id": "status",
+     "text": "On Hold"
+    },
+    {
+     "id": "date4",
+     "text": "2025-10-17"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": null
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": null
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": null
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": null
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "10073743093",
+   "name": "Lock",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Store Team"
+    },
+    {
+     "id": "status",
+     "text": "On Hold"
+    },
+    {
+     "id": "date4",
+     "text": "2025-09-17"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "1230758"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14k"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": "IN LOCK BOX"
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.4"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "158"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "9676174174",
+   "name": "Cuban Lock",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Ozodbek Rasulov"
+    },
+    {
+     "id": "status",
+     "text": "On Hold"
+    },
+    {
+     "id": "date4",
+     "text": "2025-07-25"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "1171600"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14k"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": "IN LOCK BOX"
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "7.52"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "458.7"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "9668059507",
+   "name": "Chain",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Pia Diaz"
+    },
+    {
+     "id": "status",
+     "text": "On Hold"
+    },
+    {
+     "id": "date4",
+     "text": "2025-07-24"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": null
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14k"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.86"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "174.46"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "9658158241",
+   "name": "Chain",
+   "group": {
+    "id": "group_mks78xwg",
+    "title": "On Hold"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Pia Diaz"
+    },
+    {
+     "id": "status",
+     "text": "On Hold"
+    },
+    {
+     "id": "date4",
+     "text": "2025-07-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": null
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14k"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "0.48"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "29.76"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13292194447",
+   "name": "Scrap for Mr Kim",
+   "group": {
+    "id": "group_mm8r7v52",
+    "title": "Outgoing - 10K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap for Mr Kim"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "10KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "11.59"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "611.48"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13292188650",
+   "name": "Scrap for Mr Kim",
+   "group": {
+    "id": "group_mm8r74gj",
+    "title": "Outgoing - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap for Mr Kim"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "30.02"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "2246.13"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13292223284",
+   "name": "Scrap for Mr Kim",
+   "group": {
+    "id": "group_mm8r74gj",
+    "title": "Outgoing - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-14"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap for Mr Kim"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KW"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "32.84"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "2457.12"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13330694989",
+   "name": "251434-Danny scrap",
+   "group": {
+    "id": "group_mm8r74gj",
+    "title": "Outgoing - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": "Daniel Guzman"
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-19"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "251434"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "2.65"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "201.42"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13428958374",
+   "name": "241695- Ivan scrap",
+   "group": {
+    "id": "group_mm8r74gj",
+    "title": "Outgoing - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-10-30"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "241695"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KR"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "14.38"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "1028.74"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13444230407",
+   "name": "252424-Mr Shim scrap",
+   "group": {
+    "id": "group_mm8r74gj",
+    "title": "Outgoing - 14K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-11-02"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "252424"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "14KY"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "5.16"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "373.58"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  },
+  {
+   "id": "13115754576",
+   "name": "Scrap for Mr Kim",
+   "group": {
+    "id": "group_mm8r6r53",
+    "title": "Outgoing - 18K"
+   },
+   "column_values": [
+    {
+     "id": "person",
+     "text": null
+    },
+    {
+     "id": "status",
+     "text": "Using for orders"
+    },
+    {
+     "id": "date4",
+     "text": "2026-09-23"
+    },
+    {
+     "id": "text_mks74ast",
+     "text": "Scrap for Mr Kim"
+    },
+    {
+     "id": "text_mks7vz98",
+     "text": "18KY/W/R"
+    },
+    {
+     "id": "text_mks74y03",
+     "text": null
+    },
+    {
+     "id": "numeric_mks8kca8",
+     "text": "31.65"
+    },
+    {
+     "id": "numeric_mks82dvc",
+     "text": "3208.96"
+    },
+    {
+     "id": "text_mksfg2ra",
+     "text": null
+    }
+   ]
+  }
+ ],
+ "note": "Rows of the [JALGAS] - SCRAP GOLD TRACKING board as the sync fetcher returns them (group titles, column ids), captured 2026-11-03: everything dated 2026-10-14 or later plus every Outgoing / On Hold / Incoming row."
+}

@@ -16,7 +16,7 @@ src/app/                     pages + route handlers (App Router, all dynamic, No
   api/orders/[number]/items/[lineItemId]  POST one item
   api/orders · api/stale · api/statuses · api/health · api/login · api/admin/*
   inventory/page.tsx          the inventory page (gold dust, diamonds, scrap, castings) — SPEC §14
-  api/inventory/*             GET payload · slips POST/DELETE · scan · settings · sync
+  api/inventory/*             GET payload · slips POST/DELETE · scan · settings · sync · daily (the daily check, ?notify=1 → Slack)
 src/lib/
   env.ts            boot validation (throws on bad config; no secret defaults)
   shopify/          queries.ts (every GraphQL document, named) · client.ts (fetch, THROTTLED/5xx retry) · token.ts (client credentials)
@@ -29,7 +29,10 @@ src/lib/
   admin/model.ts    settings form + staff actions (never exposes pin_hash)
   inventory/        model.ts (slip shapes, validation, normalisers) · compute.ts (THE inventory maths) ·
                     store.ts + store-file.ts + store-pg.ts (slips in a JSON file or Postgres) · access.ts ·
-                    scan.ts (Anthropic Messages API, the tuned prompts) · monday.ts (board mappers + sync) · service.ts
+                    scan.ts (Anthropic Messages API, the tuned prompts) · monday.ts (board mappers + sync) · service.ts ·
+                    daily.ts (THE daily check rules + Slack formatting) · notify.ts (Incoming Webhook)
+.claude/workflows/inventory-daily-check.js  the daily multi-agent check (gather → judge → refute → report), SPEC §14.12
+tests/fixtures/monday-scrap-board.json      real rows of the scrap board (2026-11-03) — the mapper's regression fixture
   agent-docs.ts     source of /agents, /llms.txt and docs/AGENTS.md (`npm run agents:md`)
 src/components/     StatusCard (client, optimistic saves), OrderRows, LoginForm, AdminPanel …
 src/components/inventory/  InventoryApp (tiles, review form, scanning queue), Summary, SlipLog, OwnerCards, inventory.css
@@ -65,7 +68,11 @@ read and write (`src/lib/inventory/model.ts`); the maths in `compute.ts` is the 
 is tested against the real export — change a number there only with the SPEC. As Claude, read
 and write slips through the API with the `claude` token (`GET /api/inventory`,
 `POST /api/inventory/slips`, `DELETE /api/inventory/slips/{id}`); `POST /api/inventory/sync`
-pulls the monday.com boards. Never write `source: "monday"` by hand — only the sync does.
+pulls the monday.com boards; `GET /api/inventory/daily` is the deterministic end-of-day check
+(SPEC §14.11) and the daily agents (`.claude/workflows/inventory-daily-check.js`) cross-check it
+against the boards and post to Slack. Never write `source: "monday"` by hand — only the sync
+does. The monday boards' group titles and column ids are in SPEC §14.7 and in `monday.ts`; the
+scrap board's real rows are captured in `tests/fixtures/monday-scrap-board.json`.
 
 ## Writing statuses as Claude
 

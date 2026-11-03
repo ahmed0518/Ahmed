@@ -215,6 +215,14 @@ curl -s -X POST https://production.traxnyc.com/api/inventory/slips \
 
 Remove a slip you or someone else saved by mistake; 404 `slip_not_found` otherwise. There is no edit: delete and save again.
 
+### GET /api/inventory/daily?date=2026-11-03
+
+The end-of-day check as the app computes it: `{ date, work_day, tiles, today: { dust_g, slips, scrap_in_g, scrap_out_g }, findings: [ { id, section, severity, title, detail } ], counts, ok, posted, slack_enabled }`. `severity` is `alert`, `warn` or `info`; `ok` is false when any alert is open. Rule ids such as `metal.missing_slip`, `metal.slip_net`, `scrap.negative_on_hand`, `diamond.stale_count` and `sync.failed` are documented in the SPEC. `date` re-runs an earlier day; `notify=1` (API token) also posts the report to Slack when the server has a webhook.
+
+```bash
+curl -s "https://production.traxnyc.com/api/inventory/daily" -H "Authorization: Bearer $TOKEN"
+```
+
 ### POST /api/inventory/sync
 
 Pull the four monday.com boards now (an hourly cron does it anyway). Optional body `{ "boards": ["dust", "diamond", "scrap", "casting"] }`. Answers `{ ok, results: [ { board, ok, fetched, written, skipped, dropped, error? } ] }`, HTTP 207 when a board failed; without a monday.com token every board reports `sync_unavailable`. Synced records keep stable ids, so a second run changes nothing.

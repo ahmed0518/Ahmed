@@ -231,6 +231,52 @@ four monday.com boards. Full rules in `SPEC.md` §14. To turn it on:
 Agents: `GET /api/inventory` with an `API_TOKENS` bearer returns the four headline numbers and
 every slip; `POST /api/inventory/slips` saves one. Details in `/agents`.
 
+### 6b. The daily check and the daily agents
+
+Two layers check the inventory every work day (SPEC §14.11–14.12):
+
+1. **The app's own check** — `GET /api/inventory/daily` runs fixed rules (who did not hand in
+   a slip, metal that did not come back, scrap out > in, stale diamond or casting counts, a
+   failed or stale monday.com sync …). To have it posted to Slack at 5:30 pm New York on
+   weekdays: in Slack, open the app that should post (or create one at
+   <https://api.slack.com/apps>) → **Incoming Webhooks** → **Add New Webhook to Workspace** →
+   pick the channel (`#inventory-management`) → copy the URL into `SLACK_WEBHOOK_URL`. Set
+   `INVENTORY_PUBLIC_URL=https://inventory.traxnyc.com` for the link in the message. The
+   second cron in `vercel.json` does the rest (it sends `CRON_SECRET`). On Docker, curl the
+   endpoint from cron with `Authorization: Bearer $CRON_SECRET`.
+2. **The daily agents** — a scheduled Claude Code task ("Inventory daily check", weekdays
+   5:39 pm New York) runs `.claude/workflows/inventory-daily-check.js`: five agents read the
+   four monday.com boards and the app's report, one reviewer per section re-checks the
+   arithmetic, three skeptics try to refute every alert, and a writer posts the result to
+   `#inventory-management`. It reads the boards through the monday.com connector, so it works
+   before the app is deployed; once it is, add two **environment variables** to the Claude Code
+   cloud environment the task runs in (the environment's settings, *Edit* → environment
+   variables; never paste them into a chat): `TRAX_INVENTORY_URL=https://inventory.traxnyc.com`
+   and `TRAX_INVENTORY_TOKEN=<the claude token from API_TOKENS>`. The agents never write to a
+   board or to the store.
+
+### 6c. The address: inventory.traxnyc.com
+
+`traxnyc.com` is the Shopify store. Shopify serves the apex and `www` and owns every path on
+them, so `traxnyc.com/inventory` cannot point at this app (Shopify's app proxy only offers
+`traxnyc.com/apps/…`-style paths and is made for storefront pages, not a staff login). The
+right way is a subdomain on the same deployment:
+
+1. Vercel project → **Settings → Domains → Add** `inventory.traxnyc.com` (the orders pages
+   keep `production.traxnyc.com`; both point at the same project).
+2. At the DNS provider for traxnyc.com, add the record Vercel shows: `CNAME inventory →
+   cname.vercel-dns.com` (leave the apex, `www` and the Shopify records untouched). HTTPS is
+   issued automatically once the record resolves.
+3. Environment variables: `INVENTORY_HOST=inventory.traxnyc.com` (build time: the root of that
+   hostname redirects to `/inventory`) and `INVENTORY_PUBLIC_URL=https://inventory.traxnyc.com`.
+   Redeploy.
+4. Share `https://inventory.traxnyc.com` — it lands on `/inventory`; `/login` and the order
+   pages work there too.
+
+If Shopify ever has to answer `traxnyc.com/inventory` (a link on the storefront), add a
+storefront redirect in Shopify (Online Store → Navigation → URL redirects: `/inventory` →
+`https://inventory.traxnyc.com`); that is a 301 from Shopify, not the app.
+
 ## 7. Local development
 
 Needs Node.js 22 (see the prerequisite in §3).

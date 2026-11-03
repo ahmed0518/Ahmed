@@ -46,8 +46,12 @@ export interface Env {
   /** null = the monday.com sync is off */
   MONDAY_API_TOKEN: string | null;
   MONDAY_API_URL: string;
-  /** bearer accepted by POST /api/inventory/sync (Vercel cron sends CRON_SECRET) */
+  /** bearer accepted by POST /api/inventory/sync and the daily check (Vercel cron sends CRON_SECRET) */
   CRON_SECRET: string | null;
+  /** Slack Incoming Webhook for the daily inventory report; null = not posted */
+  SLACK_WEBHOOK_URL: string | null;
+  /** https origin of the deployment, for links in the report (no trailing slash); null = no link */
+  INVENTORY_PUBLIC_URL: string | null;
   isProduction: boolean;
   /** Full GraphQL endpoint URL. */
   graphqlUrl: string;
@@ -248,6 +252,18 @@ export function buildEnv(source: EnvSource = process.env): Env {
   }
   const cronSecret = read('CRON_SECRET', source);
   if (cronSecret && cronSecret.length < 16) problems.push('CRON_SECRET must be at least 16 characters');
+  const slackWebhook = read('SLACK_WEBHOOK_URL', source);
+  if (slackWebhook && !/^https:\/\/hooks\.slack\.com\/services\/[A-Za-z0-9/_-]+$/.test(slackWebhook)) problems.push('SLACK_WEBHOOK_URL must be an https://hooks.slack.com/services/… URL');
+  let publicUrl = read('INVENTORY_PUBLIC_URL', source);
+  if (publicUrl) {
+    try {
+      const u = new URL(publicUrl);
+      if (u.protocol !== 'https:' && u.hostname !== 'localhost') problems.push('INVENTORY_PUBLIC_URL must be an https:// origin');
+      publicUrl = `${u.origin}`;
+    } catch {
+      problems.push('INVENTORY_PUBLIC_URL must be a full URL such as https://inventory.traxnyc.com');
+    }
+  }
 
   if (problems.length > 0) throw new EnvError(problems);
 
@@ -274,6 +290,8 @@ export function buildEnv(source: EnvSource = process.env): Env {
     MONDAY_API_TOKEN: mondayToken,
     MONDAY_API_URL: mondayUrl,
     CRON_SECRET: cronSecret,
+    SLACK_WEBHOOK_URL: slackWebhook,
+    INVENTORY_PUBLIC_URL: publicUrl,
     isProduction: source.NODE_ENV === 'production',
     graphqlUrl,
     tokenUrl,

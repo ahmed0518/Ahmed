@@ -135,6 +135,19 @@ test.describe('inventory', () => {
     const noCron = await request.post('/api/inventory/sync', { headers: { ...originHeader() } });
     expect(noCron.status()).toBe(401);
 
+    // the daily check: any credential reads it; notify needs a token or an owner and reports when Slack is off
+    expect((await request.get('/api/inventory/daily')).status()).toBe(401);
+    const daily = await request.get('/api/inventory/daily?date=2026-10-23', { headers: bearer(CLAUDE_TOKEN) });
+    expect(daily.status(), await daily.text()).toBe(200);
+    const report = (await daily.json()) as { date: string; work_day: boolean; findings: { id: string; severity: string }[]; counts: { alert: number }; slack_enabled: boolean; posted: boolean };
+    expect(report.date).toBe('2026-10-23');
+    expect(report.work_day).toBe(true);
+    expect(report.findings.map((f) => f.id)).toContain('metal.missing_slip');
+    expect(report.slack_enabled).toBe(false);
+    const notify = await request.get('/api/inventory/daily?notify=1', { headers: bearer(CLAUDE_TOKEN) });
+    expect(notify.status()).toBe(200);
+    expect(((await notify.json()) as { posted: boolean }).posted).toBe(false);
+
     const scan = await request.post('/api/inventory/scan', { headers: { Authorization: `Bearer ${CLAUDE_TOKEN}` }, multipart: { kind: 'metal', image: { name: 'slip.png', mimeType: 'image/png', buffer: Buffer.from('not really a png') } } });
     expect(scan.status()).toBe(503);
     expect((await scan.json()).code).toBe('scan_unavailable');

@@ -1105,10 +1105,10 @@ Without `MONDAY_API_TOKEN` every board reports 503 `sync_unavailable`.
 
 | board | id | → | rule |
 |---|---|---|---|
-| `Gold Dust-Jalgas` | 9504626073 | `metal` slips, dust only | group "July 2025-Present" only; id `dust-<person>-<date>`; two rows of one person-day add up; a row is skipped when a scanned slip of the same person already carries that dust (same grams, dated the same day or up to three days earlier — Jalgas types the board the next business day); rows ≥ 100 g or Eric's are refinery lots, kept and labelled in the note |
+| `Gold Dust-Jalgas` | 9504626073 | `metal` slips, dust only | group "July 2025-Present" only (the "Grillz Dust Tracking" group is another workflow); person text without its parenthetical (`Danny (from Maks's project)` → Danny); id `dust-<person>-<date>`; two rows of one person-day add up; a row is skipped when a scanned slip of the same person already carries that dust (same grams, dated the same day or up to three days earlier — Jalgas types the board the next business day); rows ≥ 100 g or Eric's are refinery lots, kept and labelled in the note |
 | `[JIN] - DIAMOND INVENTORY` | 18437692268 | one `diamond` slip per grade | group title = grade; id `diamond-<grade>-monday`; date = latest "Last counted" in the group (today when none); who = Mr. Jin; per-row notes appended |
-| `[JALGAS] - SCRAP GOLD TRACKING` | 9445344009 | `scrap` slips | Scrapping → `in`, one slip per day (`scrap-in-<date>`); Outgoing Scrap → `out`, one per day and receiver (`scrap-out-<date>-<to>`; `to` = person column, else `Order <order #>`, else Unknown); On Hold / Incoming ignored; rows before `scrap_since` not written (the 31.65 g 18K batch of the cutover morning is old stock); a `$` above 50,000 is an order number typed into the cost column — blanked and noted; `what` = `<order #>-<name>` |
-| `CASTING INVENTORY` | 18436449049 | one `casting` slip | id `casting-monday`, who = Rina; the date moves to today only when a line changed since the last sync |
+| `[JALGAS] - SCRAP GOLD TRACKING` | 9445344009 | `scrap` slips | groups `Scrapping - 14K` / `- 10K` / `- 18K` / `- 21K` / `- Platinum` → `in`, one slip per day (`scrap-in-<date>`); groups `Outgoing - …` → `out`, one per day and receiver (`scrap-out-<date>-<to>`; `to` from the row name: `Scrap for Mr Kim` → Mr. Kim, `251434-Danny scrap` → `Danny (order 251434)`, else the person column, else `Order <#>`, else Unknown); On Hold / Incoming Scrap ignored; rows before `scrap_since` not written, nor an outgoing batch dated the cutover day itself (the 31.65 g 18K batch of that morning is old stock); a `$` above 50,000 is an order number typed into the cost column — blanked and noted; `what` = `<order #>-<name>` with the person who brought an `in` piece in parentheses; the note column (`text_mks74y03`, "stones with Jin", "locks into lock box") is appended to the slip note. Captured rows: `tests/fixtures/monday-scrap-board.json` |
+| `CASTING INVENTORY` | 18436449049 | one `casting` slip | id `casting-monday`, who = Rina; date = the latest count date on the board (`date4`); without one, the date moves to today only when a line changed since the last sync; an empty Type cell takes the group title |
 
 Ids are stable, so every run upserts and never appends a duplicate. Person names are
 normalised (`Mr.Kim` → `Mr. Kim`); karats as in §14.1. The mappers are pure and tested on
@@ -1157,8 +1157,71 @@ ANTHROPIC_API_KEY=        # photo reading; empty = add by hand only
 ANTHROPIC_MODEL=claude-sonnet-4-6
 MONDAY_API_TOKEN=         # the sync; empty = off
 MONDAY_API_URL=           # test override, default https://api.monday.com/v2
-CRON_SECRET=              # ≥ 16 chars; the bearer Vercel cron sends to /api/inventory/sync
+CRON_SECRET=              # ≥ 16 chars; the bearer Vercel cron sends to /api/inventory/sync and /api/inventory/daily
+SLACK_WEBHOOK_URL=        # Incoming Webhook for the daily report; empty = not posted
+INVENTORY_PUBLIC_URL=     # https origin for links in the report
+INVENTORY_HOST=           # build time: hostname whose / redirects to /inventory (inventory.traxnyc.com)
 ```
+
+### 14.11 Daily check
+
+`src/lib/inventory/daily.ts` — `dailyCheck(slips, settings, today, { workDays, syncEnabled,
+now })` runs deterministic rules over the whole store and returns `{ date, work_day, tiles,
+today: { dust_g, slips, scrap_in_g, scrap_out_g }, findings[], counts, ok }`; `ok` is false when
+any finding is an `alert`. Findings are `{ id, section, severity, title, detail }`, alerts
+first. Rules and default thresholds (`DAILY_THRESHOLDS`):
+
+| id | severity | rule |
+|---|---|---|
+| `metal.missing_slip` | alert | a work day (production `work_days`) and a listed jeweler has no metal slip dated today |
+| `metal.silent_jeweler` | alert | a listed jeweler has no slip for 3 work days running |
+| `metal.slip_net` | alert | a slip today with both weights and dust whose loss − dust > 1.5 g |
+| `metal.week_net` | warn | a jeweler's 7-day net (paired slips) > 1.0 g or > 2.5 % of the metal handled |
+| `metal.dust_outlier` | warn | ≥ 100 g of dust on one slip not marked as a refinery lot |
+| `metal.refinery_lot` | info | refinery lots this week (notes containing "refinery") |
+| `diamond.no_count` / `diamond.stale_count` | warn / alert | no count, or the latest count ≥ 14 days (warn) / ≥ 30 days (alert) old |
+| `diamond.unpriced`, `diamond.mixed_dates` | info | sizes without a price; grades counted on different days |
+| `scrap.negative_on_hand` | alert | a karat with out > in since the cutover |
+| `scrap.outgoing`, `scrap.big_piece` | info | each batch given out today; a piece or batch ≥ 50 g today |
+| `scrap.missing_value`, `scrap.missing_karat` | warn | a row today without $ / without karat |
+| `casting.stale_count`, `casting.unpriced`, `casting.no_count` | warn / info / info | count ≥ 30 days old; items without weight or $/g; no count |
+| `sync.never`, `sync.failed`, `sync.stale` | warn / alert / warn | per board, only when `MONDAY_API_TOKEN` is set: never stamped; last run failed; last run > 26 h ago |
+
+`GET /api/inventory/daily[?date=YYYY-MM-DD][&notify=1]` returns the report (any credential;
+`date` re-runs an earlier day). `notify=1` also posts it to Slack through an Incoming Webhook
+(`SLACK_WEBHOOK_URL`; `formatDailyReportSlack` → header, counts, the headline numbers, one line
+per finding, a link to `INVENTORY_PUBLIC_URL/inventory`) and is accepted from the Vercel cron
+(`Authorization: Bearer $CRON_SECRET`, `vercel.json`: 22:30 UTC Mon–Fri = 5:30 pm EST /
+6:30 pm EDT), an API token or an owner's session; the answer carries `posted` and
+`slack_enabled`. Without the webhook nothing is posted and the report is still returned.
+
+### 14.12 The daily agents
+
+`.claude/workflows/inventory-daily-check.js` is the multi-agent version of the same check,
+run by a scheduled Claude session every work day at 5:39 pm New York (the Claude Code
+scheduled task "Inventory daily check"): **Gather** — five agents in parallel read the four
+monday.com boards through the monday connector and, when `TRAX_INVENTORY_URL` /
+`TRAX_INVENTORY_TOKEN` are set in the environment, the app's `/api/inventory/daily`;
+**Judge** — one reviewer per section re-checks the arithmetic against the board and merges
+with the app's findings; **Refute** — three skeptics per alert, an alert survives only when at
+most one refutes it; **Report** — one writer produces the Slack mrkdwn, which the session posts
+to `#inventory-management` (configurable through `args.channel`). The scripts take the date
+from `args` (they cannot read the clock). The app's deterministic check is the backbone; the
+agents add the cross-check against the boards themselves and plain-language judgement, and
+they never write to a board or to the store.
+
+### 14.13 Domain
+
+`traxnyc.com` is the Shopify Plus storefront: its apex and `www` resolve to Shopify, and
+Shopify owns every top-level path there, so `traxnyc.com/inventory` cannot be served by this
+app (a Shopify app proxy would only give `traxnyc.com/apps/…`, `/a/…`, `/community/…` or
+`/tools/…`, and it is built for storefront pages, not a cookie-login staff app). The address
+is therefore **`inventory.traxnyc.com`**: a CNAME at the DNS provider to the Vercel target,
+added as a domain on the Vercel project; `INVENTORY_HOST=inventory.traxnyc.com` at build time
+makes its root redirect to `/inventory` (`next.config.ts` `redirects()` with a `host`
+condition), `INVENTORY_PUBLIC_URL=https://inventory.traxnyc.com` puts the link in the daily
+report. The same deployment keeps serving the orders pages (`production.traxnyc.com`);
+`inventory.traxnyc.com` is a second hostname on it, not a second app.
 
 Not done yet (next): refinery settlements (grams sent, fine gold and $ back → a recovery factor
 that turns each jeweler's dust into a gold number); CSV / PDF export for Maks.

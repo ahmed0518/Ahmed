@@ -93,7 +93,7 @@ export function mapDustRows(items: readonly MondayItem[], ctx: MapContext): { sl
   let skipped = 0;
   for (const item of items) {
     if ((item.group?.title ?? '').trim() !== DUST_GROUP) continue;
-    const who = normalizeName(col(item, DUST_COLS.person) || item.name);
+    const who = normalizeName((col(item, DUST_COLS.person) || item.name).replace(/\s*\([^)]*\)\s*/g, ' '));
     const grams = numCol(item, DUST_COLS.grams);
     const date = dateCol(item, DUST_COLS.date);
     if (!who || grams === null || !date) {
@@ -155,20 +155,24 @@ export function mapDiamondRows(items: readonly MondayItem[], ctx: MapContext): {
 }
 
 // ---------- CASTING INVENTORY (18436449049) ----------
-export const CASTING_COLS = { type: 'text_mm8bv4n2', yellow: 'numeric_mm8bbm9f', white: 'numeric_mm8bwfjz', rose: 'numeric_mm8bb2t8', total: 'numeric_mm8b2arz', weight: 'numeric_mm8b3btx', karat: 'color_mm8bewgb', price: 'numeric_mm8bnk1w' } as const;
+export const CASTING_COLS = { type: 'text_mm8bv4n2', yellow: 'numeric_mm8bbm9f', white: 'numeric_mm8bwfjz', rose: 'numeric_mm8bb2t8', total: 'numeric_mm8b2arz', weight: 'numeric_mm8b3btx', karat: 'color_mm8bewgb', price: 'numeric_mm8bnk1w', date: 'date4' } as const;
 export const CASTING_ID = 'casting-monday';
 const CASTING_NOTE = 'Pulled from the monday.com CASTING INVENTORY board. Value = pieces x g/pc x $/g from the board.';
 
 /**
- * The whole board is one count. Its slip keeps a stable id; the date moves to today only when
+ * The whole board is one count with a stable id. Its date is the latest count date on the
+ * board (the `date4` column); when the board carries none, the date moves to today only when
  * a line changed since the last sync, so an untouched board does not look freshly counted.
  */
 export function mapCastingRows(items: readonly MondayItem[], ctx: MapContext): { slips: Slip[]; dropped: number; skipped: number } {
   const lines: CastingLine[] = [];
   let skipped = 0;
+  let counted = '';
   for (const item of items) {
+    const rowDate = dateCol(item, CASTING_COLS.date);
+    if (rowDate && rowDate > counted) counted = rowDate;
     const line: CastingLine = {
-      type: col(item, CASTING_COLS.type).slice(0, 120),
+      type: (col(item, CASTING_COLS.type) || item.group?.title || '').slice(0, 120),
       item: item.name.trim().slice(0, 120),
       karat: karatKey(col(item, CASTING_COLS.karat)) === 'Unlabeled' ? '' : karatKey(col(item, CASTING_COLS.karat)),
       yellow: numCol(item, CASTING_COLS.yellow),
@@ -186,31 +190,46 @@ export function mapCastingRows(items: readonly MondayItem[], ctx: MapContext): {
   if (lines.length === 0) return { slips: [], dropped: 0, skipped };
   const previous = ctx.existing.find((s): s is CastingSlip => s.kind === 'casting' && s.id === CASTING_ID);
   const unchanged = previous !== undefined && JSON.stringify(previous.lines) === JSON.stringify(lines);
-  const date = unchanged ? previous.date : ctx.today;
+  const date = counted || (unchanged ? previous.date : ctx.today);
   return { ...finish([{ id: CASTING_ID, kind: 'casting', who: 'Rina', date, lines, note: CASTING_NOTE, source: 'monday', createdAt: unchanged ? previous.createdAt : ctx.now }], 'casting'), skipped };
 }
 
 // ---------- [JALGAS] - SCRAP GOLD TRACKING (9445344009) ----------
-export const SCRAP_COLS = { date: 'date4', karat: 'text_mks7vz98', grams: 'numeric_mks8kca8', value: 'numeric_mks82dvc', order: 'text_mks74ast', person: 'text_mksfg2ra' } as const;
-export const SCRAP_GROUPS = { in: 'Scrapping', out: 'Outgoing Scrap' } as const;
+export const SCRAP_COLS = { date: 'date4', karat: 'text_mks7vz98', grams: 'numeric_mks8kca8', value: 'numeric_mks82dvc', order: 'text_mks74ast', person: 'text_mksfg2ra', note: 'text_mks74y03' } as const;
+/** group titles: `Scrapping - 14K`, `Scrapping - Platinum` … = in; `Outgoing - 14K` … = out; On Hold / Incoming Scrap are not movements */
+export const SCRAP_GROUPS = { in: /^scrapping\b/i, out: /^outgoing\b/i } as const;
+
+/** Who received an outgoing batch, from the row: `Scrap for Mr Kim` → Mr. Kim; `251434-Danny scrap` → Danny (order 251434); else the person column, else Unknown. */
+export function scrapReceiver(name: string, order: string, person: string): string {
+  const m = /^\s*scrap\s+for\s+(.+?)\s*$/i.exec(name);
+  if (m) return normalizeName(m[1]!);
+  const tail = order && name.startsWith(order) ? name.slice(order.length).replace(/^[\s-]+/, '') : '';
+  const who = normalizeName(tail.replace(/\bscrap\b/i, '').trim() || person);
+  if (who && order) return `${who} (order ${order})`;
+  if (who) return who;
+  return order ? `Order ${order}` : 'Unknown';
+}
 /** a "$" this large is an order number typed into the cost column (the Oct 6 2025 row) */
 export const SCRAP_VALUE_MAX = 50_000;
 const SCRAP_IN_NOTE = 'Scrapped pieces from the monday.com scrap board.';
 const SCRAP_OUT_NOTE = 'Given out, from the monday.com scrap board (Outgoing Scrap).';
 
 /**
- * Scrapping → one `in` slip per day; Outgoing Scrap → one `out` slip per day and receiver.
- * On Hold / Incoming are not ledger movements. Rows before `scrapSince` are not written.
+ * Scrapping groups → one `in` slip per day; Outgoing groups → one `out` slip per day and
+ * receiver. On Hold / Incoming are not ledger movements. Rows before `scrapSince` are not
+ * written, nor is an outgoing batch dated the cutover day itself (old stock). The person column on an `in` row names who brought the piece and goes into `what`;
+ * the free-text note column is appended to the slip note.
  */
 export function mapScrapRows(items: readonly MondayItem[], ctx: MapContext): { slips: Slip[]; dropped: number; skipped: number } {
   const slips = new Map<string, Record<string, unknown> & { lines: ScrapLine[]; notes: string[] }>();
   let skipped = 0;
   for (const item of items) {
     const group = (item.group?.title ?? '').trim();
-    const dir = group === SCRAP_GROUPS.in ? 'in' : group === SCRAP_GROUPS.out ? 'out' : null;
+    const dir = SCRAP_GROUPS.in.test(group) ? 'in' : SCRAP_GROUPS.out.test(group) ? 'out' : null;
     const date = dateCol(item, SCRAP_COLS.date);
     const grams = numCol(item, SCRAP_COLS.grams);
-    if (!dir || !date || grams === null || date < ctx.scrapSince) {
+    // Rows before the cutover are history; an outgoing batch dated the cutover day itself went out of the stock that preceded the ledger (the 31.65 g 18K batch of that morning).
+    if (!dir || !date || grams === null || date < ctx.scrapSince || (dir === 'out' && date === ctx.scrapSince)) {
       skipped++;
       continue;
     }
@@ -222,8 +241,11 @@ export function mapScrapRows(items: readonly MondayItem[], ctx: MapContext): { s
       notes.push(`${item.name}: the $ column holds ${value} — looks like an order number, left blank.`);
       value = null;
     }
-    const what = order && !item.name.includes(order) ? `${order}-${item.name.trim()}` : item.name.trim();
-    const to = dir === 'out' ? person || (order ? `Order ${order}` : 'Unknown') : '';
+    const rowNote = col(item, SCRAP_COLS.note);
+    let what = order && !item.name.includes(order) ? `${order}-${item.name.trim()}` : item.name.trim();
+    if (dir === 'in' && person && !what.toLowerCase().includes(person.toLowerCase())) what = `${what} (${person})`;
+    if (rowNote) notes.push(`${item.name.trim()}: ${rowNote}`);
+    const to = dir === 'out' ? scrapReceiver(item.name, order, person) : '';
     const id = dir === 'in' ? `scrap-in-${date}` : `scrap-out-${date}-${slug(to) || 'unknown'}`;
     const s = slips.get(id) ?? { id, kind: 'scrap', who: 'Jalgas', date, dir, to, lines: [], note: dir === 'in' ? SCRAP_IN_NOTE : SCRAP_OUT_NOTE, source: 'monday', createdAt: ctx.now, notes: [] };
     s.lines.push({ what: what.slice(0, 120), karat: karatKey(col(item, SCRAP_COLS.karat)) === 'Unlabeled' ? '' : karatKey(col(item, SCRAP_COLS.karat)), grams, value });

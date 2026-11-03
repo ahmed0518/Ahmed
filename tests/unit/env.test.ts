@@ -91,5 +91,9 @@ describe('inventory environment', () => {
     expect(() => buildEnv({ ...good, INVENTORY_OWNERS: 'not a slug' })).toThrow(/INVENTORY_OWNERS/);
     expect(() => buildEnv({ ...good, CRON_SECRET: 'short' })).toThrow(/CRON_SECRET/);
     expect(() => buildEnv({ ...good, ANTHROPIC_MODEL: 'x y' })).toThrow(/ANTHROPIC_MODEL/);
+    expect(buildEnv({ ...good, SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T000/B000/xyz' }).SLACK_WEBHOOK_URL).toBe('https://hooks.slack.com/services/T000/B000/xyz');
+    expect(() => buildEnv({ ...good, SLACK_WEBHOOK_URL: 'https://evil.test/hook' })).toThrow(/SLACK_WEBHOOK_URL/);
+    expect(buildEnv({ ...good, INVENTORY_PUBLIC_URL: 'https://inventory.traxnyc.com/inventory' }).INVENTORY_PUBLIC_URL).toBe('https://inventory.traxnyc.com');
+    expect(() => buildEnv({ ...good, INVENTORY_PUBLIC_URL: 'http://inventory.traxnyc.com' })).toThrow(/INVENTORY_PUBLIC_URL/);
   });
 });
