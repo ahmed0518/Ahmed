@@ -158,11 +158,11 @@ describe('syncMonday', () => {
 
   it('walks the pages, writes the slips, stamps last_sync, and records a failed board without throwing', async () => {
     const store = new FileInventoryStore(dir);
-    const calls: { query: string; variables: Record<string, unknown>; auth: string | null }[] = [];
+    const calls: { query: string; variables: Record<string, unknown>; auth: string | null; version?: string }[] = [];
     const dustRows = Array.from({ length: 3 }, (_, i) => item(`r${i}`, DUST_GROUP, { [DUST_COLS.person]: 'Mr. Sim', [DUST_COLS.grams]: String(i + 1), [DUST_COLS.date]: `2026-10-0${i + 1}` }));
     const fetchImpl: typeof fetch = async (_url, init) => {
       const body = JSON.parse(String(init?.body)) as { query: string; variables: Record<string, unknown> };
-      calls.push({ ...body, auth: (init?.headers as Record<string, string>).Authorization ?? null });
+      calls.push({ ...body, auth: (init?.headers as Record<string, string>).Authorization ?? null, version: (init?.headers as Record<string, string>)['API-Version'] });
       if (body.variables.board === '9504626073') return Response.json({ data: { boards: [{ items_page: { cursor: 'c1', items: dustRows.slice(0, 2) } }] } });
       if (body.variables.cursor === 'c1') return Response.json({ data: { next_items_page: { cursor: null, items: dustRows.slice(2) } } });
       if (body.variables.board === '18437692268') return new Response('oops', { status: 500 });
@@ -177,6 +177,7 @@ describe('syncMonday', () => {
     expect(results[1]!.error).toMatch(/gave up: HTTP 500/);
     expect(results[2]!.error).toMatch(/board not shared/);
     expect(calls[0]!.auth).toBe('monday-test-token');
+    expect(calls.every((c) => (c as { version?: string }).version === '2026-10')).toBe(true);
     expect(calls.filter((c) => c.variables.board === '18437692268')).toHaveLength(3); // retried
     const slips = (await store.listSlips()) as Slip[];
     expect(slips.map((s) => s.id).sort()).toEqual(['dust-mr-sim-2026-10-01', 'dust-mr-sim-2026-10-02', 'dust-mr-sim-2026-10-03']);

@@ -264,6 +264,8 @@ export const MAPPERS: Record<SyncBoard, (items: readonly MondayItem[], ctx: MapC
 };
 
 // ---------- fetching ----------
+/** Pinned: the Current version as of October 2026 (monday.com retires versions; an omitted header silently floats). */
+export const MONDAY_API_VERSION = '2026-10';
 const ITEM_FIELDS = 'id name group { id title } column_values { id text }';
 const FIRST_PAGE = `query ($board: ID!) { boards(ids: [$board]) { items_page(limit: 200) { cursor items { ${ITEM_FIELDS} } } } }`;
 const NEXT_PAGE = `query ($cursor: String!) { next_items_page(limit: 200, cursor: $cursor) { cursor items { ${ITEM_FIELDS} } } }`;
@@ -290,7 +292,7 @@ async function mondayGraphQL<T>(query: string, variables: Record<string, unknown
     try {
       res = await fetchImpl(env.MONDAY_API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: env.MONDAY_API_TOKEN, 'API-Version': '2024-10' },
+        headers: { 'Content-Type': 'application/json', Authorization: env.MONDAY_API_TOKEN, 'API-Version': MONDAY_API_VERSION },
         body: JSON.stringify({ query, variables }),
         signal: AbortSignal.timeout(30_000),
       });

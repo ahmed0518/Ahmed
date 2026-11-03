@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DAILY_THRESHOLDS, dailyCheck, formatDailyReportSlack } from '@/lib/inventory/daily';
+import { DAILY_THRESHOLDS, dailyCheck, escapeMrkdwn, formatDailyReportSlack } from '@/lib/inventory/daily';
 import { defaultInventorySettings, type InventorySettings, type MetalSlip, type ScrapSlip, type Slip } from '@/lib/inventory/model';
 import { loadExport } from './inventory-model.test';
 
@@ -91,5 +91,11 @@ describe('daily check', () => {
     expect(quiet.text).toContain('Nothing to flag today');
     expect(quiet.text).toContain('not a work day');
     expect(DAILY_THRESHOLDS.slip_net_alert).toBe(1.5);
+    // board text is data: a name with markup characters cannot inject a link or a mention
+    const sneaky = dailyCheck([metal('x', '<!channel> Bob & <https://evil.test|Ann>', '2026-11-03', { dust: 0.1, lines: [{ item: 'a', qty: 1, before: 10, after: 5 }] })], defaultInventorySettings(), '2026-11-03');
+    const text = formatDailyReportSlack(sneaky).text;
+    expect(text).toContain('&lt;!channel&gt; Bob &amp; &lt;https://evil.test|Ann&gt;');
+    expect(text).not.toContain('<!channel>');
+    expect(escapeMrkdwn('a<b>&c')).toBe('a&lt;b&gt;&amp;c');
   });
 });

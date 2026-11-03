@@ -192,6 +192,11 @@ export function dailyCheck(slips: readonly Slip[], settings: InventorySettings, 
 
 const ICON: Record<Severity, string> = { alert: ':red_circle:', warn: ':large_orange_circle:', info: ':white_circle:' };
 
+/** Board text (names, notes, item numbers) is data: the three characters Slack would read as markup are escaped. */
+export function escapeMrkdwn(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /** The report as Slack mrkdwn (one message, under the 40,000-character limit by construction). */
 export function formatDailyReportSlack(report: DailyReport, opts: { link?: string; title?: string } = {}): { text: string; blocks: unknown[] } {
   const title = opts.title ?? `Inventory check · ${report.date}`;
@@ -203,7 +208,7 @@ export function formatDailyReportSlack(report: DailyReport, opts: { link?: strin
     t.diamond ? `diamonds ${t.diamond.ct.toFixed(2)} ct (${t.diamond.date})` : 'no diamond count',
     t.casting ? `castings ${t.casting.pcs} pcs (${t.casting.date})` : 'no casting count',
   ].join(' · ');
-  const lines = report.findings.length ? report.findings.map((f) => `${ICON[f.severity]} *${f.title}* — ${f.detail}`) : [':white_check_mark: Nothing to flag today.'];
+  const lines = report.findings.length ? report.findings.map((f) => `${ICON[f.severity]} *${escapeMrkdwn(f.title)}* — ${escapeMrkdwn(f.detail)}`) : [':white_check_mark: Nothing to flag today.'];
   const summary = `${report.counts.alert} alert${report.counts.alert === 1 ? '' : 's'} · ${report.counts.warn} warning${report.counts.warn === 1 ? '' : 's'} · ${report.counts.info} note${report.counts.info === 1 ? '' : 's'}${report.work_day ? '' : ' · not a work day'}`;
   const text = [`*${title}* — ${summary}`, headline, ...lines, opts.link ?? ''].filter(Boolean).join('\n');
   const chunks: string[] = [];

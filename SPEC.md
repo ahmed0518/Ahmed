@@ -1094,10 +1094,13 @@ while the current one is checked ("slip 2 of 5", "Skip the rest", "Stop").
 ### 14.7 monday.com sync
 
 `POST /api/inventory/sync` (or `GET`, which is what Vercel cron sends) pulls the four boards of
-the TRAX NYC workspace (`src/lib/inventory/monday.ts`, `API-Version: 2024-10`, 200 items per
-page, every page walked). Accepted from `Authorization: Bearer $CRON_SECRET` (Vercel sets it
-on every cron run — `vercel.json` schedules the hour), from an `API_TOKENS` bearer, or from an
-owner's browser session (CSRF-checked). Body `{ "boards": ["dust"] }` limits it. One board's
+the TRAX NYC workspace (`src/lib/inventory/monday.ts`, `API-Version: 2026-10` pinned — the
+Current version since Oct 26 2026; 200 items per page through `items_page` then the root
+`next_items_page`, every page walked). Accepted from `Authorization: Bearer $CRON_SECRET`
+(Vercel sets it on every cron run; `vercel.json` schedules it nightly at 21:30 UTC, the hour
+before the daily report — Vercel's Hobby plan allows one run per day per cron and fires it
+anywhere within that hour; on Pro the schedule can become `0 * * * *` for an hourly pull),
+from an `API_TOKENS` bearer, or from an owner's browser session (CSRF-checked). Body `{ "boards": ["dust"] }` limits it. One board's
 failure never stops the others: each result is `{ board, ok, fetched, written, skipped,
 dropped, error? }`, HTTP 207 when any failed, and `settings.last_sync[board]` is stamped either
 way (the tiles' "last synced" data). A Docker host runs `npm run sync:monday` from cron.
@@ -1192,8 +1195,11 @@ first. Rules and default thresholds (`DAILY_THRESHOLDS`):
 (`SLACK_WEBHOOK_URL`; `formatDailyReportSlack` → header, counts, the headline numbers, one line
 per finding, a link to `INVENTORY_PUBLIC_URL/inventory`) and is accepted from the Vercel cron
 (`Authorization: Bearer $CRON_SECRET`, `vercel.json`: 22:30 UTC Mon–Fri = 5:30 pm EST /
-6:30 pm EDT), an API token or an owner's session; the answer carries `posted` and
-`slack_enabled`. Without the webhook nothing is posted and the report is still returned.
+6:30 pm EDT; Vercel evaluates cron expressions in UTC, never on preview deployments, and on
+Hobby fires within the hour), an API token or an owner's session; the answer carries `posted`
+and `slack_enabled`. Without the webhook nothing is posted and the report is still returned.
+Names, notes and item numbers from the boards are escaped (`&`, `<`, `>`) before they go into
+mrkdwn, so a row cannot smuggle a mention or a link into the message.
 
 ### 14.12 The daily agents
 

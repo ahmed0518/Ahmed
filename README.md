@@ -223,8 +223,10 @@ four monday.com boards. Full rules in `SPEC.md` §14. To turn it on:
    "Add by hand" only.
 5. **monday.com sync.** Set `MONDAY_API_TOKEN` (monday.com → profile → Developers → My access
    tokens; the token's user must see the four boards) and `CRON_SECRET` (`openssl rand -hex 24`).
-   `vercel.json` schedules `GET /api/inventory/sync` every hour and Vercel sends `CRON_SECRET`
-   as the bearer. On Docker, cron `npm run sync:monday` instead. "Sync now" on the page and the
+   `vercel.json` schedules `GET /api/inventory/sync` nightly (21:30 UTC, the hour before the
+   daily report) and Vercel sends `CRON_SECRET` as the bearer; on the Pro plan you can make it
+   hourly (`0 * * * *`) — the Hobby plan allows one run per day per cron and would refuse the
+   deploy. On Docker, cron `npm run sync:monday` instead. "Sync now" on the page and the
    per-board "last synced" stamps show whether it works. Mr. Jin keeps updating the diamond
    board; the app pulls it.
 
@@ -242,8 +244,9 @@ Two layers check the inventory every work day (SPEC §14.11–14.12):
    <https://api.slack.com/apps>) → **Incoming Webhooks** → **Add New Webhook to Workspace** →
    pick the channel (`#inventory-management`) → copy the URL into `SLACK_WEBHOOK_URL`. Set
    `INVENTORY_PUBLIC_URL=https://inventory.traxnyc.com` for the link in the message. The
-   second cron in `vercel.json` does the rest (it sends `CRON_SECRET`). On Docker, curl the
-   endpoint from cron with `Authorization: Bearer $CRON_SECRET`.
+   second cron in `vercel.json` does the rest (it sends `CRON_SECRET`; Vercel crons run in
+   UTC and only on the production deployment). On Docker, curl the endpoint from cron with
+   `Authorization: Bearer $CRON_SECRET`.
 2. **The daily agents** — a scheduled Claude Code task ("Inventory daily check", weekdays
    5:39 pm New York) runs `.claude/workflows/inventory-daily-check.js`: five agents read the
    four monday.com boards and the app's report, one reviewer per section re-checks the
