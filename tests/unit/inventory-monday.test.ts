@@ -26,7 +26,7 @@ describe('monday.com mappers', () => {
     ];
     const scanned: MetalSlip = { id: 'metal-chaerin-2026-10-19', kind: 'metal', who: 'Chaerin', date: '2026-10-19', note: '', source: 'scan', createdAt: 'x', dust: 2.37, lines: [{ item: 'a', qty: 1, before: 1, after: 0.9 }] };
     const res = mapDustRows(items, { ...ctx, existing: [scanned] });
-    expect(res.skipped).toBe(2); // the duplicate of the scanned slip and the empty row (the old group is simply ignored)
+    expect(res.skipped).toBe(3); // the duplicate of the scanned slip, the empty row and the row in another group
     expect(res.dropped).toBe(0);
     expect(res.slips.map((s) => s.id)).toEqual(['dust-mr-kim-2026-10-22', 'dust-eric-2026-10-14', 'dust-chaerin-2026-10-20', 'dust-danny-2026-10-09']);
     expect(res.slips[3]).toMatchObject({ who: 'Danny', dust: 6.86 });
@@ -53,6 +53,11 @@ describe('monday.com mappers', () => {
     ]);
     expect(si.note).toContain('0.8 mm: low');
     expect((res.slips[1] as DiamondSlip).date).toBe('2026-11-03'); // no count date on the board → today
+    // … unless the grade is unchanged since the last sync: then it keeps the date it had, so staleness shows
+    const again = mapDiamondRows(items, { ...ctx, existing: res.slips, today: '2026-12-01', now: '2026-12-01T16:00:00Z' });
+    expect((again.slips[1] as DiamondSlip).date).toBe('2026-11-03');
+    const changed = mapDiamondRows([items[0]!, items[1]!, item('1.3', 'VS-SI', { [DIAMOND_COLS.size]: '1.3', [DIAMOND_COLS.carats]: '12', [DIAMOND_COLS.price]: '220' })], { ...ctx, existing: res.slips, today: '2026-12-01' });
+    expect((changed.slips[1] as DiamondSlip).date).toBe('2026-12-01');
   });
 
   it('castings: the count date is the board\'s date column; without one the date only moves when a line changes', () => {
@@ -109,6 +114,8 @@ describe('monday.com mappers', () => {
     expect(scrapReceiver('252424-Mr Shim scrap', '252424', '')).toBe('Mr. Shim (order 252424)');
     expect(scrapReceiver('Refinery lot', '', 'Umid')).toBe('Umid');
     expect(scrapReceiver('batch', '', '')).toBe('Unknown');
+    expect(scrapReceiver('Scrap Lock', 'Scrap Lock', '')).toBe('Unknown'); // the order column mirrors the name: not an order number, nobody named
+    expect(scrapReceiver('TRX-8963 batch', 'TRX-8963', '')).toBe('Batch (order TRX-8963)');
   });
 
   it('scrap: the rows captured from the real board on 2026-11-03', () => {
@@ -187,6 +194,18 @@ describe('syncMonday', () => {
     // a second run upserts the same ids: still three
     await syncMonday(store, ['dust'], { fetchImpl, now: new Date('2026-11-04T16:00:00Z') });
     expect(await store.listSlips()).toHaveLength(3);
+    // the board is the source of truth for its slips: a row that disappears (or moves to another day) takes its slip with it,
+    // a dust row now covered by a scanned slip is withdrawn, and slips scanned in the app are never touched
+    const scanned: Slip = { id: 'metal-mr-sim-2026-10-02', kind: 'metal', who: 'Mr Sim', date: '2026-10-02', note: '', source: 'scan', createdAt: '2026-10-02T20:00:00Z', dust: 2, lines: [{ item: 'x', qty: 1, before: 3, after: 2.9 }] };
+    await store.putSlips([scanned]);
+    dustRows.splice(0, 1); // the 10-01 row was deleted on the board
+    const third = await syncMonday(store, ['dust'], { fetchImpl: async (_u, init) => {
+      const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+      if (body.variables.board === '9504626073') return Response.json({ data: { boards: [{ items_page: { cursor: null, items: dustRows } }] } });
+      return Response.json({ errors: [{ message: 'unexpected' }] });
+    }, now: new Date('2026-11-05T16:00:00Z') });
+    expect(third[0]).toMatchObject({ ok: true, written: 1, skipped: 1, removed: 2 });
+    expect((await store.listSlips()).map((s) => s.id).sort()).toEqual(['dust-mr-sim-2026-10-03', 'metal-mr-sim-2026-10-02']);
     await store.close();
   });
 });

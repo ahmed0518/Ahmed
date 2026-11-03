@@ -30,6 +30,12 @@ export function parseIsoLenient(value: unknown): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/** YYYY-MM-DD of `now` in `tz` — "today" for the inventory slips, tiles and the daily check. */
+export function todayIn(tz: string, now: Date = new Date()): string {
+  const c = civilDate(now, tz);
+  return `${c.y}-${String(c.m).padStart(2, '0')}-${String(c.d).padStart(2, '0')}`;
+}
+
 export interface CivilDate {
   y: number;
   m: number;

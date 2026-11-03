@@ -3,7 +3,7 @@
  * list, the sync stamps and today's date. Pure — the route, the Slack post and the daily
  * agent all read the same report. Every finding names the rule, so a person can look it up.
  */
-import { byKind, hasWeights, latestCasting, latestCount, metalRows, missingToday, scrapSince, scrapSummary, tiles, type Tiles } from './compute';
+import { byKind, latestCasting, latestCount, metalRows, missingToday, scrapSince, scrapSummary, tiles, type Tiles } from './compute';
 import { SYNC_BOARDS, nameKey, type InventorySettings, type Slip, type SlipKind, type SyncBoard } from './model';
 
 export type Severity = 'alert' | 'warn' | 'info';
@@ -35,7 +35,7 @@ export interface DailyOptions {
   workDays?: readonly number[];
   /** whether the monday.com sync is configured — stale/never stamps only matter then */
   syncEnabled?: boolean;
-  /** ISO timestamp of "now" for the sync-age rule; default = end of `today` */
+  /** ISO timestamp of "now" for the sync-age rule; the route passes the clock, tests pass a fixed instant; default = end of `today` */
   now?: string;
 }
 
@@ -72,6 +72,9 @@ function addDays(date: string, n: number): string {
   return new Date((dayNumber(date) + n) * 86_400_000).toISOString().slice(0, 10);
 }
 const g = (n: number) => `${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} g`;
+/** Detail text stays short: one Slack section block holds 3,000 characters. */
+export const DETAIL_MAX = 400;
+const clip = (text: string) => (text.length > DETAIL_MAX ? `${text.slice(0, DETAIL_MAX - 1)}…` : text);
 const list = (names: readonly string[]) => names.join(', ');
 
 /** Run every rule. `slips` is the whole store (every section). */
@@ -79,7 +82,7 @@ export function dailyCheck(slips: readonly Slip[], settings: InventorySettings, 
   const workDays = opts.workDays ?? [1, 2, 3, 4, 5];
   const workDay = workDays.includes(isoWeekday(today));
   const findings: Finding[] = [];
-  const add = (f: Finding) => findings.push(f);
+  const add = (f: Finding) => findings.push({ ...f, title: clip(f.title), detail: clip(f.detail) });
   const t = tiles(slips, today, settings.scrap_since);
 
   // ---------- gold dust ----------
@@ -106,11 +109,13 @@ export function dailyCheck(slips: readonly Slip[], settings: InventorySettings, 
     if (silent.length) add({ id: 'metal.silent_jeweler', section: 'metal', severity: 'alert', title: `${list(silent)}: no slip for ${DAILY_THRESHOLDS.silent_days} work days`, detail: 'Nothing handed in or logged on the dust board. Ask before the week closes.' });
   }
   for (const s of todaysMetal) {
-    if (hasWeights(s) && s.dust !== null) {
-      const before = s.lines.reduce((a, l) => a + (l.before ?? 0), 0);
-      const after = s.lines.reduce((a, l) => a + (l.after ?? 0), 0);
+    // only lines weighed on both ends count: a piece still out (no "after") is not a loss
+    const weighed = s.lines.filter((l) => l.before !== null && l.after !== null);
+    if (weighed.length && s.dust !== null) {
+      const before = weighed.reduce((a, l) => a + (l.before ?? 0), 0);
+      const after = weighed.reduce((a, l) => a + (l.after ?? 0), 0);
       const net = before - after - s.dust;
-      if (net > DAILY_THRESHOLDS.slip_net_alert) add({ id: 'metal.slip_net', section: 'metal', severity: 'alert', title: `${s.who}: ${g(net)} did not come back today`, detail: `Before ${g(before)}, after ${g(after)}, dust ${g(s.dust)} (loss ${g(before - after)}).` });
+      if (net > DAILY_THRESHOLDS.slip_net_alert) add({ id: 'metal.slip_net', section: 'metal', severity: 'alert', title: `${s.who}: ${g(net)} did not come back today`, detail: `Before ${g(before)}, after ${g(after)}, dust ${g(s.dust)} (loss ${g(before - after)})${weighed.length < s.lines.length ? `; ${s.lines.length - weighed.length} line${s.lines.length - weighed.length === 1 ? '' : 's'} without both weights left out` : ''}.` });
     }
     if (s.dust !== null && s.dust >= DAILY_THRESHOLDS.dust_outlier && !/refinery/i.test(s.note)) add({ id: 'metal.dust_outlier', section: 'metal', severity: 'warn', title: `${s.who}: ${g(s.dust)} of dust on one day`, detail: 'A refinery lot logged as bench dust, or a typo. Check the slip.' });
   }
@@ -147,7 +152,7 @@ export function dailyCheck(slips: readonly Slip[], settings: InventorySettings, 
   const inToday = todaysScrap.filter((s) => s.dir === 'in').reduce((a, s) => a + s.lines.reduce((b, l) => b + (l.grams ?? 0), 0), 0);
   const outToday = todaysScrap.filter((s) => s.dir === 'out').reduce((a, s) => a + s.lines.reduce((b, l) => b + (l.grams ?? 0), 0), 0);
   for (const s of todaysScrap) {
-    if (s.dir === 'out') add({ id: 'scrap.outgoing', section: 'scrap', severity: 'info', title: `${g(s.lines.reduce((a, l) => a + (l.grams ?? 0), 0))} of scrap given to ${s.to || 'someone'}`, detail: s.lines.map((l) => `${l.what} ${l.karat} ${g(l.grams ?? 0)}`).join(' · ') });
+    if (s.dir === 'out') add({ id: 'scrap.outgoing', section: 'scrap', severity: 'info', title: `${g(s.lines.reduce((a, l) => a + (l.grams ?? 0), 0))} of scrap given to ${s.to || 'someone'}`, detail: clip(s.lines.map((l) => `${l.what} ${l.karat} ${g(l.grams ?? 0)}`).join(' · ')) });
     for (const l of s.lines) {
       if ((l.grams ?? 0) >= DAILY_THRESHOLDS.scrap_big_piece) add({ id: 'scrap.big_piece', section: 'scrap', severity: 'info', title: `${l.what}: ${g(l.grams ?? 0)} ${s.dir === 'in' ? 'scrapped' : 'given out'}`, detail: `${l.karat || 'karat not set'}${l.value !== null ? `, $${l.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : ''}` });
       if (l.value === null) add({ id: 'scrap.missing_value', section: 'scrap', severity: 'warn', title: `${l.what}: no $ on the scrap row`, detail: `${g(l.grams ?? 0)} ${l.karat || ''} ${s.dir === 'in' ? 'scrapped' : `given to ${s.to}`} today without a value.` });
@@ -208,7 +213,7 @@ export function formatDailyReportSlack(report: DailyReport, opts: { link?: strin
     t.diamond ? `diamonds ${t.diamond.ct.toFixed(2)} ct (${t.diamond.date})` : 'no diamond count',
     t.casting ? `castings ${t.casting.pcs} pcs (${t.casting.date})` : 'no casting count',
   ].join(' · ');
-  const lines = report.findings.length ? report.findings.map((f) => `${ICON[f.severity]} *${escapeMrkdwn(f.title)}* — ${escapeMrkdwn(f.detail)}`) : [':white_check_mark: Nothing to flag today.'];
+  const lines = report.findings.length ? report.findings.map((f) => `${ICON[f.severity]} *${escapeMrkdwn(clip(f.title))}* — ${escapeMrkdwn(clip(f.detail))}`) : [':white_check_mark: Nothing to flag today.'];
   const summary = `${report.counts.alert} alert${report.counts.alert === 1 ? '' : 's'} · ${report.counts.warn} warning${report.counts.warn === 1 ? '' : 's'} · ${report.counts.info} note${report.counts.info === 1 ? '' : 's'}${report.work_day ? '' : ' · not a work day'}`;
   const text = [`*${title}* — ${summary}`, headline, ...lines, opts.link ?? ''].filter(Boolean).join('\n');
   const chunks: string[] = [];

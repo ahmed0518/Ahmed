@@ -68,7 +68,10 @@ export function SlipLog({ kind, slips, today, canWrite, expanded, confirming, on
                 {s.kind === 'metal' && num(s.dust) !== null ? <p className="inv-note">Dust returned: {fmt(s.dust, 2)} g</p> : null}
                 {s.note ? <p className="inv-note">{s.note}</p> : null}
                 {s.createdBy ? <p className="inv-note">Saved by {s.createdBy}</p> : null}
-                {canWrite ? (
+                {s.source === 'monday' ? (
+                  <p className="inv-note">Mirrors the monday.com board — change or delete it there; the next sync follows.</p>
+                ) : null}
+                {canWrite && s.source !== 'monday' ? (
                   <div className="inv-row">
                     {confirming === s.id ? (
                       <>

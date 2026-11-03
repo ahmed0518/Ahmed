@@ -37,12 +37,17 @@ export interface MetalRow {
   paired: number;
 }
 
-/** Per person: dust handed in, before/after over their slips, and the paired loss − dust. Sorted by dust, most first. */
+/**
+ * Per person: dust handed in, before/after over their slips, and the paired loss − dust.
+ * People are matched the way `missingToday` matches them (`Mr Kim` = `Mr. Kim`); the first
+ * spelling seen is the one shown. Sorted by dust, most first.
+ */
 export function metalRows(list: readonly MetalSlip[]): MetalRow[] {
   const m = new Map<string, MetalRow & { dayset: Set<string> }>();
   for (const s of list) {
-    const key = s.who.trim() || 'Unnamed';
-    const r = m.get(key) ?? { who: key, dayset: new Set<string>(), days: 0, slips: 0, before: 0, after: 0, pcs: 0, dust: 0, pairedLoss: 0, pairedDust: 0, paired: 0 };
+    const who = s.who.trim() || 'Unnamed';
+    const key = nameKey(who) || 'unnamed';
+    const r = m.get(key) ?? { who, dayset: new Set<string>(), days: 0, slips: 0, before: 0, after: 0, pcs: 0, dust: 0, pairedLoss: 0, pairedDust: 0, paired: 0 };
     const d = num(s.dust);
     if (d !== null) {
       r.dust += d;

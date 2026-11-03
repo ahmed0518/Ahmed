@@ -147,6 +147,7 @@ test.describe('inventory', () => {
     const notify = await request.get('/api/inventory/daily?notify=1', { headers: bearer(CLAUDE_TOKEN) });
     expect(notify.status()).toBe(200);
     expect(((await notify.json()) as { posted: boolean }).posted).toBe(false);
+    expect((await request.get('/api/inventory/daily?date=2026-02-30', { headers: bearer(CLAUDE_TOKEN) })).status()).toBe(400);
 
     const scan = await request.post('/api/inventory/scan', { headers: { Authorization: `Bearer ${CLAUDE_TOKEN}` }, multipart: { kind: 'metal', image: { name: 'slip.png', mimeType: 'image/png', buffer: Buffer.from('not really a png') } } });
     expect(scan.status()).toBe(503);
@@ -174,6 +175,14 @@ test.describe('inventory', () => {
     await expect(asIgor.locator('.inv-status')).toHaveText('View only');
     const denied = await asIgor.request.post('/api/inventory/slips', { headers: originHeader(), data: { kind: 'diamond', date: '2026-11-03', lines: [{ quality: 'SI', carats: 1 }] } });
     expect(denied.status()).toBe(403);
+    // an owner's session may post the report only with a POST (a link cannot trigger it); a non-owner never
+    const asOwnerGet = await page.request.get('/api/inventory/daily?notify=1', { headers: originHeader() });
+    expect(asOwnerGet.status()).toBe(403);
+    expect((await asOwnerGet.json()).code).toBe('post_required');
+    const asOwnerPost = await page.request.post('/api/inventory/daily?notify=1', { headers: originHeader() });
+    expect(asOwnerPost.status()).toBe(200);
+    expect(((await asOwnerPost.json()) as { posted: boolean }).posted).toBe(false); // no webhook in the e2e run
+    expect((await asIgor.request.post('/api/inventory/daily?notify=1', { headers: originHeader() })).status()).toBe(403);
     const outside = await asIgor.request.get('/api/inventory?kind=metal', { headers: originHeader() });
     expect(((await outside.json()) as { slips: unknown[] }).slips).toHaveLength(0);
     await other.close();

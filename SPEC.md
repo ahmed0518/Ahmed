@@ -1113,9 +1113,17 @@ Without `MONDAY_API_TOKEN` every board reports 503 `sync_unavailable`.
 | `[JALGAS] - SCRAP GOLD TRACKING` | 9445344009 | `scrap` slips | groups `Scrapping - 14K` / `- 10K` / `- 18K` / `- 21K` / `- Platinum` → `in`, one slip per day (`scrap-in-<date>`); groups `Outgoing - …` → `out`, one per day and receiver (`scrap-out-<date>-<to>`; `to` from the row name: `Scrap for Mr Kim` → Mr. Kim, `251434-Danny scrap` → `Danny (order 251434)`, else the person column, else `Order <#>`, else Unknown); On Hold / Incoming Scrap ignored; rows before `scrap_since` not written, nor an outgoing batch dated the cutover day itself (the 31.65 g 18K batch of that morning is old stock); a `$` above 50,000 is an order number typed into the cost column — blanked and noted; `what` = `<order #>-<name>` with the person who brought an `in` piece in parentheses; the note column (`text_mks74y03`, "stones with Jin", "locks into lock box") is appended to the slip note. Captured rows: `tests/fixtures/monday-scrap-board.json` |
 | `CASTING INVENTORY` | 18436449049 | one `casting` slip | id `casting-monday`, who = Rina; date = the latest count date on the board (`date4`); without one, the date moves to today only when a line changed since the last sync; an empty Type cell takes the group title |
 
-Ids are stable, so every run upserts and never appends a duplicate. Person names are
-normalised (`Mr.Kim` → `Mr. Kim`); karats as in §14.1. The mappers are pure and tested on
-captured rows; the fetcher retries 429/5xx three times.
+Ids are stable, so every run upserts and never appends a duplicate — and **the board is the
+source of truth for its slips**: after a successful fetch, every `source: monday` slip whose id
+the board's mapper mints (`dust-*`, `diamond-*-monday`, `scrap-in-*` / `scrap-out-*`,
+`casting-monday`) that the current rows no longer produce is removed (a row deleted or
+re-dated on the board, a dust row now covered by a scanned slip); the result reports it as
+`removed`. Slips scanned or typed in the app are never touched. The page shows a monday slip
+as a mirror of the board ("change or delete it there") and offers no Delete for it. "Today"
+for the mappers is the display time zone, not UTC. Person names are normalised (`Mr.Kim`,
+`mr kim`, `Mrs Kim` → `Mr. Kim` / `Mrs. Kim`; a title is a whole word, so `Drew` stays);
+karats as in §14.1. The mappers are pure and tested on captured rows; the fetcher retries
+429/5xx three times.
 
 ### 14.8 API
 
@@ -1178,8 +1186,8 @@ first. Rules and default thresholds (`DAILY_THRESHOLDS`):
 |---|---|---|
 | `metal.missing_slip` | alert | a work day (production `work_days`) and a listed jeweler has no metal slip dated today |
 | `metal.silent_jeweler` | alert | a listed jeweler has no slip for 3 work days running |
-| `metal.slip_net` | alert | a slip today with both weights and dust whose loss − dust > 1.5 g |
-| `metal.week_net` | warn | a jeweler's 7-day net (paired slips) > 1.0 g or > 2.5 % of the metal handled |
+| `metal.slip_net` | alert | a slip today whose lines weighed on both ends (before **and** after; a piece still out does not count) lose more than the dust: loss − dust > 1.5 g |
+| `metal.week_net` | warn | a jeweler's 7-day net (paired slips; spellings of one name are one person) > 1.0 g or > 2.5 % of the metal handled |
 | `metal.dust_outlier` | warn | ≥ 100 g of dust on one slip not marked as a refinery lot |
 | `metal.refinery_lot` | info | refinery lots this week (notes containing "refinery") |
 | `diamond.no_count` / `diamond.stale_count` | warn / alert | no count, or the latest count ≥ 14 days (warn) / ≥ 30 days (alert) old |
@@ -1191,9 +1199,13 @@ first. Rules and default thresholds (`DAILY_THRESHOLDS`):
 | `sync.never`, `sync.failed`, `sync.stale` | warn / alert / warn | per board, only when `MONDAY_API_TOKEN` is set: never stamped; last run failed; last run > 26 h ago |
 
 `GET /api/inventory/daily[?date=YYYY-MM-DD][&notify=1]` returns the report (any credential;
-`date` re-runs an earlier day). `notify=1` also posts it to Slack through an Incoming Webhook
+`date` re-runs an earlier day and must be a real day, else 400 `invalid_date`; the sync-age
+rule uses the clock). `notify=1` also posts it to Slack through an Incoming Webhook
 (`SLACK_WEBHOOK_URL`; `formatDailyReportSlack` → header, counts, the headline numbers, one line
-per finding, a link to `INVENTORY_PUBLIC_URL/inventory`) and is accepted from the Vercel cron
+per finding — titles and details clipped to 400 characters so no section block passes 3,000 —
+a link to `INVENTORY_PUBLIC_URL/inventory`). On GET, `notify=1` needs a bearer; an owner's
+browser session may post only with `POST` (CSRF-checked), so a link an owner is tricked into
+opening can never post (403 `post_required`). It is accepted from the Vercel cron
 (`Authorization: Bearer $CRON_SECRET`, `vercel.json`: 22:30 UTC Mon–Fri = 5:30 pm EST /
 6:30 pm EDT; Vercel evaluates cron expressions in UTC, never on preview deployments, and on
 Hobby fires within the hour), an API token or an owner's session; the answer carries `posted`

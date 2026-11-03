@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DAILY_THRESHOLDS, dailyCheck, escapeMrkdwn, formatDailyReportSlack } from '@/lib/inventory/daily';
+import { DAILY_THRESHOLDS, DETAIL_MAX, dailyCheck, escapeMrkdwn, formatDailyReportSlack } from '@/lib/inventory/daily';
 import { defaultInventorySettings, type InventorySettings, type MetalSlip, type ScrapSlip, type Slip } from '@/lib/inventory/model';
 import { loadExport } from './inventory-model.test';
 
@@ -59,6 +59,23 @@ describe('daily check', () => {
     expect(r.findings.filter((f) => f.id === 'metal.week_net').map((f) => f.title)).toEqual(['Mr. Kim: 1.5 g net loss over 7 days (3.0%)', 'Chaerin: 1.8 g net loss over 7 days (18.0%)']); // most dust first, like the table
     expect(ids(r)).not.toContain('metal.missing_slip');
     expect(r.today).toEqual({ dust_g: 153.2, slips: 3, scrap_in_g: 0, scrap_out_g: 0 });
+    // a piece still out (no "after") is not a loss: only lines weighed on both ends count
+    const partial = dailyCheck([metal('p', 'Chaerin', day, { dust: 0.1, lines: [{ item: 'out', qty: 1, before: 12, after: null }, { item: 'back', qty: 1, before: 5, after: 4.9 }] })], defaultInventorySettings(), day);
+    expect(ids(partial)).not.toContain('metal.slip_net');
+    const onlyBefore = dailyCheck([metal('q', 'Chaerin', day, { dust: 0.1, lines: [{ item: 'out', qty: 1, before: 12, after: null }] })], defaultInventorySettings(), day);
+    expect(ids(onlyBefore)).not.toContain('metal.slip_net');
+  });
+
+  it('long details are clipped so one Slack section never passes 3,000 characters', () => {
+    const day = '2026-11-03';
+    const lines = Array.from({ length: 300 }, (_, i) => ({ what: `piece-${i}-with-a-long-description-${'x'.repeat(40)}`, karat: '14KY', grams: 1, value: 10 }));
+    const r = dailyCheck([{ id: 'big', kind: 'scrap', who: 'Jalgas', date: day, note: '', source: 'monday', createdAt: 'x', dir: 'out', to: 'Refinery', lines }], defaultInventorySettings(), day);
+    const outgoing = r.findings.find((f) => f.id === 'scrap.outgoing')!;
+    expect(outgoing.detail.length).toBeLessThanOrEqual(DETAIL_MAX);
+    expect(outgoing.detail.endsWith('…')).toBe(true);
+    const m = formatDailyReportSlack(r);
+    for (const b of m.blocks as { type: string; text?: { text: string } }[]) if (b.type === 'section') expect(b.text!.text.length).toBeLessThanOrEqual(3000);
+    expect((m.blocks as unknown[]).length).toBeLessThanOrEqual(50);
   });
 
   it('scrap: negative on hand, outgoing batches, big pieces, missing $ and karat', () => {

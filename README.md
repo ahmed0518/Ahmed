@@ -228,7 +228,9 @@ four monday.com boards. Full rules in `SPEC.md` §14. To turn it on:
    hourly (`0 * * * *`) — the Hobby plan allows one run per day per cron and would refuse the
    deploy. On Docker, cron `npm run sync:monday` instead. "Sync now" on the page and the
    per-board "last synced" stamps show whether it works. Mr. Jin keeps updating the diamond
-   board; the app pulls it.
+   board; the app pulls it. The boards stay the source of truth for what they feed: fix or
+   delete a wrong row **on the board** and the next sync follows (the page says so on every
+   synced record and offers no Delete for it); slips scanned or typed in the app are yours.
 
 Agents: `GET /api/inventory` with an `API_TOKENS` bearer returns the four headline numbers and
 every slip; `POST /api/inventory/slips` saves one. Details in `/agents`.

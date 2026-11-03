@@ -7,8 +7,8 @@
 import { getEnv } from '@/lib/env';
 import { AppError } from '@/lib/errors';
 import { log } from '@/lib/log';
-import { formatTimestamp } from '@/lib/time';
-import { karatKey, normalizeName, nameKey, numberCell, slug, validateSlip, type CastingLine, type CastingSlip, type MetalSlip, type ScrapLine, type Slip, type SyncBoard, type SyncStamp } from './model';
+import { formatTimestamp, todayIn } from '@/lib/time';
+import { karatKey, normalizeName, nameKey, numberCell, slug, validateSlip, type CastingLine, type CastingSlip, type DiamondSlip, type MetalSlip, type ScrapLine, type Slip, type SyncBoard, type SyncStamp } from './model';
 import type { InventoryStore } from './store-shared';
 
 export const BOARD_IDS: Record<SyncBoard, string> = {
@@ -73,6 +73,7 @@ export interface MapContext {
 // ---------- Gold Dust-Jalgas (9504626073) ----------
 export const DUST_COLS = { person: 'text_mksf70b5', grams: 'numeric_mkvyfksc', date: 'date4' } as const;
 export const DUST_GROUP = 'July 2025-Present';
+const DUST_GROUP_RE = /^july\s*2025\s*-\s*present$/i;
 const DUST_NOTE = 'Dust from the Gold Dust-Jalgas board on monday.com. Date is the day Jalgas logged it (usually the next business day after the slip).';
 const REFINERY_NOTE = 'Dust from the Gold Dust-Jalgas board. Eric’s dust is what goes to the refinery every 2–3 months — a refinery lot, not bench dust.';
 /** rows this heavy are refinery lots, whoever is named */
@@ -92,7 +93,10 @@ export function mapDustRows(items: readonly MondayItem[], ctx: MapContext): { sl
   const docs: Record<string, unknown>[] = [];
   let skipped = 0;
   for (const item of items) {
-    if ((item.group?.title ?? '').trim() !== DUST_GROUP) continue;
+    if (!DUST_GROUP_RE.test((item.group?.title ?? '').trim())) {
+      skipped++; // the "Grillz Dust Tracking" group is another workflow
+      continue;
+    }
     const who = normalizeName((col(item, DUST_COLS.person) || item.name).replace(/\s*\([^)]*\)\s*/g, ' '));
     const grams = numCol(item, DUST_COLS.grams);
     const date = dateCol(item, DUST_COLS.date);
@@ -149,7 +153,11 @@ export function mapDiamondRows(items: readonly MondayItem[], ctx: MapContext): {
   for (const g of groups.values()) {
     g.lines.sort((a, b) => ((a.size as number | null) ?? 999) - ((b.size as number | null) ?? 999));
     const note = [DIAMOND_NOTE, ...g.notes].join(' ').slice(0, 1000);
-    docs.push({ id: `diamond-${slug(g.quality)}-monday`, kind: 'diamond', who: 'Mr. Jin', date: g.date || ctx.today, lines: g.lines, note, source: 'monday', createdAt: ctx.now });
+    const id = `diamond-${slug(g.quality)}-monday`;
+    // no "Last counted" on the board: an unchanged grade keeps the date it had, so staleness still shows
+    const previous = ctx.existing.find((s): s is DiamondSlip => s.kind === 'diamond' && s.id === id);
+    const unchanged = previous !== undefined && JSON.stringify(previous.lines) === JSON.stringify(validateSlip({ id, kind: 'diamond', date: '2000-01-01', lines: g.lines, createdAt: ctx.now })?.lines ?? null);
+    docs.push({ id, kind: 'diamond', who: 'Mr. Jin', date: g.date || (unchanged ? previous.date : ctx.today), lines: g.lines, note, source: 'monday', createdAt: ctx.now });
   }
   return { ...finish(docs, 'diamond'), skipped };
 }
@@ -189,7 +197,8 @@ export function mapCastingRows(items: readonly MondayItem[], ctx: MapContext): {
   }
   if (lines.length === 0) return { slips: [], dropped: 0, skipped };
   const previous = ctx.existing.find((s): s is CastingSlip => s.kind === 'casting' && s.id === CASTING_ID);
-  const unchanged = previous !== undefined && JSON.stringify(previous.lines) === JSON.stringify(lines);
+  const cleaned = validateSlip({ id: CASTING_ID, kind: 'casting', date: '2000-01-01', lines, createdAt: ctx.now })?.lines ?? null;
+  const unchanged = previous !== undefined && JSON.stringify(previous.lines) === JSON.stringify(cleaned);
   const date = counted || (unchanged ? previous.date : ctx.today);
   return { ...finish([{ id: CASTING_ID, kind: 'casting', who: 'Rina', date, lines, note: CASTING_NOTE, source: 'monday', createdAt: unchanged ? previous.createdAt : ctx.now }], 'casting'), skipped };
 }
@@ -200,9 +209,11 @@ export const SCRAP_COLS = { date: 'date4', karat: 'text_mks7vz98', grams: 'numer
 export const SCRAP_GROUPS = { in: /^scrapping\b/i, out: /^outgoing\b/i } as const;
 
 /** Who received an outgoing batch, from the row: `Scrap for Mr Kim` → Mr. Kim; `251434-Danny scrap` → Danny (order 251434); else the person column, else Unknown. */
-export function scrapReceiver(name: string, order: string, person: string): string {
+export function scrapReceiver(name: string, orderText: string, person: string): string {
   const m = /^\s*scrap\s+for\s+(.+?)\s*$/i.exec(name);
   if (m) return normalizeName(m[1]!);
+  // the order column mirrors the row name when there is no order number; only a number-like value is one
+  const order = /^[A-Za-z]{0,6}[\s-]?\d{3,}$/.test(orderText.trim()) ? orderText.trim() : '';
   const tail = order && name.startsWith(order) ? name.slice(order.length).replace(/^[\s-]+/, '') : '';
   const who = normalizeName(tail.replace(/\bscrap\b/i, '').trim() || person);
   if (who && order) return `${who} (order ${order})`;
@@ -336,29 +347,53 @@ export interface SyncResult {
   written: number;
   skipped: number;
   dropped: number;
+  /** monday-sourced slips of this board the current rows no longer produce (a corrected or deleted row) */
+  removed: number;
   error?: string;
 }
 
 export interface SyncDeps {
   fetchImpl?: typeof fetch;
   now?: Date;
+  /** time zone for "today" (the display zone); default America/New_York */
+  tz?: string;
 }
 
-/** Sync the given boards (default: all four), write the slips, stamp `last_sync`. Never throws for one board's failure. */
+/** Which stored slips a board owns: every `source: monday` slip whose id the board's mapper mints. */
+export const BOARD_SLIP_ID: Record<SyncBoard, RegExp> = {
+  dust: /^dust-/,
+  diamond: /^diamond-.*-monday$/,
+  scrap: /^scrap-(in|out)-/,
+  casting: /^casting-monday$/,
+};
+
+/**
+ * Sync the given boards (default: all four): the board is the source of truth for its
+ * `source: monday` slips, so each run upserts what the rows produce and removes the board's
+ * slips that the rows no longer produce (a corrected date, a deleted row, a dust row now
+ * covered by a scanned slip). Slips scanned or typed in the app are never touched. Stamps
+ * `last_sync`; never throws for one board's failure.
+ */
 export async function syncMonday(store: InventoryStore, boards: readonly SyncBoard[], deps: SyncDeps = {}): Promise<SyncResult[]> {
   const now = deps.now ?? new Date();
   const fetchImpl = deps.fetchImpl ?? fetch;
   const results: SyncResult[] = [];
   const settings = await store.getSettings();
   const existing = await store.listSlips();
-  const ctx: MapContext = { existing, today: formatTimestamp(now).slice(0, 10), now: formatTimestamp(now), scrapSince: settings.scrap_since };
+  const ctx: MapContext = { existing, today: todayIn(deps.tz ?? 'America/New_York', now), now: formatTimestamp(now), scrapSince: settings.scrap_since };
   for (const board of boards) {
-    const result: SyncResult = { board, ok: false, fetched: 0, written: 0, skipped: 0, dropped: 0 };
+    const result: SyncResult = { board, ok: false, fetched: 0, written: 0, skipped: 0, dropped: 0, removed: 0 };
     try {
       const items = await fetchBoardItems(BOARD_IDS[board], fetchImpl);
       result.fetched = items.length;
       const mapped = MAPPERS[board](items, ctx);
       await store.putSlips(mapped.slips);
+      const produced = new Set(mapped.slips.map((s) => s.id));
+      for (const s of existing) {
+        if (s.source === 'monday' && BOARD_SLIP_ID[board].test(s.id) && !produced.has(s.id)) {
+          if (await store.deleteSlip(s.id)) result.removed++;
+        }
+      }
       result.written = mapped.slips.length;
       result.skipped = mapped.skipped;
       result.dropped = mapped.dropped;

@@ -227,11 +227,15 @@ export function karatKey(raw: string | null | undefined): string {
   return k ? k.replace(/^(\d+)TT$/, '$1KTT') : 'Unlabeled';
 }
 
-/** `Mr.Kim`, `mr kim`, `MR. KIM` → `Mr. Kim`; collapses whitespace; keeps other names as typed (first letter capitalised). */
+/**
+ * `Mr.Kim`, `mr kim`, `Mrs Kim` → `Mr. Kim` / `Mrs. Kim`: a title is a whole word (`Drew` and
+ * `Msomi` are left alone), gets its dot and a space; whitespace collapses; an all-lowercase
+ * word gets a capital. Other spellings are kept as typed (`MR. KIM` → `Mr. KIM`).
+ */
 export function normalizeName(raw: string | null | undefined): string {
   const s = cleanText(String(raw ?? ''), WHO_MAX);
   if (!s) return '';
-  const spaced = s.replace(/\b(mr|mrs|ms|dr)\.?\s*/gi, (_m, t: string) => `${t[0]!.toUpperCase()}${t.slice(1).toLowerCase()}. `).replace(/\s+/g, ' ').trim();
+  const spaced = s.replace(/\b(mrs|mr|ms|dr)\b\.?\s*/gi, (_m, t: string) => `${t[0]!.toUpperCase()}${t.slice(1).toLowerCase()}. `).replace(/\s+/g, ' ').trim();
   return spaced
     .split(' ')
     .map((w) => (w.length > 0 && w === w.toLowerCase() ? w[0]!.toUpperCase() + w.slice(1) : w))
@@ -252,7 +256,8 @@ export function slug(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-function validDate(v: unknown): string | null {
+/** A real calendar day as `YYYY-MM-DD` (2026-02-30 is not one), else null. */
+export function validDate(v: unknown): string | null {
   if (typeof v !== 'string' || !DATE_RE.test(v)) return null;
   const d = new Date(`${v}T00:00:00Z`);
   return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v ? null : v;

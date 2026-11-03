@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { karatKey, nameKey, normalizeName, numberCell, validateAccess, validateInventorySettings, validateJewelers, validateSlip, validateSlipInput, type MetalSlip, type ScrapSlip } from '@/lib/inventory/model';
+import { karatKey, nameKey, normalizeName, numberCell, validDate, validateAccess, validateInventorySettings, validateJewelers, validateSlip, validateSlipInput, type MetalSlip, type ScrapSlip } from '@/lib/inventory/model';
 
 export const EXPORT_FILE = path.join(process.cwd(), 'data', 'trax-inventory-2026-11-03.json');
 
@@ -44,6 +44,10 @@ describe('inventory model', () => {
     expect(normalizeName('mr   kim')).toBe('Mr. Kim');
     expect(normalizeName('MR. SIM')).toBe('Mr. SIM');
     expect(normalizeName('chaerin')).toBe('Chaerin');
+    expect(normalizeName('Mrs Kim')).toBe('Mrs. Kim');
+    expect(normalizeName('Drew')).toBe('Drew');
+    expect(normalizeName('Msomi')).toBe('Msomi');
+    expect(normalizeName('dr. lee')).toBe('Dr. Lee');
     expect(nameKey('Mr. Kim')).toBe('mrkim');
     expect(nameKey('mr kim')).toBe(nameKey('Mr.Kim'));
   });
@@ -66,6 +70,13 @@ describe('inventory model', () => {
     expect(validateSlipInput({ kind: 'scrap', date: '2026-10-19', lines: [{ what: 'chain', grams: 1 }], dir: 'sideways', to: 'x' })).toMatchObject({ ok: true, value: { dir: 'in', to: '' } });
     expect(validateSlipInput({ kind: 'scrap', date: '2026-10-19', lines: [{ what: 'chain', grams: 1 }], dir: 'out', to: ' Mr. Kim ' })).toMatchObject({ ok: true, value: { dir: 'out', to: 'Mr. Kim' } });
     expect(validateSlipInput({ kind: 'casting', date: '2026-10-19', note: 'a\u0000b\tc', lines: [{ type: 'Ring', item: '1', yellow: 1 }] })).toMatchObject({ ok: true, value: { note: 'ab c' } });
+  });
+
+  it('validDate accepts real days only', () => {
+    expect(validDate('2026-02-28')).toBe('2026-02-28');
+    expect(validDate('2026-02-30')).toBeNull();
+    expect(validDate('2026-10-3')).toBeNull();
+    expect(validDate(20261003)).toBeNull();
   });
 
   it('validateSlip needs an id and a createdAt', () => {

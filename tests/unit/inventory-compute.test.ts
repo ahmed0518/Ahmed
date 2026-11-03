@@ -25,6 +25,17 @@ describe('inventory maths on the exported records', () => {
     expect(rows.reduce((t, r) => t + r.dust, 0)).toBeCloseTo(1516.46, 2);
   });
 
+  it('gold dust: spellings of one name are one row', () => {
+    const base = { kind: 'metal' as const, note: '', source: 'manual' as const, createdAt: 'x', lines: [] };
+    const rows = metalRows([
+      { ...base, id: 'a', who: 'Mr. Kim', date: '2026-10-30', dust: 1 },
+      { ...base, id: 'b', who: 'Mr Kim', date: '2026-10-31', dust: 2 },
+      { ...base, id: 'c', who: 'MR.KIM', date: '2026-11-01', dust: 3 },
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ who: 'Mr. Kim', dust: 6, days: 3 });
+  });
+
   it('diamonds: the latest count per grade, merged by size', () => {
     const c = latestCount(byKind(slips, 'diamond'))!;
     expect(c.date).toBe('2026-10-29');

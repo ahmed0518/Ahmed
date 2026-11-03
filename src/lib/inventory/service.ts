@@ -6,7 +6,7 @@ import { randomBytes } from 'node:crypto';
 import { isAdmin, readCredential } from '@/lib/auth/credential';
 import type { HeaderReader } from '@/lib/auth/csrf';
 import { badRequest, forbidden, notFound, unauthorized } from '@/lib/errors';
-import { formatTimestamp } from '@/lib/time';
+import { formatTimestamp, todayIn } from '@/lib/time';
 import { actorName, resolveViewer, type Viewer } from './access';
 import { sortSlips, tiles, type Tiles } from './compute';
 import { SLIP_KINDS, isSlipKind, validateSlipInput, type InventorySettings, type Slip, type SlipKind, type SyncStamp } from './model';
@@ -22,12 +22,7 @@ export interface InventoryPayload {
   slips: Slip[];
 }
 
-/** YYYY-MM-DD in the display time zone — "today" for the slips, the tiles and the missing-slip line. */
-export function todayIn(tz: string, now: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
+export { todayIn };
 
 /** Credential + settings → viewer. Anonymous callers get 401 from the API (the page redirects to /login instead). */
 export async function viewerFor(headers: HeaderReader): Promise<{ viewer: Viewer; settings: InventorySettings }> {
